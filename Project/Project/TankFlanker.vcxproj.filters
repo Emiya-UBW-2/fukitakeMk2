@@ -45,14 +45,8 @@
     <ClInclude Include="Character.hpp">
       <Filter>ソース ファイル\MainScene\Object</Filter>
     </ClInclude>
-    <ClInclude Include="Gun.hpp">
-      <Filter>ソース ファイル\MainScene\Object</Filter>
-    </ClInclude>
     <ClInclude Include="BackGround.hpp">
       <Filter>ソース ファイル\MainScene\BackGround</Filter>
-    </ClInclude>
-    <ClInclude Include="Target.hpp">
-      <Filter>ソース ファイル\MainScene\Object</Filter>
     </ClInclude>
     <ClInclude Include="ObjectBase.hpp">
       <Filter>ソース ファイル\MainScene\Object</Filter>
@@ -60,19 +54,7 @@
     <ClInclude Include="ObjectManager.hpp">
       <Filter>ソース ファイル\MainScene</Filter>
     </ClInclude>
-    <ClInclude Include="Magazine.hpp">
-      <Filter>ソース ファイル\MainScene\Object</Filter>
-    </ClInclude>
     <ClInclude Include="Circle.hpp">
-      <Filter>ソース ファイル\MainScene\Object</Filter>
-    </ClInclude>
-    <ClInclude Include="Gate.hpp">
-      <Filter>ソース ファイル\MainScene\Object</Filter>
-    </ClInclude>
-    <ClInclude Include="ShootingMat.hpp">
-      <Filter>ソース ファイル\MainScene\Object</Filter>
-    </ClInclude>
-    <ClInclude Include="Cart.hpp">
       <Filter>ソース ファイル\MainScene\Object</Filter>
     </ClInclude>
   </ItemGroup>

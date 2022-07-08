@@ -141,10 +141,6 @@ namespace FPS_n2 {
 						if (i == (int)CharaFrame::Max) { break; }
 						compare = (FName == CharaFrameName[i]);
 						break;
-					case ObjType::Gun://human
-						if (i == (int)GunFrame::Max) { break; }
-						compare = (FName == GunFrameName[i]);
-						break;
 					default:
 						break;
 					}
