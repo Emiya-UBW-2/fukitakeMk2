@@ -201,7 +201,7 @@ namespace FPS_n2 {
 				//VR‹óŠÔ‚É“K—p
 				DrawParts->Move_Player();
 				//I—¹”»’è
-				if (CheckHitKey(KEY_INPUT_ESCAPE) != 0) {
+				if (CheckHitKeyWithCheck(KEY_INPUT_ESCAPE) != 0) {
 					this->m_EndFlag = true;
 					return true;
 				}
@@ -235,7 +235,7 @@ namespace FPS_n2 {
 				//UI‘‚«ž‚Ý
 				PostPassParts->Set_UI_Draw([&] { this->m_ScenesPtr->UI_Draw(); });
 				//VR‚ÉˆÚ‚·
-				DrawParts->Draw_VR([&] {
+				DrawParts->Draw([&] {
 					auto tmp = GetDrawScreen();
 					cam_info tmp_cam = this->m_ScenesPtr->Get_Camera();
 					tmp_cam.campos = GetCameraPosition();

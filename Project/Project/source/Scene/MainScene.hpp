@@ -45,7 +45,7 @@ namespace FPS_n2 {
 					for (int i = 0; i < 5; i++) {
 						float max = Xsize * (i + 1) / 5;
 						float rad = floatParam[2] * (i + 1) / 5;
-						DrawLine(
+						DrawLine_2D(
 							xpt, ypt,
 							xP + (int)(max*sin(rad)), yP + (int)(max*-cos(rad)),
 							GetColor(255, 0, 0), 5 - i);
@@ -59,11 +59,11 @@ namespace FPS_n2 {
 						ypt = yP + (int)(max*-cos(rad));
 
 						float yap = Xsize / 5;
-						DrawLine(
+						DrawLine_2D(
 							xpt - (int)(yap*sin(rad * 2.f - deg2rad(15))), ypt - (int)(yap*-cos(rad * 2.f - deg2rad(15))),
 							xpt, ypt,
 							GetColor(255, 0, 0), 2);
-						DrawLine(
+						DrawLine_2D(
 							xpt - (int)(yap*sin(rad * 2.f + deg2rad(15))), ypt - (int)(yap*-cos(rad * 2.f + deg2rad(15))),
 							xpt, ypt,
 							GetColor(255, 0, 0), 2);
@@ -231,10 +231,10 @@ namespace FPS_n2 {
 				}
 				//Input,AI
 				{
-					MouseActive.GetInput(CheckHitKey_M(KEY_INPUT_TAB) != 0);
-					FPSActive.GetInput(CheckHitKey_M(KEY_INPUT_V) != 0);
-					RunKey.GetInput(CheckHitKey_M(KEY_INPUT_LSHIFT) != 0);
-					auto MidPress = (GetMouseInput_M() & MOUSE_INPUT_MIDDLE) != 0;
+					MouseActive.GetInput(CheckHitKeyWithCheck(KEY_INPUT_TAB) != 0);
+					FPSActive.GetInput(CheckHitKeyWithCheck(KEY_INPUT_V) != 0);
+					RunKey.GetInput(CheckHitKeyWithCheck(KEY_INPUT_LSHIFT) != 0);
+					auto MidPress = (GetMouseInputWithCheck() & MOUSE_INPUT_MIDDLE) != 0;
 					int mx = DXDraw::Instance()->disp_x / 2, my = DXDraw::Instance()->disp_y / 2;
 					if (MouseActive.on()) {
 						if (MouseActive.trigger()) {
@@ -276,12 +276,12 @@ namespace FPS_n2 {
 							Chara->SetInput(
 								pp_x*(1.f - TPS_Per),
 								pp_y*(1.f - TPS_Per),
-								CheckHitKey_M(KEY_INPUT_W) != 0,
-								CheckHitKey_M(KEY_INPUT_S) != 0,
-								CheckHitKey_M(KEY_INPUT_A) != 0,
-								CheckHitKey_M(KEY_INPUT_D) != 0,
+								CheckHitKeyWithCheck(KEY_INPUT_W) != 0,
+								CheckHitKeyWithCheck(KEY_INPUT_S) != 0,
+								CheckHitKeyWithCheck(KEY_INPUT_A) != 0,
+								CheckHitKeyWithCheck(KEY_INPUT_D) != 0,
 								RunKey.press(),
-								CheckHitKey_M(KEY_INPUT_SPACE) != 0,
+								CheckHitKeyWithCheck(KEY_INPUT_SPACE) != 0,
 								this->m_ReadyTime < 0.f
 							);
 							continue;
