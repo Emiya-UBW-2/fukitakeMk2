@@ -11,19 +11,18 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BackGround.hpp" />
-    <ClInclude Include="Character.hpp" />
-    <ClInclude Include="Circle.hpp" />
-    <ClInclude Include="Enums.hpp" />
-    <ClInclude Include="Header.hpp" />
-    <ClInclude Include="MainScene.hpp" />
-    <ClInclude Include="ObjectBase.hpp" />
-    <ClInclude Include="ObjectManager.hpp" />
-    <ClInclude Include="sequence.hpp" />
-    <ClInclude Include="sub.hpp" />
+    <ClInclude Include="source\BackGround.hpp" />
+    <ClInclude Include="source\Character.hpp" />
+    <ClInclude Include="source\Circle.hpp" />
+    <ClInclude Include="source\Enums.hpp" />
+    <ClInclude Include="source\Header.hpp" />
+    <ClInclude Include="source\MainScene.hpp" />
+    <ClInclude Include="source\ObjectBase.hpp" />
+    <ClInclude Include="source\sequence.hpp" />
+    <ClInclude Include="source\sub.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="source\main.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
