@@ -1,5 +1,5 @@
 #pragma once
-#include"Header.hpp"
+#include"../Header.hpp"
 
 namespace FPS_n2 {
 	namespace Sceneclass {
@@ -252,7 +252,7 @@ namespace FPS_n2 {
 					float pp_x = std::clamp(-(float)(my - DXDraw::Instance()->disp_y / 2)*1.f, -9.f, 9.f) * cam_per;
 					float pp_y = std::clamp((float)(mx - DXDraw::Instance()->disp_x / 2)*1.f, -9.f, 9.f) * cam_per;
 					
-					easing_set(&TPS_Per, (!FPSActive.on() && MidPress) ? 1.f : 0.f, 0.9f);
+					Easing(&TPS_Per, (!FPSActive.on() && MidPress) ? 1.f : 0.f, 0.9f, EasingType::OutExpo);
 
 					TPS_Xrad += pp_x;
 					TPS_Yrad += pp_y;
@@ -263,7 +263,7 @@ namespace FPS_n2 {
 					TPS_Xrad *= TPS_Per;
 					TPS_Yrad *= TPS_Per;
 
-					easing_set(&TPS_XradR, TPS_Xrad, 0.5f);
+					Easing(&TPS_XradR, TPS_Xrad, 0.5f, EasingType::OutExpo);
 
 					TPS_YradR += (sin(TPS_Yrad)*cos(TPS_YradR) - cos(TPS_Yrad) * sin(TPS_YradR))*20.f / FPS;
 
@@ -335,17 +335,17 @@ namespace FPS_n2 {
 						camera_main.camvec = CamPos + CamVec * 100.f;
 						camera_main.camup = UpperMat.yvec();
 					}
-					easing_set(&EyeRunPer, Chara->GetIsRun() ? 1.f : 0.f, 0.95f);
+					Easing(&EyeRunPer, Chara->GetIsRun() ? 1.f : 0.f, 0.95f, EasingType::OutExpo);
 
 					if (Chara->GetIsRun()) {
-						easing_set(&camera_main.fov, deg2rad(90), 0.9f);
-						easing_set(&camera_main.near_, 3.f, 0.9f);
-						easing_set(&camera_main.far_, 12.5f * 150.f, 0.9f);
+						Easing(&camera_main.fov, deg2rad(90), 0.9f, EasingType::OutExpo);
+						Easing(&camera_main.near_, 3.f, 0.9f, EasingType::OutExpo);
+						Easing(&camera_main.far_, 12.5f * 150.f, 0.9f, EasingType::OutExpo);
 					}
 					else {
-						easing_set(&camera_main.fov, deg2rad(75), 0.9f);
-						easing_set(&camera_main.near_, 10.f, 0.9f);
-						easing_set(&camera_main.far_, 12.5f * 300.f, 0.9f);
+						Easing(&camera_main.fov, deg2rad(75), 0.9f, EasingType::OutExpo);
+						Easing(&camera_main.near_, 10.f, 0.9f, EasingType::OutExpo);
+						Easing(&camera_main.far_, 12.5f * 300.f, 0.9f, EasingType::OutExpo);
 					}
 				}
 				//UIパラメーター
