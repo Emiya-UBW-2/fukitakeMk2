@@ -215,7 +215,7 @@ namespace FPS_n2 {
 				if (IsFirstLoop) {
 					SetMousePoint(DXDraw::Instance()->disp_x / 2, DXDraw::Instance()->disp_y / 2);
 					Env.play(DX_PLAYTYPE_LOOP, TRUE);
-					this->m_ReadyTime = 10.f;
+					this->m_ReadyTime = 5.f;
 				}
 				//
 				{
@@ -305,45 +305,9 @@ namespace FPS_n2 {
 				//Execute
 				this->Obj.ExecuteObject();
 				//col
-				/*
-				for (int i = 0; i < chara_num; i++) {
-					auto& c = (std::shared_ptr<CharacterClass>&)(this->Obj.GetObj(ObjType::Human, i));
-					auto& Gun = c->GetGunPtr();
-					if (Gun != nullptr) {
-						for (int j = 0; j < tgt_num; j++) {
-							auto s = (i*tgt_num + j);
-							auto& t = (std::shared_ptr<TargetClass>&)(this->Obj.GetObj(ObjType::Target, s));
-							if (Gun->CheckBullet(t->GetCol())) {
-								//エフェクト
-								Effect_UseControl::Set_Effect(Effect::ef_fire, Gun->GetHitPos(), Gun->GetHitVec(), 1.f);
-								//ヒット演算
-								if (i == 0) {
-									if (tgtSel != -1 && tgtSel != s) {
-										auto& tOLD = (std::shared_ptr<TargetClass>&)(this->Obj.GetObj(ObjType::Target, tgtSel));
-										tOLD->ResetHit();
-									}
-									tgtSel = s;
-									tgtTimer = 5.f;
-								}
-								c->AddScore(t->SetHitPos(Gun->GetHitPos()));
-							}
-						}
-						if (Gun->CheckBullet(&this->BackGround.GetGroundCol())) {
-							//エフェクト
-							Effect_UseControl::Set_Effect(Effect::ef_fire, Gun->GetHitPos(), Gun->GetHitVec(), 1.f);
-						}
-					}
+				{
+
 				}
-				tgtTimer = std::max(tgtTimer - 1.f / FPS, 0.f);
-				for (int j = 0; j < gun_num; j++) {
-					auto& Gun = (std::shared_ptr<GunClass>&)(this->Obj.GetObj(ObjType::Gun, j));
-					if (Gun->GetIsShot()) {
-						//エフェクト
-						auto mat = Gun->GetMuzzleMatrix();
-						Effect_UseControl::Set_Effect(Effect::ef_fire2, mat.pos(), mat.GetRot().zvec()*-1.f, 1.f);
-					}
-				}
-				//*/
 				//視点
 				{
 
@@ -353,7 +317,7 @@ namespace FPS_n2 {
 						camera_main.camup = Chara->GetMatrix().GetRot().yvec();
 					}
 					else {
-						MATRIX_ref UpperMat = Chara->GetFrameWorldMat(CharaFrame::Upper).GetRot()*MATRIX_ref::RotY(TPS_YradR);
+						MATRIX_ref UpperMat = Chara->GetCharaDir().GetRot()*MATRIX_ref::RotY(TPS_YradR);
 						VECTOR_ref CamPos = Chara->GetMatrix().pos() + Chara->GetMatrix().yvec() * 14.f;
 
 						VECTOR_ref CamVec = MATRIX_ref::Vtrans(Chara->GetEyeVector(), MATRIX_ref::RotY(TPS_YradR));
@@ -361,10 +325,15 @@ namespace FPS_n2 {
 						CamVec = MATRIX_ref::Vtrans(CamVec, MATRIX_ref::RotAxis(UpperMat.xvec(), TPS_XradR));
 						CamVec = Leap(Chara->GetEyeVector(), CamVec, TPS_Per);
 
-						CamPos += Leap((UpperMat.xvec()*-8.f + UpperMat.yvec()*3.f), (UpperMat.xvec()*-3.f + UpperMat.yvec()*4.f), EyeRunPer);
+						CamPos += 
+							Leap(
+							Leap((UpperMat.xvec()*-8.f + UpperMat.yvec()*3.f), (UpperMat.xvec()*-3.f + UpperMat.yvec()*4.f), EyeRunPer),
+								UpperMat.yvec()*3.f,
+								Chara->GetFlightPer()
+								);
 						camera_main.campos = (CamPos + CamVec * -20.f);
 						camera_main.camvec = CamPos + CamVec * 100.f;
-						camera_main.camup = Chara->GetMatrix().GetRot().yvec();
+						camera_main.camup = UpperMat.yvec();
 					}
 					easing_set(&EyeRunPer, Chara->GetIsRun() ? 1.f : 0.f, 0.95f);
 
@@ -436,7 +405,6 @@ namespace FPS_n2 {
 			}
 			//UI表示
 			void UI_Draw(void) noexcept  override {
-				auto* DrawParts = DXDraw::Instance();
 				UI_class.Draw();
 			}
 		};
