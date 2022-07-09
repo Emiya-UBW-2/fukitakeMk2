@@ -12,23 +12,6 @@ namespace std {
 }; // namespace std
 //
 namespace FPS_n2 {
-	//ファイル走査
-	std::vector<WIN32_FIND_DATA> data_t;
-	void GetFileNames(std::string path_t) noexcept {
-		data_t.clear();
-		WIN32_FIND_DATA win32fdt;
-		HANDLE hFind = FindFirstFile((path_t + "*").c_str(), &win32fdt);
-		if (hFind != INVALID_HANDLE_VALUE) {
-			do {
-				if (win32fdt.cFileName[0] != '.') {
-					data_t.resize(data_t.size() + 1);
-					data_t.back() = win32fdt;
-				}
-
-			} while (FindNextFile(hFind, &win32fdt));
-		} //else{ return false; }
-		FindClose(hFind);
-	}
 	//フォントプール
 	class FontPool {
 	public:
@@ -66,8 +49,8 @@ namespace FPS_n2 {
 		bool Update_effect_f{ true };					//エフェクトのアップデートタイミングフラグ
 		std::vector<EffekseerEffectHandle> effsorce;	/*エフェクトリソース*/
 		void Init(void) noexcept {
-			GetFileNames("data/effect/");
-			for (auto& d : data_t) {
+			auto data_t = GetFileNames("data/effect/");
+			for (const auto& d : data_t) {
 				std::string p = d.cFileName;
 				if (p.find(".efk") != std::string::npos && p.find(".efkproj") == std::string::npos) {
 					effsorce.resize(effsorce.size() + 1);

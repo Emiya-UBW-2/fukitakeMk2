@@ -10,7 +10,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	//MV1SetLoadModelUsePackDraw(TRUE);
 
 #ifdef DEBUG
-	DeBuG::Create(FPS_n2::Frame_Rate);
+	DebugClass::Create(FPS_n2::Frame_Rate);
 #endif // DEBUG
 	OptionParts->Set_useVR(DXDraw::Instance()->use_vr);
 

@@ -24,16 +24,20 @@
 #include "DXLib_ref/DXLib_ref.h"
 #include "Box2D/Box2D.h"
 
+using namespace DXLib_ref;
+
 #include "Enums.hpp"
+#include "MainScene/Object/CharacterEnum.hpp"
+//
 #include "sub.hpp"
 #include "sequence.hpp"
 //
-#include "BackGround.hpp"
+#include "MainScene/BackGround/BackGround.hpp"
 
-#include "ObjectBase.hpp"
-#include "Character.hpp"
-#include "Circle.hpp"
+#include "MainScene/Object/ObjectBase.hpp"
+#include "MainScene/Object/Character.hpp"
+#include "MainScene/Object/Circle.hpp"
 
 #include "ObjectManager.hpp"
 //
-#include "MainScene.hpp"
+#include "Scene/MainScene.hpp"

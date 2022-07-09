@@ -27,21 +27,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="source\BackGround.hpp">
-      <Filter>ソース ファイル\MainScene\BackGround</Filter>
-    </ClInclude>
-    <ClInclude Include="source\Circle.hpp">
-      <Filter>ソース ファイル\MainScene\Object</Filter>
-    </ClInclude>
-    <ClInclude Include="source\ObjectBase.hpp">
-      <Filter>ソース ファイル\MainScene\Object</Filter>
-    </ClInclude>
-    <ClInclude Include="source\Character.hpp">
-      <Filter>ソース ファイル\MainScene\Object</Filter>
-    </ClInclude>
-    <ClInclude Include="source\MainScene.hpp">
-      <Filter>ソース ファイル\Scene</Filter>
-    </ClInclude>
     <ClInclude Include="source\sequence.hpp">
       <Filter>ソース ファイル</Filter>
     </ClInclude>
@@ -52,6 +37,24 @@
       <Filter>ソース ファイル</Filter>
     </ClInclude>
     <ClInclude Include="source\Header.hpp">
+      <Filter>ソース ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="source\MainScene\Object\Character.hpp">
+      <Filter>ソース ファイル\MainScene\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="source\MainScene\Object\Circle.hpp">
+      <Filter>ソース ファイル\MainScene\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="source\MainScene\Object\ObjectBase.hpp">
+      <Filter>ソース ファイル\MainScene\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="source\MainScene\BackGround\BackGround.hpp">
+      <Filter>ソース ファイル\MainScene\BackGround</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Scene\MainScene.hpp">
+      <Filter>ソース ファイル\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ObjectManager.hpp">
       <Filter>ソース ファイル</Filter>
     </ClInclude>
   </ItemGroup>

@@ -184,7 +184,7 @@ namespace FPS_n2 {
 
 				auto* DrawParts = DXDraw::Instance();
 #ifdef DEBUG
-				auto* DebugParts = DeBuG::Instance();					//デバッグ
+				auto* DebugParts = DebugClass::Instance();					//デバッグ
 				clsDx();
 #endif // DEBUG
 				if (ProcessMessage() != 0) {
@@ -213,7 +213,7 @@ namespace FPS_n2 {
 				auto* DrawParts = DXDraw::Instance();
 				auto* PostPassParts = PostPassEffect::Instance();				//ホストパスエフェクト(VR、フルスクリーン共用)
 #ifdef DEBUG
-				auto* DebugParts = DeBuG::Instance();					//デバッグ
+				auto* DebugParts = DebugClass::Instance();					//デバッグ
 #endif // DEBUG
 				//共通の描画前用意
 				this->m_ScenesPtr->ReadyDraw();
