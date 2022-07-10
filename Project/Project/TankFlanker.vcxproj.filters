@@ -25,6 +25,9 @@
     <Filter Include="ソース ファイル\MainScene\BackGround">
       <UniqueIdentifier>{f8f7caa6-07a4-4b61-981f-3b99bc5d3bb1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ソース ファイル\MainScene\UI">
+      <UniqueIdentifier>{a481be59-68ff-4107-9bce-dabca4ec7642}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\sequence.hpp">
@@ -56,6 +59,9 @@
     </ClInclude>
     <ClInclude Include="source\ObjectManager.hpp">
       <Filter>ソース ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="source\MainScene\UI\MainSceneUIControl.hpp">
+      <Filter>ソース ファイル\MainScene\UI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

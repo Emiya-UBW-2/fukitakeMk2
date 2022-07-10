@@ -10,56 +10,64 @@ namespace FPS_n2 {
 			const float HeartRateMin{ 60.f };//心拍数最小
 			const float HeartRateMax{ 180.f };//心拍数最大
 		private:
-			VECTOR_ref m_posBuf;
-			MATRIX_ref m_UpperMatrix;
-
-			VECTOR_ref m_FlightVecBuf;
-			MATRIX_ref m_FlightMatrix;
-
-
-			std::array<float, 4> m_Vec{ 0,0,0,0 };
-			std::array<float, (int)CharaAnimeID::AnimeIDMax> m_AnimPerBuf{ 0 };
-			float m_MoveVector{ 0.f };
-			float m_xrad_Add{ 0.f }, m_yrad_Add{ 0.f };
-			VECTOR_ref m_rad_Buf, m_rad;
-			float m_yrad_Upper{ 0.f }, m_yrad_Bottom{ 0.f };
-			float m_RunTimer{ 0.f };
-			float m_RunPer{ 0.f };
-			float m_FlightPer{ 0.f };
-			float m_RunPer2{ 0.f }, m_PrevRunPer2{ 0.f };
-			bool m_TurnBody{ false };
-			bool m_IsRun{ false };
-			bool m_Flightmode{ false };
-			CharaAnimeID UpperAnimSelect, PrevUpperAnimSel;
-			CharaAnimeID BottomAnimSelect;
-			bool m_Ready_Start{ true };
-			bool m_ReturnStand{ false };
+			VECTOR_ref											m_posBuf;
+			MATRIX_ref											m_UpperMatrix;
+			//飛行関連
+			VECTOR_ref											m_FlightVecBuf;
+			MATRIX_ref											m_FlightMatrix;
+			VECTOR_ref											m_FradAdd_Buf, m_FradAdd;
 			//
-			VECTOR_ref m_FradAdd_Buf, m_FradAdd;
-			//入力
-			bool m_Press_GoFront{ false };
-			bool m_Press_GoRear{ false };
-			bool m_Press_GoLeft{ false };
-			bool m_Press_GoRight{ false };
-			//体力
-			float m_HeartRate{ HeartRateMin };//心拍数
-			float m_HeartRate_r{ HeartRateMin };//心拍数
-			float m_HeartRateRad{ 0.f };//呼吸Sin渡し
-			//表情
-			int m_Eyeclose{ 0 };
-			float m_EyeclosePer{ 0.f };
-			float m_NeckPer{ 0.f };
-			//サウンド
-			int charaSound{ -1 };
-			SoundHandle m_Breath;
-			bool heartp{ false };
-		public://ゲッター
-			const auto GetPressFrontGround() const noexcept { return this->m_Press_GoFront && !this->m_Flightmode; }
-			const auto GetPressRearGround() const noexcept { return this->m_Press_GoRear && !this->m_Flightmode; }
-			const auto GetPressLeftGround() const noexcept { return this->m_Press_GoLeft && !this->m_Flightmode; }
-			const auto GetPressRightGround() const noexcept { return this->m_Press_GoRight && !this->m_Flightmode; }
+			std::array<float, 4>								m_Vec{ 0,0,0,0 };
+			std::array<float, (int)CharaAnimeID::AnimeIDMax>	m_AnimPerBuf{ 0 };
+			float												m_MoveVector{ 0.f };
+			VECTOR_ref											m_rad_Buf, m_rad, m_radAdd;
+			float												m_yrad_Upper{ 0.f }, m_yrad_Bottom{ 0.f };
+			float												m_RunTimer{ 0.f };
+			float												m_RunPer{ 0.f };
+			float												m_FlightPer{ 0.f };
+			float												m_RunPer2{ 0.f }, m_PrevRunPer2{ 0.f };
+			bool												m_TurnBody{ false };
+			bool												m_IsRun{ false };
+			bool												m_Flightmode{ false };
+			bool												m_Ready_Start{ true };
+			bool												m_ReturnStand{ false };
 
-			const auto GetCharaDir(void) const noexcept {
+			CharaAnimeID										m_UpperAnimSelect, m_PrevUpperAnimSel;
+			CharaAnimeID										m_BottomAnimSelect;
+			//入力
+			bool												m_Press_GoFront{ false };
+			bool												m_Press_GoRear{ false };
+			bool												m_Press_GoLeft{ false };
+			bool												m_Press_GoRight{ false };
+			//体力
+			float												m_HeartRate{ HeartRateMin };//心拍数
+			float												m_HeartRate_r{ HeartRateMin };//心拍数
+			float												m_HeartRateRad{ 0.f };//呼吸Sin渡し
+			//表情
+			int													m_Eyeclose{ 0 };
+			float												m_EyeclosePer{ 0.f };
+			float												m_NeckPer{ 0.f };
+			//サウンド
+			int													m_CharaSound{ -1 };
+			SoundHandle											m_Breath;
+			bool												m_HeartSoundFlag{ false };
+		public://ゲッター
+			//
+			const auto		GetFrameLocalMat(CharaFrame frame) const noexcept { return this->m_obj.GetFrameLocalMatrix(Frames[(int)frame].first); }
+			const auto		GetParentFrameLocalMat(CharaFrame frame) const noexcept { return this->m_obj.GetFrameLocalMatrix((int)this->m_obj.frame_parent(Frames[(int)frame].first)); }
+			const auto		GetFrameWorldMat(CharaFrame frame) const noexcept { return this->m_obj.GetFrameLocalWorldMatrix(Frames[(int)frame].first); }
+			const auto		GetParentFrameWorldMat(CharaFrame frame) const noexcept { return this->m_obj.GetFrameLocalWorldMatrix((int)this->m_obj.frame_parent(Frames[(int)frame].first)); }
+			void			ResetFrameLocalMat(CharaFrame frame) noexcept { this->m_obj.frame_Reset(Frames[(int)frame].first); }
+			void			SetFrameLocalMat(CharaFrame frame, const MATRIX_ref&value) noexcept { this->m_obj.SetFrameLocalMatrix(Frames[(int)frame].first, value * Frames[(int)frame].second); }
+			void			SetShapePer(CharaShape pShape, float Per) noexcept { Shapes[(int)pShape].second = Per; }
+			const auto		GetAnime(CharaAnimeID anim) noexcept { return this->m_obj.get_anime((int)anim); }
+			//
+			const auto		GetPressFrontGround() const noexcept { return this->m_Press_GoFront && !this->m_Flightmode; }
+			const auto		GetPressRearGround() const noexcept { return this->m_Press_GoRear && !this->m_Flightmode; }
+			const auto		GetPressLeftGround() const noexcept { return this->m_Press_GoLeft && !this->m_Flightmode; }
+			const auto		GetPressRightGround() const noexcept { return this->m_Press_GoRight && !this->m_Flightmode; }
+			//
+			const auto		GetCharaDir(void) const noexcept {
 				if (!this->m_Flightmode) {
 					return this->m_UpperMatrix * this->m_move.mat;
 				}
@@ -67,33 +75,33 @@ namespace FPS_n2 {
 					return this->m_UpperMatrix * this->m_FlightMatrix;
 				}
 			}
-			const auto GetEyeVector(void) const noexcept { return GetCharaDir().zvec() * -1.f; }
-			const auto GetEyePosition(void) const noexcept { return (GetFrameWorldMat(CharaFrame::LeftEye).pos() + GetFrameWorldMat(CharaFrame::RightEye).pos()) / 2.f + this->GetEyeVector().Norm() * 0.5f; }
-			const auto& GetIsRun(void) const noexcept { return this->m_IsRun; }
-			const auto& GetHeartRate(void) const noexcept { return this->m_HeartRate; }
-			const auto& GetHeartRateRad(void) const noexcept { return this->m_HeartRateRad; }
-			const auto& GetFlightPer(void) const noexcept { return this->m_FlightPer; }
-		private: //
-			void SetVec(int pDir, bool Press) {
+			const auto		GetEyeVector(void) const noexcept { return GetCharaDir().zvec() * -1.f; }
+			const auto		GetEyePosition(void) const noexcept { return (GetFrameWorldMat(CharaFrame::LeftEye).pos() + GetFrameWorldMat(CharaFrame::RightEye).pos()) / 2.f + this->GetEyeVector().Norm() * 0.5f; }
+			const auto&		GetIsRun(void) const noexcept { return this->m_IsRun; }
+			const auto&		GetHeartRate(void) const noexcept { return this->m_HeartRate; }
+			const auto&		GetHeartRateRad(void) const noexcept { return this->m_HeartRateRad; }
+			const auto&		GetFlightPer(void) const noexcept { return this->m_FlightPer; }
+		private: //内部
+			void			SetVec(int pDir, bool Press) {
 				this->m_Vec[pDir] += (Press ? 1.f : -1.f)*2.f / FPS;
 				this->m_Vec[pDir] = std::clamp(this->m_Vec[pDir], 0.f, 1.f);
 			}
-		private: //
+		private: //更新関連
 			//以前の状態保持
-			void ExecuteSavePrev(void) noexcept {
-				this->PrevUpperAnimSel = this->UpperAnimSelect;
+			void			ExecuteSavePrev(void) noexcept {
+				this->m_PrevUpperAnimSel = this->m_UpperAnimSelect;
 				this->m_PrevRunPer2 = this->m_RunPer2;
 			}
 			//アニメ
-			void ExecuteAnim(void) noexcept {
+			void			ExecuteAnim(void) noexcept {
 				auto SE = SoundPool::Instance();
 				//アニメ演算
 				{
 					//上半身
 					{
-						UpperAnimSelect = CharaAnimeID::Upper_Normal;
+						this->m_UpperAnimSelect = CharaAnimeID::Upper_Normal;
 						if (this->m_IsRun) {
-							UpperAnimSelect = CharaAnimeID::Upper_Running;
+							this->m_UpperAnimSelect = CharaAnimeID::Upper_Running;
 						}
 						//首
 						Easing(&m_NeckPer, (true) ? 0.f : 1.f, 0.9f, EasingType::OutExpo);
@@ -101,13 +109,13 @@ namespace FPS_n2 {
 					//下半身
 					{
 						if (GetPressFrontGround()) {
-							BottomAnimSelect = (this->m_IsRun) ? CharaAnimeID::Bottom_Run : CharaAnimeID::Bottom_Walk;
+							this->m_BottomAnimSelect = (this->m_IsRun) ? CharaAnimeID::Bottom_Run : CharaAnimeID::Bottom_Walk;
 						}
 						else {
-							BottomAnimSelect = CharaAnimeID::Bottom_Stand;
-							if (GetPressLeftGround()) { BottomAnimSelect = CharaAnimeID::Bottom_LeftStep; }
-							if (GetPressRightGround()) { BottomAnimSelect = CharaAnimeID::Bottom_RightStep; }
-							if (GetPressRearGround()) { BottomAnimSelect = CharaAnimeID::Bottom_WalkBack; }
+							this->m_BottomAnimSelect = CharaAnimeID::Bottom_Stand;
+							if (GetPressLeftGround()) { this->m_BottomAnimSelect = CharaAnimeID::Bottom_LeftStep; }
+							if (GetPressRightGround()) { this->m_BottomAnimSelect = CharaAnimeID::Bottom_RightStep; }
+							if (GetPressRearGround()) { this->m_BottomAnimSelect = CharaAnimeID::Bottom_WalkBack; }
 						}
 					}
 					//
@@ -135,7 +143,7 @@ namespace FPS_n2 {
 							i == (int)CharaAnimeID::Upper_Running
 							)
 						{
-							this->m_AnimPerBuf[i] += ((i == (int)UpperAnimSelect) ? 1.f : -1.f)*3.f / FPS;
+							this->m_AnimPerBuf[i] += ((i == (int)this->m_UpperAnimSelect) ? 1.f : -1.f)*3.f / FPS;
 						}
 						//下半身
 						if (
@@ -148,7 +156,7 @@ namespace FPS_n2 {
 							i == (int)CharaAnimeID::Bottom_WalkBack
 							)
 						{
-							this->m_AnimPerBuf[i] += ((i == (int)BottomAnimSelect) ? 1.f : -1.f)*3.f / FPS;
+							this->m_AnimPerBuf[i] += ((i == (int)this->m_BottomAnimSelect) ? 1.f : -1.f)*3.f / FPS;
 						}
 						this->m_AnimPerBuf[i] = std::clamp(this->m_AnimPerBuf[i], 0.f, 1.f);
 						//反映
@@ -167,20 +175,20 @@ namespace FPS_n2 {
 				}
 				//足音
 				if (!this->m_Flightmode) {
-					if (BottomAnimSelect != CharaAnimeID::Bottom_Stand) {
-						auto Time = this->m_obj.get_anime((int)BottomAnimSelect).time;
-						if (BottomAnimSelect != CharaAnimeID::Bottom_Run) {
+					if (this->m_BottomAnimSelect != CharaAnimeID::Bottom_Stand) {
+						auto Time = this->m_obj.get_anime((int)this->m_BottomAnimSelect).time;
+						if (this->m_BottomAnimSelect != CharaAnimeID::Bottom_Run) {
 							//L
 							if ((9.f < Time && Time < 10.f)) {
-								if (charaSound != 1) {
-									charaSound = 1;
+								if (this->m_CharaSound != 1) {
+									this->m_CharaSound = 1;
 									SE->Get((int)SoundEnum::RunFoot).Play_3D(0, GetFrameWorldMat(CharaFrame::LeftFoot).pos(), 12.5f * 5.f);
 								}
 							}
 							//R
 							if ((27.f < Time &&Time < 28.f)) {
-								if (charaSound != 3) {
-									charaSound = 3;
+								if (this->m_CharaSound != 3) {
+									this->m_CharaSound = 3;
 									SE->Get((int)SoundEnum::RunFoot).Play_3D(0, GetFrameWorldMat(CharaFrame::RightFoot).pos(), 12.5f * 5.f);
 								}
 							}
@@ -191,8 +199,8 @@ namespace FPS_n2 {
 								(18.f < Time &&Time < 19.f) ||
 								(38.f < Time &&Time < 39.f)
 								) {
-								if (charaSound != 5) {
-									charaSound = 5;
+								if (this->m_CharaSound != 5) {
+									this->m_CharaSound = 5;
 									SE->Get((int)SoundEnum::RunFoot).Play_3D(0, GetFrameWorldMat(CharaFrame::LeftFoot).pos(), 12.5f * 5.f);
 								}
 							}
@@ -201,8 +209,8 @@ namespace FPS_n2 {
 								(8.f < Time &&Time < 9.f) ||
 								(28.f < Time &&Time < 29.f)
 								) {
-								if (charaSound != 6) {
-									charaSound = 6;
+								if (this->m_CharaSound != 6) {
+									this->m_CharaSound = 6;
 									SE->Get((int)SoundEnum::RunFoot).Play_3D(0, GetFrameWorldMat(CharaFrame::RightFoot).pos(), 12.5f * 5.f);
 								}
 							}
@@ -210,8 +218,8 @@ namespace FPS_n2 {
 						this->m_ReturnStand = true;
 					}
 					else if (this->m_ReturnStand) {
-						if (charaSound != 7) {
-							charaSound = 7;
+						if (this->m_CharaSound != 7) {
+							this->m_CharaSound = 7;
 							SE->Get((int)SoundEnum::SlideFoot).Play_3D(0, GetFrameWorldMat(CharaFrame::RightFoot).pos(), 12.5f * 5.f, (int)(192.f * this->m_RunPer2 / SpeedLimit));
 						}
 						this->m_ReturnStand = false;
@@ -220,7 +228,7 @@ namespace FPS_n2 {
 				//
 			}
 			//
-			void ExecuteHeartRate(void) noexcept {
+			void			ExecuteHeartRate(void) noexcept {
 				auto SE = SoundPool::Instance();
 				auto addRun = (this->m_RunPer2 - this->m_PrevRunPer2);
 				if (addRun > 0.f) {
@@ -249,13 +257,13 @@ namespace FPS_n2 {
 					(deg2rad(120) <= this->m_HeartRateRad && this->m_HeartRateRad <= deg2rad(130)) ||
 					(deg2rad(240) <= this->m_HeartRateRad && this->m_HeartRateRad <= deg2rad(250))
 					) {
-					if (!this->heartp) {
-						this->heartp = true;
+					if (!this->m_HeartSoundFlag) {
+						this->m_HeartSoundFlag = true;
 						SE->Get((int)SoundEnum::Heart).Play_3D(0, GetFrameWorldMat(CharaFrame::Upper2).pos(), 12.5f * 1.f);
 					}
 				}
 				else {
-					this->heartp = false;
+					this->m_HeartSoundFlag = false;
 				}
 			}
 		public: //コンストラクタ、デストラクタ
@@ -265,7 +273,7 @@ namespace FPS_n2 {
 			}
 			~CharacterClass(void) noexcept {}
 		public: //継承
-			void Init(void) noexcept override {
+			void			Init(void) noexcept override {
 				ObjectBaseClass::Init();
 				this->m_obj.get_anime((int)CharaAnimeID::Bottom_Stand).per=1.f;
 				//
@@ -275,7 +283,7 @@ namespace FPS_n2 {
 				this->m_Breath.vol(128);
 				Set3DPresetReverbParamSoundMem(DX_REVERB_PRESET_MOUNTAINS, this->m_Breath.get());
 			}
-			void Execute(void) noexcept override {
+			void			Execute(void) noexcept override {
 				if (this->m_IsFirstLoop) {
 					for (int i = 0; i < this->m_obj.get_anime().size(); i++) { this->m_obj.get_anime(i).per = 0.f; }
 					this->m_obj.work_anime();
@@ -403,8 +411,8 @@ namespace FPS_n2 {
 				}
 				//顔//スコープ内0.01ms
 				{
-					SetShape(CharaShape::None, 0.f);
-					SetShape(CharaShape::O, (0.75f + sin(this->m_HeartRateRad * 3)*0.25f)*(0.5f));
+					SetShapePer(CharaShape::None, 0.f);
+					SetShapePer(CharaShape::O, (0.75f + sin(this->m_HeartRateRad * 3)*0.25f)*(0.5f));
 					if (this->m_EyeclosePer <= 0.05f && (GetRand(100) == 0)) {
 						this->m_Eyeclose = 1;
 					}
@@ -412,14 +420,15 @@ namespace FPS_n2 {
 						this->m_Eyeclose = 0;
 					}
 					Easing(&this->m_EyeclosePer, (float)this->m_Eyeclose, 0.5f, EasingType::OutExpo);
-					SetShape(CharaShape::EYECLOSE, this->m_EyeclosePer);
+					SetShapePer(CharaShape::EYECLOSE, this->m_EyeclosePer);
 				}
 				//心拍数//0.00ms
 				ExecuteHeartRate();
 			}
-			//void Draw(void) noexcept override { ObjectBaseClass::Draw(); }
+			//void			Draw(void) noexcept override { ObjectBaseClass::Draw(); }
 		public:
-			void ValueSet(float pxRad, float pyRad, bool IsFlight, const VECTOR_ref& pPos) {
+			//
+			void			ValueSet(float pxRad, float pyRad, bool IsFlight, const VECTOR_ref& pPos) {
 				for (int i = 0; i < 4; i++) {
 					this->m_Vec[i] = 0.f;
 				}
@@ -432,8 +441,7 @@ namespace FPS_n2 {
 				this->m_RunPer2 = 0.f;
 				this->m_PrevRunPer2 = 0.f;
 				this->m_HeartRateRad = 0.f;
-				this->m_xrad_Add = 0.f;
-				this->m_yrad_Add = 0.f;
+				this->m_radAdd.clear();
 				this->m_TurnBody = false;
 				this->m_Press_GoFront = false;
 				this->m_Press_GoRear = false;
@@ -441,7 +449,7 @@ namespace FPS_n2 {
 				this->m_Press_GoRight = false;
 				this->m_Ready_Start = false;
 				this->m_IsRun = false;
-				this->heartp = false;
+				this->m_HeartSoundFlag = false;
 				//動作にかかわる操作
 				this->m_rad_Buf.x(pxRad);
 				this->m_rad_Buf.y(pyRad);
@@ -459,7 +467,8 @@ namespace FPS_n2 {
 				this->m_FradAdd;
 				SetMove(MATRIX_ref::RotY(this->m_yrad_Bottom), this->m_posBuf);
 			}
-			void SetInput(
+			//
+			void			SetInput(
 				float pAddxRad, float pAddyRad,
 				bool pGoFrontPress,
 				bool pGoBackPress,
@@ -497,15 +506,18 @@ namespace FPS_n2 {
 					auto limchange = Leap(1.f, powf(1.f - this->m_Vec[0], 0.5f), this->m_RunPer * 0.8f);
 					auto tmp2 = 0.2f * GetRandf(deg2rad(1.f));
 					auto tmp3 = 0.5f;
-
-					Easing(&this->m_xrad_Add, tmp2 + 0.0002f * sin(this->m_HeartRateRad) * powf(this->m_HeartRate / HeartRateMin, 3.f), 0.95f, EasingType::OutExpo);
-					Easing(&this->m_yrad_Add, tmp2 + 0.0002f * sin(this->m_HeartRateRad * 3) * powf(this->m_HeartRate / HeartRateMin, 3.f), 0.95f, EasingType::OutExpo);
+					VECTOR_ref tmpvec = VECTOR_ref::vget(
+						tmp2 + 0.0002f * sin(this->m_HeartRateRad) * powf(this->m_HeartRate / HeartRateMin, 3.f),
+						tmp2 + 0.0002f * sin(this->m_HeartRateRad * 3) * powf(this->m_HeartRate / HeartRateMin, 3.f),
+						0.f
+					);
+					Easing(&this->m_radAdd, tmpvec, 0.95f, EasingType::OutExpo);
 
 					auto prev = this->m_rad_Buf;
 					this->m_rad_Buf.x(std::clamp(this->m_rad_Buf.x() + pAddxRad, -deg2rad(40.f) * limchange, deg2rad(25.f) * limchange));
 					this->m_rad_Buf.yadd(pAddyRad);
-					this->m_rad_Buf.xadd(this->m_xrad_Add * tmp3);
-					this->m_rad_Buf.yadd(this->m_yrad_Add * tmp3);
+					this->m_rad_Buf.xadd(this->m_radAdd.x() * tmp3);
+					this->m_rad_Buf.yadd(this->m_radAdd.y() * tmp3);
 
 					this->m_rad_Buf = prev +(this->m_rad_Buf - prev)*(1.f - this->m_FlightPer);
 
@@ -518,7 +530,8 @@ namespace FPS_n2 {
 					Easing(&this->m_FradAdd, this->m_FradAdd_Buf, 0.95f, EasingType::OutExpo);
 				}
 			}
-			void SetEyeVec(const VECTOR_ref& camvec) noexcept {
+			//
+			void			SetEyeVec(const VECTOR_ref& camvec) noexcept {
 				this->m_obj.frame_Reset(this->Frames[(int)CharaFrame::Head].first);
 				auto v1 = (GetFrameWorldMat(CharaFrame::Head).GetRot() * GetCharaDir().Inverse()).zvec()*-1.f;
 				auto v2 = Leap(MATRIX_ref::Vtrans(camvec.Norm(), GetCharaDir().Inverse()), v1, m_NeckPer);

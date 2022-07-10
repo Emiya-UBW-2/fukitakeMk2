@@ -5,51 +5,59 @@ namespace FPS_n2 {
 	namespace Sceneclass {
 		class ObjectBaseClass {
 		protected:
-			MV1 m_obj;
-			MV1 col;
-			moves m_move;
-			const MV1* m_MapCol{ nullptr };
-			std::vector<std::pair<int, MATRIX_ref>> Frames;
-			std::vector< std::pair<int, float>> Shapes;
-			ObjType m_objType{ ObjType::Human };
-			std::string m_FilePath;
-			std::string m_ObjFileName;
-			std::string m_ColFileName;
-			bool m_IsActive{ true };
-			bool m_IsResetPhysics{ true };
-			bool m_IsFirstLoop{ true };
-			bool m_IsDraw{ true };
-			float m_DistanceToCam{ 0.f };
-			bool m_IsBaseModel{ false };
+			MV1											m_obj;
+			MV1											m_col;
+			moves										m_move;
+			const MV1*									m_MapCol{ nullptr };
+			std::vector<std::pair<int, MATRIX_ref>>		Frames;
+			std::vector<std::pair<int, float>>			Shapes;
+			ObjType										m_objType{ ObjType::Human };
+			std::string									m_FilePath;
+			std::string									m_ObjFileName;
+			std::string									m_ColFileName;
+			bool										m_IsActive{ true };
+			bool										m_IsResetPhysics{ true };
+			bool										m_IsFirstLoop{ true };
+			bool										m_IsDraw{ true };
+			float										m_DistanceToCam{ 0.f };
+			bool										m_IsBaseModel{ false };
 		public:
-			void SetActive(bool value) noexcept { this->m_IsActive = value; }
-			void SetMapCol(const MV1* MapCol) noexcept { this->m_MapCol = MapCol; }
-			void SetResetP(bool value) { this->m_IsResetPhysics = value; }
-			void SetShape(CharaShape pShape, float Per) noexcept { if (this->m_objType == ObjType::Human) { Shapes[(int)pShape].second = Per; } }
+			void			SetActive(bool value) noexcept { this->m_IsActive = value; }
+			void			SetMapCol(const MV1* MapCol) noexcept { this->m_MapCol = MapCol; }
+			void			SetResetP(bool value) { this->m_IsResetPhysics = value; }
+			const auto		GetMatrix(void) const noexcept { return this->m_obj.GetMatrix(); }
+			const auto		GetIsBaseModel(const char* filepath, const char* objfilename, const char* colfilename) const noexcept {
+				return (
+					this->m_IsBaseModel &&
+					(this->m_FilePath == filepath) &&
+					(this->m_ObjFileName == objfilename) &&
+					(this->m_ColFileName == colfilename));
+			}
+			const auto&		GetobjType(void) const noexcept { return this->m_objType; }
+			const auto&		GetCol(void) const noexcept { return this->m_col; }
 			//
-			const auto GetFrameLocalMat(CharaFrame frame) const noexcept { return this->m_obj.GetFrameLocalMatrix(Frames[(int)frame].first); }
-			const auto GetParentFrameLocalMat(CharaFrame frame) const noexcept { return this->m_obj.GetFrameLocalMatrix((int)this->m_obj.frame_parent(Frames[(int)frame].first)); }
-			const auto GetFrameWorldMat(CharaFrame frame) const noexcept { return this->m_obj.GetFrameLocalWorldMatrix(Frames[(int)frame].first); }
-			const auto GetParentFrameWorldMat(CharaFrame frame) const noexcept { return this->m_obj.GetFrameLocalWorldMatrix((int)this->m_obj.frame_parent(Frames[(int)frame].first)); }
-			void ResetFrameLocalMat(CharaFrame frame) noexcept { this->m_obj.frame_Reset(Frames[(int)frame].first); }
-			void SetFrameLocalMat(CharaFrame frame, const MATRIX_ref&value) noexcept { this->m_obj.SetFrameLocalMatrix(Frames[(int)frame].first, value * Frames[(int)frame].second); }
-			//
-			const auto GetMatrix(void) const noexcept { return this->m_obj.GetMatrix(); }
-			const auto& GetobjType(void) const noexcept { return this->m_objType; }
-			const auto* GetCol(void) const noexcept { return &this->col; }
-
-			const auto GetAnime(CharaAnimeID anim) noexcept { return this->m_obj.get_anime((int)anim); }
-
-			void SetAnimOnce(int ID, float speed) {
+			void			SetAnimOnce(int ID, float speed) {
 				this->m_obj.get_anime(ID).time += 30.f / FPS * speed;
 				if (this->m_obj.get_anime(ID).TimeEnd()) { this->m_obj.get_anime(ID).GoEnd(); }
 			}
-			void SetAnimLoop(int ID, float speed) {
+			void			SetAnimLoop(int ID, float speed) {
 				this->m_obj.get_anime(ID).time += 30.f / FPS * speed;
 				if (this->m_obj.get_anime(ID).TimeEnd()) { this->m_obj.get_anime(ID).GoStart(); }
 			}
+			void			SetMove(const MATRIX_ref& mat, const VECTOR_ref& pos) noexcept {
+				this->m_move.mat = mat;
+				this->m_move.pos = pos;
+				UpdateMove();
+			}
+			void			UpdateMove(void) noexcept {
+				this->m_obj.SetMatrix(this->m_move.MatIn());
+				if (this->m_col.IsActive()) {
+					this->m_col.SetMatrix(this->m_move.MatIn());
+					this->m_col.RefreshCollInfo();
+				}
+			}
 		public:
-			void LoadModel(const char* filepath, const char* objfilename = "model", const char* colfilename = "col") noexcept {
+			void			LoadModel(const char* filepath, const char* objfilename = "model", const char* colfilename = "col") noexcept {
 				this->m_FilePath = filepath;
 				this->m_ObjFileName = objfilename;
 				this->m_ColFileName = colfilename;
@@ -75,53 +83,46 @@ namespace FPS_n2 {
 					std::string Path = this->m_FilePath;
 					Path += this->m_ColFileName;
 					if (FileRead_findFirst((Path + ".mv1").c_str(), &FileInfo) != (DWORD_PTR)-1) {
-						MV1::Load(Path + ".pmx", &this->col, DX_LOADMODEL_PHYSICS_REALTIME);
-						//MV1::Load((Path + ".mv1").c_str(), &this->col, DX_LOADMODEL_PHYSICS_REALTIME);
+						MV1::Load(Path + ".pmx", &this->m_col, DX_LOADMODEL_PHYSICS_REALTIME);
+						//MV1::Load((Path + ".mv1").c_str(), &this->m_col, DX_LOADMODEL_PHYSICS_REALTIME);
 					}
 					else {
 						if (FileRead_findFirst((Path + ".pmx").c_str(), &FileInfo) != (DWORD_PTR)-1) {
-							MV1::Load(Path + ".pmx", &this->col, DX_LOADMODEL_PHYSICS_REALTIME);
+							MV1::Load(Path + ".pmx", &this->m_col, DX_LOADMODEL_PHYSICS_REALTIME);
 							MV1SetLoadModelUsePhysicsMode(DX_LOADMODEL_PHYSICS_REALTIME);
-							MV1SaveModelToMV1File(this->col.get(), (Path + ".mv1").c_str());
+							MV1SaveModelToMV1File(this->m_col.get(), (Path + ".mv1").c_str());
 							MV1SetLoadModelUsePhysicsMode(DX_LOADMODEL_PHYSICS_LOADCALC);
 						}
 						else {
 						}
 					}
 
-					this->col.SetupCollInfo(1, 1, 1);
+					this->m_col.SetupCollInfo(1, 1, 1);
 				}
 				this->m_IsBaseModel = true;
 			}
-			void CopyModel(std::shared_ptr<ObjectBaseClass>& pBase) noexcept {
+			void			CopyModel(std::shared_ptr<ObjectBaseClass>& pBase) noexcept {
 				this->m_FilePath = pBase->m_FilePath;
 				this->m_ObjFileName = pBase->m_ObjFileName;
 				this->m_ColFileName = pBase->m_ColFileName;
 				this->m_obj = pBase->m_obj.Duplicate();
 				MV1::SetAnime(&this->m_obj, pBase->m_obj);
 				//col
-				if(pBase->col.IsActive()){
-					this->col = pBase->col.Duplicate();
-					this->col.SetupCollInfo(1, 1, 1);
+				if(pBase->m_col.IsActive()){
+					this->m_col = pBase->m_col.Duplicate();
+					this->m_col.SetupCollInfo(1, 1, 1);
 				}
 				this->m_IsBaseModel = false;
 			}
-			const auto GetIsBaseModel(const char* filepath, const char* objfilename, const char* colfilename) const noexcept {
-				return (
-					this->m_IsBaseModel && 
-					(this->m_FilePath == filepath) && 
-					(this->m_ObjFileName == objfilename) &&
-					(this->m_ColFileName == colfilename) );
-			}
 			//
-			virtual void Init(void) noexcept {
+			virtual void	Init(void) noexcept {
 				this->m_IsActive = true;
 				this->m_IsResetPhysics = true;
 				this->m_IsFirstLoop = true;
 				this->m_IsDraw = false;
 			}
 			//
-			void SetFrameNum(void) noexcept {
+			void			SetFrameNum(void) noexcept {
 				int i = 0;
 				for (int f = 0; f < this->m_obj.frame_num(); f++) {
 					std::string FName = this->m_obj.frame_name(f);
@@ -159,8 +160,8 @@ namespace FPS_n2 {
 				}
 			}
 			//
-			virtual void Execute(void) noexcept { }
-			void ExecuteCommon(void) noexcept {
+			virtual void	Execute(void) noexcept { }
+			void			ExecuteCommon(void) noexcept {
 				//シェイプ更新
 				switch (this->m_objType) {
 				case ObjType::Human://human
@@ -183,13 +184,13 @@ namespace FPS_n2 {
 				this->m_IsFirstLoop = false;
 			}
 			//
-			virtual void Depth_Draw(void) noexcept { }
-			virtual void DrawShadow(void) noexcept {
+			virtual void	Depth_Draw(void) noexcept { }
+			virtual void	DrawShadow(void) noexcept {
 				if (this->m_IsActive) {
 					this->m_obj.DrawModel();
 				}
 			}
-			void CheckDraw(void) noexcept {
+			void			CheckDraw(void) noexcept {
 				this->m_IsDraw = false;
 				this->m_DistanceToCam = (m_obj.GetMatrix().pos() - GetCameraPosition()).size();
 				if (CheckCameraViewClip_Box(
@@ -199,7 +200,7 @@ namespace FPS_n2 {
 					this->m_IsDraw |= true;
 				}
 			}
-			virtual void Draw(void) noexcept {
+			virtual void	Draw(void) noexcept {
 				if (this->m_IsActive && this->m_IsDraw) {
 					if (CheckCameraViewClip_Box(
 						(m_obj.GetMatrix().pos() + VECTOR_ref::vget(-20, 0, -20)).get(),
@@ -210,23 +211,9 @@ namespace FPS_n2 {
 				}
 			}
 			//
-			virtual void Dispose(void) noexcept {
+			virtual void	Dispose(void) noexcept {
 				this->m_obj.Dispose();
 			}
-		public:
-			void SetMove(const MATRIX_ref& mat, const VECTOR_ref& pos) noexcept {
-				this->m_move.mat = mat;
-				this->m_move.pos = pos;
-				UpdateMove();
-			}
-			void UpdateMove(void) noexcept {
-				this->m_obj.SetMatrix(this->m_move.MatIn());
-				if (this->col.IsActive()) {
-					this->col.SetMatrix(this->m_move.MatIn());
-					this->col.RefreshCollInfo();
-				}
-			}
-			//
 		};
 	};
 };

@@ -39,5 +39,7 @@ using namespace DXLib_ref;
 #include "MainScene/Object/Circle.hpp"
 
 #include "ObjectManager.hpp"
+
+#include "MainScene/UI/MainSceneUIControl.hpp"
 //
 #include "Scene/MainScene.hpp"
