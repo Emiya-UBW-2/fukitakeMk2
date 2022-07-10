@@ -346,7 +346,7 @@ namespace FPS_n2 {
 						this->m_PrevRunPer2 = this->m_RunPer2;
 					}
 
-					auto OLDpos = this->m_posBuf;
+					auto OLDpos = this->m_PosBuf;
 					VECTOR_ref vecBuf = MATRIX_ref::Vtrans(VECTOR_ref::vget(this->m_Vec[1] - this->m_Vec[3], 0, this->m_Vec[2] - this->m_Vec[0]), MATRIX_ref::RotY(this->m_yrad_Upper));
 					this->m_MoveVector = std::clamp(vecBuf.size(), 0.f, 1.f);
 
@@ -359,11 +359,11 @@ namespace FPS_n2 {
 						this->m_move.vec.z(vecBuf.z());
 					}
 					{
-						auto HitResult = this->m_MapCol->CollCheck_Line(this->m_posBuf + VECTOR_ref::up() * -1.f, this->m_posBuf + VECTOR_ref::up() * 15.f);
+						auto HitResult = this->m_MapCol->CollCheck_Line(this->m_PosBuf + VECTOR_ref::up() * -1.f, this->m_PosBuf + VECTOR_ref::up() * 15.f);
 						if (HitResult.HitFlag == TRUE) {
-							auto yPos = this->m_posBuf.y();
+							auto yPos = this->m_PosBuf.y();
 							Easing(&yPos, HitResult.HitPosition.y, 0.8f, EasingType::OutExpo);
-							this->m_posBuf.y(yPos);
+							this->m_PosBuf.y(yPos);
 							if (this->m_move.vec.y() != 0.f) {
 								this->m_Flightmode = false;
 							}
@@ -378,19 +378,19 @@ namespace FPS_n2 {
 							}
 						}
 					}
-					this->m_posBuf += this->m_move.vec;
+					this->m_PosBuf += this->m_move.vec;
 
 					if (this->m_Flightmode) {
 
 						Easing(&this->m_FlightVecBuf, this->GetCharaDir().zvec() * -1.f * 3.f * 60.f / FPS, 0.95f, EasingType::OutExpo);
 
-						this->m_posBuf += this->m_FlightVecBuf;
+						this->m_PosBuf += this->m_FlightVecBuf;
 					}
 					else {
 						Easing(&this->m_FlightVecBuf, VECTOR_ref::zero(), 0.975f, EasingType::OutExpo);
 					}
 
-					col_wall(OLDpos, &this->m_posBuf, *this->m_MapCol);
+					col_wall(OLDpos, &this->m_PosBuf, *this->m_MapCol);
 					//this->m_move.mat = MATRIX_ref::RotZ(this->m_rad.z()) * MATRIX_ref::RotY(this->m_yrad_Bottom);
 					if (!this->m_Flightmode) {
 						Easing_Matrix(&this->m_move.mat, MATRIX_ref::RotZ(this->m_rad.z()) * MATRIX_ref::RotY(this->m_yrad_Bottom), 0.8f, EasingType::OutExpo);
@@ -403,7 +403,7 @@ namespace FPS_n2 {
 						Easing_Matrix(&this->m_move.mat, this->m_FlightMatrix, 0.8f, EasingType::OutExpo);
 					}
 
-					Easing(&this->m_move.pos, this->m_posBuf, 0.9f, EasingType::OutExpo);
+					Easing(&this->m_move.pos, this->m_PosBuf, 0.9f, EasingType::OutExpo);
 					UpdateMove();
 				}
 				{
@@ -454,7 +454,7 @@ namespace FPS_n2 {
 				this->m_rad_Buf.x(pxRad);
 				this->m_rad_Buf.y(pyRad);
 				this->m_Flightmode = IsFlight;
-				this->m_posBuf = pPos;
+				this->m_PosBuf = pPos;
 
 				this->m_FradAdd_Buf.clear();
 				this->m_FradAdd.clear();
@@ -465,7 +465,7 @@ namespace FPS_n2 {
 				this->m_move.vec.clear();
 				this->m_UpperMatrix = MATRIX_ref::RotX(this->m_rad.x()) * MATRIX_ref::RotY(this->m_rad.y() - this->m_yrad_Bottom);
 				this->m_FradAdd;
-				SetMove(MATRIX_ref::RotY(this->m_yrad_Bottom), this->m_posBuf);
+				SetMove(MATRIX_ref::RotY(this->m_yrad_Bottom), this->m_PosBuf);
 			}
 			//
 			void			SetInput(
