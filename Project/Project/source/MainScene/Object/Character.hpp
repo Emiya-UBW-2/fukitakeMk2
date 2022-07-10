@@ -10,7 +10,7 @@ namespace FPS_n2 {
 			const float HeartRateMin{ 60.f };//心拍数最小
 			const float HeartRateMax{ 180.f };//心拍数最大
 		private:
-			VECTOR_ref											m_posBuf;
+			VECTOR_ref											m_PosBuf;
 			MATRIX_ref											m_UpperMatrix;
 			//飛行関連
 			VECTOR_ref											m_FlightVecBuf;
