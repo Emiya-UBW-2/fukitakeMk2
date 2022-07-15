@@ -161,7 +161,7 @@ namespace FPS_n2 {
 				//êl
 				for (int i = 0; i < chara_num; i++) {
 					auto& c = (std::shared_ptr<CharacterClass>&)(this->Obj.GetObj(ObjType::Human, i));
-					c->SetGunPtr((std::shared_ptr<GunClass>&)(this->Obj.GetObj(ObjType::Gun, i)));
+					//c->SetGunPtr((std::shared_ptr<GunClass>&)(this->Obj.GetObj(ObjType::Gun, i)));
 					c->SetHoukiPtr((std::shared_ptr<HoukiClass>&)(this->Obj.GetObj(ObjType::Houki, i)));
 					c->ValueSet(deg2rad(0.f), deg2rad(-90.f), false, false, VECTOR_ref::vget(0.f, 0.f, -52.5f + (float)(i - 1)*20.f));
 				}
@@ -541,11 +541,11 @@ namespace FPS_n2 {
 						CamPos += 
 							Leap(
 								Leap((UpperMat.xvec()*-8.f + UpperMat.yvec()*3.f), (UpperMat.xvec()*-3.f + UpperMat.yvec()*4.f), EyeRunPer),
-								UpperMat.yvec()*4.f,
+								Leap(UpperMat.yvec()*4.f, UpperMat.yvec()*8.f, TPS_Per),
 								Chara->GetFlightPer()
 								);
 
-						camera_main.campos = Leap(CamPos + CamVec * Leap(-20.f, 2.f, EyePosPer_Prone), Chara->GetScopePos(), EyePosPer);
+						camera_main.campos = Leap(CamPos + CamVec * Leap(Leap(-20.f, 2.f, EyePosPer_Prone),-40.f, TPS_Per), Chara->GetScopePos(), EyePosPer);
 						camera_main.camvec = Leap(CamPos, Chara->GetScopePos(), EyePosPer) + CamVec * 100.f;
 
 						camera_main.camup = Leap(Chara->GetMatrix().GetRot().yvec(), VECTOR_ref::up(), TPS_Per);

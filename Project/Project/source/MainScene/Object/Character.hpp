@@ -257,7 +257,8 @@ namespace FPS_n2 {
 			float												m_yrad_Upper{ 0.f }, m_yrad_Bottom{ 0.f };
 			float												m_RunPer2{ 0.f }, m_PrevRunPer2{ 0.f };
 			float												m_NeckPer{ 0.f };
-			float m_SlingPer{ 0.f };
+			float m_SlingGunPer{ 0.f };
+			float m_SlingHoukiPer{ 0.f };
 			float m_PronePer2{ 0.f };
 			VECTOR_ref m_ProneNormal{ VECTOR_ref::up() };
 			bool												m_TurnBody{ false };
@@ -345,8 +346,8 @@ namespace FPS_n2 {
 			const auto		GetLensPosSize(void) noexcept { return (this->m_Gun_Ptr != nullptr) ? this->m_Gun_Ptr->GetLensPosSize() : VECTOR_ref::zero(); }
 			const auto		GetCanshot(void) const noexcept { return (this->m_Gun_Ptr != nullptr) ? (this->m_Gun_Ptr->GetCanshot() && (this->m_ShotPhase <= 1)) : false; }
 			const auto		GetIsEmpty(void) const noexcept { return (this->m_Gun_Ptr != nullptr) ? this->m_Gun_Ptr->GetIsEmpty() : false; }
-			const auto		GetAmmoNum(void) const noexcept { return this->m_Gun_Ptr->GetAmmoNum(); }
-			const auto		GetAmmoAll(void) const noexcept { return this->m_Gun_Ptr->GetAmmoAll(); }
+			const auto		GetAmmoNum(void) const noexcept { return (this->m_Gun_Ptr != nullptr) ? this->m_Gun_Ptr->GetAmmoNum() : 0; }
+			const auto		GetAmmoAll(void) const noexcept { return (this->m_Gun_Ptr != nullptr) ? this->m_Gun_Ptr->GetAmmoAll() : 0; }
 			const auto&		GetReticle(void) noexcept { return this->m_Gun_Ptr->GetReticle(); }
 			const auto&		GetScore(void) const noexcept { return this->m_Score; }
 			const auto		GetIsRun(void) const noexcept { return this->m_InputGround.GetRun(); }
@@ -428,6 +429,8 @@ namespace FPS_n2 {
 				}
 				//
 				Easing(&this->m_FlightPer, this->m_Flightmode ? 1.f : 0.f, 0.95f, EasingType::OutExpo);
+				this->m_SlingHoukiPer = 1.f - this->m_FlightPer;
+
 				Easing(&this->m_ReadyPer, (this->m_ReadyTimer < UpperTimerLimit) ? 1.f : 0.f, 0.9f, EasingType::OutExpo);
 				{
 					if (!GetIsProne() && (this->m_InputGround.GetPronePer() == 1.f)) {
@@ -487,8 +490,8 @@ namespace FPS_n2 {
 					//ã”¼g
 					{
 						this->m_UpperAnimSelect = (!this->m_KeyActive) ? CharaAnimeID::Upper_Ready : CharaAnimeID::Upper_Down;
-						if (!this->m_KeyActive) {
-							this->m_SlingPer = 1.f;
+						if (!this->m_KeyActive || this->m_Flightmode) {
+							this->m_SlingGunPer = 1.f;
 						}
 						if (this->m_ReadySwitch) {
 							this->m_RunReadyFirst = false;
@@ -500,19 +503,19 @@ namespace FPS_n2 {
 							canreverse = false;
 						}
 						if (this->m_RunReadyFirst) {
-							this->m_SlingPer = 0.f;
+							this->m_SlingGunPer = 0.f;
 							GetAnime(CharaAnimeID::Upper_RunningStart).GoStart();
 						}
 						if (this->m_RunReady) {
 							if (!this->m_Running) {
 								SetAnimOnce(CharaAnimeID::Upper_RunningStart, 2.f);
-								Easing(&this->m_SlingPer, (canreverse && (GetAnime(CharaAnimeID::Upper_RunningStart).time > 16)) ? 1.f : 0.f, 0.9f, EasingType::OutExpo);
+								Easing(&this->m_SlingGunPer, (canreverse && (GetAnime(CharaAnimeID::Upper_RunningStart).time > 16)) ? 1.f : 0.f, 0.9f, EasingType::OutExpo);
 								this->m_InputGround.GetSprintPer(0.f);
 								if (GetAnime(CharaAnimeID::Upper_RunningStart).TimeEnd()) {
 									this->m_Running = true;
 									GetAnime(CharaAnimeID::Upper_Running).GoStart();
 									if (canreverse) {
-										this->m_SlingPer = 1.f;
+										this->m_SlingGunPer = 1.f;
 									}
 								}
 								m_UpperAnimSelect = CharaAnimeID::Upper_RunningStart;
@@ -522,7 +525,7 @@ namespace FPS_n2 {
 							}
 						}
 						else {
-							Easing(&this->m_SlingPer, 0.f, 0.9f, EasingType::OutExpo);
+							Easing(&this->m_SlingGunPer, 0.f, 0.9f, EasingType::OutExpo);
 							this->m_Running = false;
 						}
 						if (this->m_ReadyTimer < UpperTimerLimit) {
@@ -642,6 +645,9 @@ namespace FPS_n2 {
 							|| GetAnimeBuf(CharaAnimeID::All_ProneWalk) > 0.1f
 							|| GetAnimeBuf(CharaAnimeID::All_PronetoStand) > 0.1f
 							|| GetAnimeBuf(CharaAnimeID::Upper_Ready) > 0.1f
+
+							|| GetAnimeBuf(CharaAnimeID::Upper_FlightNormal) > 0.1f
+
 							) ? 1.f : 0.f, 0.8f, EasingType::OutExpo);
 				}
 				//ƒAƒjƒƒZƒŒƒNƒg
@@ -675,6 +681,8 @@ namespace FPS_n2 {
 						GetAnimeBuf(m_PrevUpperAnimSel) = 0.f;
 						GetAnimeBuf(m_UpperAnimSelect) = 1.f;
 					}
+					GetAnimeBuf(CharaAnimeID::Upper_FlightNormal) = 1.f;
+					GetAnimeBuf(CharaAnimeID::Bottom_FlightNormal) = 1.f;
 
 					//^‚ñ’†
 					GetAnimeBuf(CharaAnimeID::Mid_Squat) = this->m_InputGround.GetSquatPer();
@@ -742,28 +750,28 @@ namespace FPS_n2 {
 
 							}
 							else {
-								GetAnime((CharaAnimeID)i).per = this->m_AnimPerBuf[i] * this->m_InputGround.GetPronePer();
+								GetAnime((CharaAnimeID)i).per = GetAnimeBuf((CharaAnimeID)i) * this->m_InputGround.GetPronePer();
 							}
 						}
 						else {
 							//’Êí
 							if (this->m_InputGround.GetPronetoStanding()) {
-								GetAnime((CharaAnimeID)i).per = this->m_AnimPerBuf[i] * (1.f - this->m_InputGround.GetPronePer()) * this->m_PronePer2;
+								GetAnime((CharaAnimeID)i).per = GetAnimeBuf((CharaAnimeID)i) * (1.f - this->m_InputGround.GetPronePer()) * this->m_PronePer2;
 							}
 							else {
-								GetAnime((CharaAnimeID)i).per = this->m_AnimPerBuf[i] * (1.f - this->m_InputGround.GetPronePer());
+								GetAnime((CharaAnimeID)i).per = GetAnimeBuf((CharaAnimeID)i) * (1.f - this->m_InputGround.GetPronePer());
 							}
 						}
-						/*
+						//*
 						//”½‰f
 						if (
-							i == (int)CharaAnimeID::Upper_Flight ||
-							i == (int)CharaAnimeID::Bottom_Flight
+							i == (int)CharaAnimeID::Bottom_FlightNormal ||
+							i == (int)CharaAnimeID::Upper_FlightNormal
 							) {
-							GetAnime((CharaAnimeID)i).per = GetAnimeBuf((CharaAnimeID)i) * this->m_FlightPer;
+							GetAnime((CharaAnimeID)i).per = GetAnime((CharaAnimeID)i).per * this->m_FlightPer;
 						}
 						else {
-							GetAnime((CharaAnimeID)i).per = GetAnimeBuf((CharaAnimeID)i) * (1.f - this->m_FlightPer);
+							GetAnime((CharaAnimeID)i).per = GetAnime((CharaAnimeID)i).per * (1.f - this->m_FlightPer);
 						}
 						//*/
 					}
@@ -975,9 +983,9 @@ namespace FPS_n2 {
 							GetFrameWorldMat(CharaFrame::Upper2).GetRot().yvec() * -1.75f +
 							GetFrameWorldMat(CharaFrame::Upper2).GetRot().zvec() * 1.75f;
 					}
-					auto yVec = Leap(yVec1, yVec2, this->m_SlingPer);
-					auto zVec = Leap(zVec1, zVec2, this->m_SlingPer);
-					auto PosBuf = Leap(Pos1, Pos2, this->m_SlingPer);
+					auto yVec = Leap(yVec1, yVec2, this->m_SlingGunPer);
+					auto zVec = Leap(zVec1, zVec2, this->m_SlingGunPer);
+					auto PosBuf = Leap(Pos1, Pos2, this->m_SlingGunPer);
 					auto tmp_gunrat = MATRIX_ref::RotVec2(VECTOR_ref::vget(0, 0, -1).Norm(), zVec);
 					tmp_gunrat *= MATRIX_ref::RotVec2(tmp_gunrat.yvec(), yVec);
 					tmp_gunrat *= GetCharaDir() * MATRIX_ref::Mtrans(PosBuf);
@@ -996,7 +1004,32 @@ namespace FPS_n2 {
 				}
 				//
 				if (this->m_Houki_Ptr != nullptr) {
-					this->m_Houki_Ptr->SetMove(this->m_move.mat, this->m_move.pos);
+					//Ž‚¿Žè’Tõ
+					VECTOR_ref yVec1, zVec1, Pos1;
+					{
+						auto mat = (this->m_move.mat*GetCharaDir().Inverse());
+						yVec1 = mat.yvec();
+						zVec1 = mat.zvec()*-1.f;
+						Pos1 = GetFrameWorldMat(CharaFrame::RightHandJoint).pos();
+					}
+					//”w•‰‚¢êŠ’Tõ
+					VECTOR_ref yVec2, zVec2, Pos2;
+					{
+						yVec2 = (MATRIX_ref::RotZ(deg2rad(30)) * GetFrameWorldMat(CharaFrame::Upper2).GetRot() * GetCharaDir().Inverse()).xvec();
+						zVec2 = (MATRIX_ref::RotZ(deg2rad(30)) * GetFrameWorldMat(CharaFrame::Upper2).GetRot() * GetCharaDir().Inverse()).yvec();
+						Pos2 =
+							GetFrameWorldMat(CharaFrame::Upper2).pos() +
+							GetFrameWorldMat(CharaFrame::Upper2).GetRot().yvec() * -1.75f +
+							GetFrameWorldMat(CharaFrame::Upper2).GetRot().zvec() * 1.75f;
+					}
+					auto yVec = Leap(yVec1, yVec2, this->m_SlingHoukiPer);
+					auto zVec = Leap(zVec1, zVec2, this->m_SlingHoukiPer);
+					auto PosBuf = Leap(Pos1, Pos2, this->m_SlingHoukiPer);
+					auto tmp_gunrat = MATRIX_ref::RotVec2(VECTOR_ref::vget(0, 0, -1).Norm(), zVec);
+					tmp_gunrat *= MATRIX_ref::RotVec2(tmp_gunrat.yvec(), yVec);
+					tmp_gunrat *= GetCharaDir() * MATRIX_ref::Mtrans(PosBuf);
+
+					this->m_Houki_Ptr->SetMove(tmp_gunrat.GetRot(), tmp_gunrat.pos());
 				}
 			}
 			//Šç																	//0.01ms

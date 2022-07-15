@@ -43,6 +43,9 @@ namespace FPS_n2 {
 			Upper_Ready,
 			Upper_Down,
 
+			Bottom_FlightNormal,
+			Upper_FlightNormal,
+
 			AnimeIDMax,
 		};
 		enum class CharaFrame {
