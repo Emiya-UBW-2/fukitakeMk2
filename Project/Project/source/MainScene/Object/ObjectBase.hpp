@@ -8,6 +8,7 @@ namespace FPS_n2 {
 			MV1											m_obj;
 			MV1											m_col;
 			moves										m_move;
+			MATRIX_ref									m_PrevMat;//物理更新のため
 			const MV1*									m_MapCol{ nullptr };
 			std::vector<std::pair<int, MATRIX_ref>>		Frames;
 			std::vector<std::pair<int, float>>			Shapes;
@@ -50,6 +51,7 @@ namespace FPS_n2 {
 				UpdateMove();
 			}
 			void			UpdateMove(void) noexcept {
+				this->m_PrevMat = this->m_obj.GetMatrix();
 				this->m_obj.SetMatrix(this->m_move.MatIn());
 				if (this->m_col.IsActive()) {
 					this->m_col.SetMatrix(this->m_move.MatIn());
@@ -57,7 +59,7 @@ namespace FPS_n2 {
 				}
 			}
 		public:
-			void			LoadModel(const char* filepath, const char* objfilename = "model", const char* colfilename = "col") noexcept {
+			void			LoadModel(const char* filepath, int PhysicsType, const char* objfilename = "model", const char* colfilename = "col") noexcept {
 				this->m_FilePath = filepath;
 				this->m_ObjFileName = objfilename;
 				this->m_ColFileName = colfilename;
@@ -67,12 +69,12 @@ namespace FPS_n2 {
 					std::string Path = this->m_FilePath;
 					Path += this->m_ObjFileName;
 					if (FileRead_findFirst((Path + ".mv1").c_str(), &FileInfo) != (DWORD_PTR)-1) {
-						//MV1::Load(Path + ".pmx", &this->m_obj, DX_LOADMODEL_PHYSICS_REALTIME);
-						MV1::Load((Path + ".mv1").c_str(), &this->m_obj, DX_LOADMODEL_PHYSICS_REALTIME);
+						//MV1::Load(Path + ".pmx", &this->m_obj, PhysicsType);
+						MV1::Load((Path + ".mv1").c_str(), &this->m_obj, PhysicsType);
 					}
 					else {
-						MV1::Load(Path + ".pmx", &this->m_obj, DX_LOADMODEL_PHYSICS_REALTIME);
-						MV1SetLoadModelUsePhysicsMode(DX_LOADMODEL_PHYSICS_REALTIME);
+						MV1::Load(Path + ".pmx", &this->m_obj, PhysicsType);
+						MV1SetLoadModelUsePhysicsMode(PhysicsType);
 						MV1SaveModelToMV1File(this->m_obj.get(), (Path + ".mv1").c_str());
 						MV1SetLoadModelUsePhysicsMode(DX_LOADMODEL_PHYSICS_LOADCALC);
 					}
@@ -188,6 +190,9 @@ namespace FPS_n2 {
 			//
 			virtual void	Execute(void) noexcept { }
 			void			ExecuteCommon(void) noexcept {
+				if (this->m_IsFirstLoop) {
+					this->m_PrevMat = this->m_obj.GetMatrix();
+				}
 				//シェイプ更新
 				switch (this->m_objType) {
 				case ObjType::Human://human
@@ -199,12 +204,22 @@ namespace FPS_n2 {
 					break;
 				}
 				//物理更新
-				if (this->m_IsResetPhysics) {
-					this->m_IsResetPhysics = false;
-					this->m_obj.PhysicsResetState();
-				}
-				else {
-					this->m_obj.PhysicsCalculation(1000.0f / FPS * 240.f);
+				{
+					if (this->m_IsResetPhysics) {
+						this->m_IsResetPhysics = false;
+						this->m_obj.PhysicsResetState();
+					}
+					else {
+						auto NowMat = this->m_obj.GetMatrix();
+						int Max = 2;
+						for (int i = 1; i <= Max; i++) {
+							this->m_obj.SetMatrix(
+								
+								Leap_Matrix(this->m_PrevMat.GetRot(), NowMat.GetRot(), (float)i / (float)Max)
+								* MATRIX_ref::Mtrans(Leap(this->m_PrevMat.pos(), NowMat.pos(), (float)i / (float)Max)));
+							this->m_obj.PhysicsCalculation(1000.0f / FPS * 60.f);
+						}
+					}
 				}
 				//最初のループ終わり
 				this->m_IsFirstLoop = false;

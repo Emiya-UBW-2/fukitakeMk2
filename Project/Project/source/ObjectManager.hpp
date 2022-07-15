@@ -9,39 +9,15 @@ namespace FPS_n2 {
 		public:
 			void AddObject(ObjType ModelType) {
 				switch (ModelType) {
-				case ObjType::Human://human
+				case ObjType::Human:
 					this->m_Object.resize(this->m_Object.size() + 1);
 					this->m_Object.back() = std::make_shared<CharacterClass>();
 					break;
-				case ObjType::Magazine://mag
-					this->m_Object.resize(this->m_Object.size() + 1);
-					this->m_Object.back() = std::make_shared<MagazineClass>();
-					break;
-				case ObjType::Gun://gun
-					this->m_Object.resize(this->m_Object.size() + 1);
-					this->m_Object.back() = std::make_shared<GunClass>();
-					break;
-				case ObjType::Target://human
-					this->m_Object.resize(this->m_Object.size() + 1);
-					this->m_Object.back() = std::make_shared<TargetClass>();
-					break;
-				case ObjType::Circle://human
+				case ObjType::Circle:
 					this->m_Object.resize(this->m_Object.size() + 1);
 					this->m_Object.back() = std::make_shared<CircleClass>();
 					break;
-				case ObjType::Gate://human
-					this->m_Object.resize(this->m_Object.size() + 1);
-					this->m_Object.back() = std::make_shared<GateClass>();
-					break;
-				case ObjType::ShootingMat://human
-					this->m_Object.resize(this->m_Object.size() + 1);
-					this->m_Object.back() = std::make_shared<ShootingMatClass>();
-					break;
-				case ObjType::Cart://human
-					this->m_Object.resize(this->m_Object.size() + 1);
-					this->m_Object.back() = std::make_shared<CartClass>();
-					break;
-				case ObjType::Houki://human
+				case ObjType::Houki:
 					this->m_Object.resize(this->m_Object.size() + 1);
 					this->m_Object.back() = std::make_shared<HoukiClass>();
 					break;
@@ -49,14 +25,14 @@ namespace FPS_n2 {
 					break;
 				}
 			}
-			void LoadObj(const char* filepath, const char* objfilename = "model", const char* colfilename = "col") {
+			void LoadObj(const char* filepath, int PhysicsType, const char* objfilename = "model", const char* colfilename = "col") {
 				for (auto& o : this->m_Object) {
 					if (o->GetIsBaseModel(filepath, objfilename, colfilename)) {
 						this->m_Object.back()->CopyModel(o);
 						return;
 					}
 				}
-				this->m_Object.back()->LoadModel(filepath, objfilename, colfilename);
+				this->m_Object.back()->LoadModel(filepath, PhysicsType, objfilename, colfilename);
 			}
 
 			auto& GetObj(ObjType ModelType, int num) {
