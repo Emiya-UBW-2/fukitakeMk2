@@ -196,7 +196,7 @@ namespace FPS_n2 {
 								(CheckHitKeyWithCheck(KEY_INPUT_S) != 0) && isready,
 								(CheckHitKeyWithCheck(KEY_INPUT_A) != 0) && isready,
 								(CheckHitKeyWithCheck(KEY_INPUT_D) != 0) && isready,
-								(CheckHitKeyWithCheck(KEY_INPUT_LSHIFT) != 0) && isready, 
+								(CheckHitKeyWithCheck(KEY_INPUT_LSHIFT) != 0) && isready,
 								(CheckHitKeyWithCheck(KEY_INPUT_Q) != 0) && isready,
 								(CheckHitKeyWithCheck(KEY_INPUT_E) != 0) && isready,
 								(CheckHitKeyWithCheck(KEY_INPUT_SPACE) != 0) && isready
@@ -233,25 +233,26 @@ namespace FPS_n2 {
 						camera_main.camup = Chara->GetMatrix().GetRot().yvec();
 					}
 					else {
-						MATRIX_ref UpperMat = Chara->GetFrameWorldMat(CharaFrame::Upper).GetRot()*MATRIX_ref::RotY(TPS_YradR);
+						MATRIX_ref UpperMat = Chara->GetFrameWorldMat(CharaFrame::Upper).GetRot();
 						VECTOR_ref CamPos = Chara->GetMatrix().pos() + Chara->GetMatrix().yvec() * 14.f;
 
-						VECTOR_ref CamVec = MATRIX_ref::Vtrans(Chara->GetEyeVector(), MATRIX_ref::RotY(TPS_YradR));
+						VECTOR_ref CamVec;
 
-						CamVec = MATRIX_ref::Vtrans(CamVec, MATRIX_ref::RotAxis(UpperMat.xvec(), TPS_XradR));
+						CamVec = MATRIX_ref::Vtrans(Chara->GetEyeVector(), MATRIX_ref::RotAxis(Chara->GetMatrix().xvec(), TPS_XradR) * MATRIX_ref::RotAxis(Chara->GetMatrix().yvec(), TPS_YradR));
+
 						CamVec = Leap(Chara->GetEyeVector(), CamVec, TPS_Per);
 
-						CamPos += 
+						CamPos +=
 							Leap(
 								Leap((UpperMat.xvec()*-8.f + UpperMat.yvec()*3.f), (UpperMat.xvec()*-3.f + UpperMat.yvec()*4.f), EyeRunPer),
 								Leap(UpperMat.yvec()*4.f, UpperMat.yvec()*8.f, TPS_Per),
 								Chara->GetFlightPer()
-								);
+							);
 
-						camera_main.campos = CamPos + CamVec * Leap(-20.f, -40.f, TPS_Per);
+						camera_main.campos = CamPos + CamVec * Leap(Leap(-20.f, -30.f, Chara->GetFlightPer()), -40.f, TPS_Per);
 						camera_main.camvec = CamPos + CamVec * 100.f;
 
-						camera_main.camup = Leap(Chara->GetMatrix().GetRot().yvec(), VECTOR_ref::up(), TPS_Per);
+						camera_main.camup = Chara->GetMatrix().GetRot().yvec();
 					}
 					Easing(&EyeRunPer, Chara->GetIsRun() ? 1.f : 0.f, 0.95f, EasingType::OutExpo);
 
@@ -268,13 +269,12 @@ namespace FPS_n2 {
 				}
 				//UIパラメーター
 				{
-					UI_class.SetfloatParam(2, Chara->GetTurnRatePer());
-					UI_class.SetfloatParam(3, this->scoreBuf);
+					int minute = (int)((-this->m_ReadyTime) / 60.f);
+					UI_class.SetIntParam(0, minute);
+					UI_class.SetfloatParam(0, (-this->m_ReadyTime) - (float)minute*60.f);
 
+					UI_class.SetIntParam(1, (int)this->scoreBuf);
 					this->scoreBuf += std::clamp((Chara->GetScore() - this->scoreBuf)*100.f, -5.f, 5.f) / FPS;
-
-
-
 				}
 				TEMPSCENE::Update();
 				Effect_UseControl::Update_Effect();
