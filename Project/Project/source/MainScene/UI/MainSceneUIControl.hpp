@@ -16,17 +16,19 @@ namespace FPS_n2 {
 			}
 			void Draw(void) noexcept {
 				auto* DrawParts = DXDraw::Instance();
+				auto Green = GetColor(43, 163, 91);
+				auto White = GetColor(212, 255, 239);
 				//タイム,スコア
 				{
 					int xp1, yp1;
 					xp1 = y_r(10);
 					yp1 = y_r(10);
-					UI.Get(y_r(20)).Get_handle().DrawString(xp1, yp1, "TIME", GetColor(0, 255, 0));
-					UI.Get(y_r(20)).Get_handle().DrawStringFormat_RIGHT(xp1 + y_r(240), yp1, GetColor(0, 255, 0), "%d:%05.2f", intParam[0], floatParam[0]);
+					UI.Get(y_r(20)).Get_handle().DrawString(xp1, yp1, "TIME", Green, White);
+					UI.Get(y_r(20)).Get_handle().DrawStringFormat_RIGHT(xp1 + y_r(240), yp1, Green, White, "%d:%05.2f", intParam[0], floatParam[0]);
 
 					yp1 += y_r(25);
-					UI.Get(y_r(20)).Get_handle().DrawString(xp1, yp1, "SCORE", GetColor(0, 255, 0));
-					UI.Get(y_r(20)).Get_handle().DrawStringFormat_RIGHT(xp1 + y_r(240), yp1, GetColor(0, 255, 0), "%d", intParam[1]);
+					UI.Get(y_r(20)).Get_handle().DrawString(xp1, yp1, "SCORE", Green, White);
+					UI.Get(y_r(20)).Get_handle().DrawStringFormat_RIGHT(xp1 + y_r(240), yp1, Green, White, "%d", intParam[1]);
 				}
 				//アイテム
 				{
@@ -68,8 +70,9 @@ namespace FPS_n2 {
 					ys1 = y_r(256) / 2;
 					xp1 = DrawParts->disp_x - y_r(80) - xs1;
 					yp1 = DrawParts->disp_y - y_r(300) - ys1;
-					DrawBox((int)(xp1 - xs1), (int)(yp1 - ys1), (int)(xp1 + xs1), (int)(yp1 + ys1), GetColor(0, 255, 0), FALSE);
-					DrawBox((int)(xp1 - xs1) + 2, (int)(yp1 - ys1) + 2, (int)(xp1 + xs1) - 2, (int)(yp1 + ys1) - 2, GetColor(0, 255, 0), FALSE);
+					DrawBox((int)(xp1 - xs1), (int)(yp1 - ys1), (int)(xp1 + xs1), (int)(yp1 + ys1), Green, FALSE);
+					DrawBox((int)(xp1 - xs1) + 1, (int)(yp1 - ys1) + 1, (int)(xp1 + xs1) - 1, (int)(yp1 + ys1) - 1, GetColor(0,0,0), FALSE);
+					DrawBox((int)(xp1 - xs1) + 2, (int)(yp1 - ys1) + 2, (int)(xp1 + xs1) - 2, (int)(yp1 + ys1) - 2, Green, FALSE);
 				}
 				//情報
 				{
@@ -81,23 +84,24 @@ namespace FPS_n2 {
 						xp1 = DrawParts->disp_x - y_r(300);
 						yp1 = DrawParts->disp_y - y_r(30) - ys1 * Num - y_r(90);
 
-						UI.Get(y_r(20)).Get_handle().DrawStringFormat(xp1 + y_r(50), yp1, GetColor(0, 255, 0), "%s", "Name");
+						UI.Get(y_r(20)).Get_handle().DrawStringFormat(xp1 + y_r(50), yp1, Green, White, "%s", "Name");
 
 						yp1 += y_r(25);
-						UI.Get(y_r(20)).Get_handle().DrawString(xp1, yp1, "HP", GetColor(0, 255, 0));
-						UI.Get(y_r(20)).Get_handle().DrawStringFormat(xp1 + y_r(50), yp1, GetColor(0, 255, 0), "%03d / %03d", 100, 100);
+						UI.Get(y_r(20)).Get_handle().DrawString(xp1, yp1, "HP", Green, White);
+						UI.Get(y_r(20)).Get_handle().DrawStringFormat(xp1 + y_r(50), yp1, Green, White, "%03d / %03d", 100, 100);
 
 						yp1 += y_r(25);
-						UI.Get(y_r(20)).Get_handle().DrawString(xp1, yp1, "MP", GetColor(0, 255, 0));
-						UI.Get(y_r(20)).Get_handle().DrawStringFormat(xp1 + y_r(50), yp1, GetColor(0, 255, 0), "%03d / %03d", 100, 100);
+						UI.Get(y_r(20)).Get_handle().DrawString(xp1, yp1, "MP", Green, White);
+						UI.Get(y_r(20)).Get_handle().DrawStringFormat(xp1 + y_r(50), yp1, Green, White, "%03d / %03d", 100, 100);
 					}
 					//魔法、クールタイム
 					{
 						xp1 = DrawParts->disp_x - y_r(300);
 						yp1 = DrawParts->disp_y - y_r(30) - ys1 * Num;
 						for (int s = 0; s < Num; s++) {
-							UI.Get(y_r(20)).Get_handle().DrawStringFormat(xp1, yp1, GetColor(0, 255, 0), "%s", "MAGIC");
-							DrawBox(xp1 + y_r(100), yp1 + y_r(2), xp1 + y_r(100) + y_r(160), yp1 + y_r(2) + y_r(12), GetColor(255, 255, 255), TRUE);
+							UI.Get(y_r(20)).Get_handle().DrawStringFormat(xp1, yp1, Green, White, "%s", "MAGIC");
+							DrawBox(xp1 + y_r(100), yp1 + y_r(2), xp1 + y_r(100) + y_r(160), yp1 + y_r(2) + y_r(12), White, TRUE);
+							DrawBox(xp1 + y_r(100) + 2, yp1 + y_r(2) + 2, xp1 + y_r(100) + y_r(160) - 2, yp1 + y_r(2) + y_r(12) - 2, GetColor(255, 255, 0), TRUE);
 							yp1 += ys1;
 						}
 					}

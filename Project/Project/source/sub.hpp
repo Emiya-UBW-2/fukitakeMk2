@@ -25,6 +25,8 @@ namespace FPS_n2 {
 		bool m_QPress;
 		bool m_EPress;
 		bool m_GoFlight;
+		bool m_Press_Accel{ false };
+		bool m_Press_Brake{ false };
 	public:
 		void			SetInput(
 			float pAddxRad, float pAddyRad,
@@ -36,7 +38,9 @@ namespace FPS_n2 {
 			bool pRunPress,
 			bool pQPress,
 			bool pEPress,
-			bool pGoFlight
+			bool pGoFlight,
+			bool pPress_Accel,
+			bool pPress_Brake
 		) {
 			this->m_AddxRad = pAddxRad;
 			this->m_AddyRad = pAddyRad;
@@ -48,6 +52,8 @@ namespace FPS_n2 {
 			this->m_QPress = pQPress;
 			this->m_EPress = pEPress;
 			this->m_GoFlight = pGoFlight;
+			this->m_Press_Accel = pPress_Accel;
+			this->m_Press_Brake = pPress_Brake;
 		}
 	};
 
@@ -63,7 +69,7 @@ namespace FPS_n2 {
 			const auto& Get_handle(void)const noexcept { return handle; }
 			void Set(int siz_t) noexcept {
 				this->size = siz_t;
-				this->handle = FontHandle::Create("x14y24pxHeadUpDaisy", siz_t, DX_FONTTYPE_EDGE, -1, 2);
+				this->handle = FontHandle::Create("x14y24pxHeadUpDaisy", siz_t, DX_FONTTYPE_EDGE, -1, 1);
 			}
 		};
 	private:

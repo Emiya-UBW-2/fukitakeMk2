@@ -199,7 +199,9 @@ namespace FPS_n2 {
 								(CheckHitKeyWithCheck(KEY_INPUT_LSHIFT) != 0) && isready,
 								(CheckHitKeyWithCheck(KEY_INPUT_Q) != 0) && isready,
 								(CheckHitKeyWithCheck(KEY_INPUT_E) != 0) && isready,
-								(CheckHitKeyWithCheck(KEY_INPUT_SPACE) != 0) && isready
+								(CheckHitKeyWithCheck(KEY_INPUT_SPACE) != 0) && isready,
+								(CheckHitKeyWithCheck(KEY_INPUT_R) != 0) && isready,
+								(CheckHitKeyWithCheck(KEY_INPUT_F) != 0) && isready
 							);
 							Chara->SetInput(Input, isready);
 							continue;
@@ -208,6 +210,8 @@ namespace FPS_n2 {
 						Input.SetInput(
 							0.f,
 							0.f,
+							(false) && isready,
+							(false) && isready,
 							(false) && isready,
 							(false) && isready,
 							(false) && isready,

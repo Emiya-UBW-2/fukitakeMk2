@@ -186,6 +186,8 @@ namespace FPS_n2 {
 			bool												m_Press_GoRight{ false };
 			switchs												m_QKey;
 			switchs												m_EKey;
+			bool												m_Press_Accel{ false };
+			bool												m_Press_Brake{ false };
 			float												m_FlightPer{ 0.f };
 			VECTOR_ref											m_FradAdd_Buf, m_FradAdd;
 		private: //内部
@@ -206,6 +208,9 @@ namespace FPS_n2 {
 			const auto		GetPressRight() const noexcept { return this->m_Press_GoRight; }
 			const auto		GetFlightPer() const noexcept { return this->m_FlightPer; }
 			const auto		GetFradAdd() const noexcept { return this->m_FradAdd; }
+
+			const auto		GetPressAccel() const noexcept { return this->m_Press_Accel; }
+			const auto		GetPressBrake() const noexcept { return this->m_Press_Brake; }
 		public:
 			void			ValueSet() {
 				this->m_FradAdd_Buf.clear();
@@ -218,7 +223,9 @@ namespace FPS_n2 {
 				bool pGoRightPress,
 				bool pFlightMode,
 				bool pQPress,
-				bool pEPress
+				bool pEPress,
+				bool pPress_Accel,
+				bool pPress_Brake
 			) {
 				this->m_Flightmode = pFlightMode;
 
@@ -228,6 +235,8 @@ namespace FPS_n2 {
 				this->m_Press_GoRight = pGoRightPress;
 				m_QKey.GetInput(pQPress);
 				m_EKey.GetInput(pEPress);
+				this->m_Press_Accel = pPress_Accel;
+				this->m_Press_Brake = pPress_Brake;
 				if (m_EKey.trigger()) {
 				}
 				if (m_QKey.trigger()) {
@@ -258,6 +267,9 @@ namespace FPS_n2 {
 		private://キャラパラメーター
 			const float SpeedLimit{ 2.f };
 			const float UpperTimerLimit = 3.f;
+
+			const float FlightSpeedMin = 20.f;
+			const float FlightSpeedMax = 200.f;
 		private:
 			CharacterMoveGroundControl							m_InputGround;
 			CharacterMoveFlightControl							m_InputSky;
@@ -266,6 +278,10 @@ namespace FPS_n2 {
 			bool												m_Flightmode{ false };
 			VECTOR_ref											m_FlightVecBuf;
 			MATRIX_ref											m_FlightMatrix;
+
+			float												m_FlightSpeedAdd{ 0.f };
+			float												m_FlightSpeed_r{ 0.f };
+			float												m_FlightSpeed{ 0.f };
 			//
 			std::array<float, (int)CharaAnimeID::AnimeIDMax>	m_AnimPerBuf{ 0 };
 			VECTOR_ref											m_PosBuf;
@@ -596,8 +612,21 @@ namespace FPS_n2 {
 					}
 				}
 				this->m_PosBuf += this->m_move.vec;
+				//
+				if (m_InputSky.GetPressAccel()) {
+					this->m_FlightSpeedAdd = std::clamp(this->m_FlightSpeedAdd + 10.f / FPS, 0.f, 1.f);
+				}
+				else if (m_InputSky.GetPressBrake()) {
+					this->m_FlightSpeedAdd = std::clamp(this->m_FlightSpeedAdd - 10.f / FPS, -1.f, 0.f);
+				}
+				else {
+					Easing(&this->m_FlightSpeedAdd, 0.f, 0.95f, EasingType::OutExpo);
+				}
+				this->m_FlightSpeed_r = std::clamp(this->m_FlightSpeed_r + this->m_FlightSpeedAdd*60.f / FPS, FlightSpeedMin, FlightSpeedMax);
+				Easing(&this->m_FlightSpeed, this->m_FlightSpeed_r, 0.95f, EasingType::OutExpo);
+				//
 				if (this->m_Flightmode) {
-					Easing(&this->m_FlightVecBuf, (this->GetCharaDir().zvec() * -1.f) * 55.f * (12.5f / FPS), 0.95f, EasingType::OutExpo);
+					Easing(&this->m_FlightVecBuf, (this->GetCharaDir().zvec() * -1.f) * (this->m_FlightSpeed * 1000.f / 3600.f)* (12.5f / FPS), 0.95f, EasingType::OutExpo);
 				}
 				else {
 					Easing(&this->m_FlightVecBuf, VECTOR_ref::zero(), 0.975f, EasingType::OutExpo);
@@ -610,9 +639,11 @@ namespace FPS_n2 {
 					this->m_FlightMatrix = this->m_move.mat;
 				}
 				else {
-					this->m_FlightMatrix *= MATRIX_ref::RotAxis(this->m_move.mat.xvec(), this->m_InputSky.GetFradAdd().x());
-					this->m_FlightMatrix *= MATRIX_ref::RotAxis(this->m_move.mat.zvec(), this->m_InputSky.GetFradAdd().y());
-					this->m_FlightMatrix *= MATRIX_ref::RotAxis(this->m_move.mat.yvec(), this->m_InputSky.GetFradAdd().z());
+					float per = Leap(1.f, 0.5f, (this->m_FlightSpeed - FlightSpeedMin) / (FlightSpeedMax - FlightSpeedMin));
+
+					this->m_FlightMatrix *= MATRIX_ref::RotAxis(this->m_move.mat.xvec(), this->m_InputSky.GetFradAdd().x()*per);
+					this->m_FlightMatrix *= MATRIX_ref::RotAxis(this->m_move.mat.zvec(), this->m_InputSky.GetFradAdd().y()*per);
+					this->m_FlightMatrix *= MATRIX_ref::RotAxis(this->m_move.mat.yvec(), this->m_InputSky.GetFradAdd().z()*per);
 					Easing_Matrix(&this->m_move.mat, this->m_FlightMatrix, 0.8f, EasingType::OutExpo);
 				}
 				Easing(&this->m_move.pos, this->m_PosBuf, 0.9f, EasingType::OutExpo);
@@ -796,7 +827,9 @@ namespace FPS_n2 {
 					pInput.m_GoRightPress && this->m_Flightmode,
 					this->m_Flightmode,
 					pInput.m_QPress && this->m_Flightmode,
-					pInput.m_EPress && this->m_Flightmode
+					pInput.m_EPress && this->m_Flightmode,
+					pInput.m_Press_Accel && this->m_Flightmode,
+					pInput.m_Press_Brake && this->m_Flightmode
 				);
 				//地
 				m_InputGround.SetInput(
