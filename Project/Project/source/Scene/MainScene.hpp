@@ -271,6 +271,8 @@ namespace FPS_n2 {
 						Easing(&camera_main.far_, 12.5f * 300.f, 0.9f, EasingType::OutExpo);
 					}
 				}
+
+				this->BackGround.Execute();
 				//UIパラメーター
 				{
 					int minute = (int)((-this->m_ReadyTime) / 60.f);
@@ -279,6 +281,10 @@ namespace FPS_n2 {
 
 					UI_class.SetIntParam(1, (int)this->scoreBuf);
 					this->scoreBuf += std::clamp((Chara->GetScore() - this->scoreBuf)*100.f, -5.f, 5.f) / FPS;
+
+					UI_class.SetIntParam(1, Chara->GetFlightMode());
+					UI_class.SetfloatParam(1, Chara->GetFlightSpeed());
+					UI_class.SetfloatParam(2, Chara->GetMatrix().pos().y() / 12.5f);
 				}
 				TEMPSCENE::Update();
 				Effect_UseControl::Update_Effect();

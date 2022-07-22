@@ -54,6 +54,10 @@ namespace FPS_n2 {
 				Easing(&xbuf, x, 0.9f, EasingType::OutExpo);
 				this->m_rad_Buf.x(xbuf);
 			}
+			void			SetRadBufY(float y) noexcept {
+				this->m_rad_Buf.y(y);
+				this->m_rad.y(y);
+			}
 			void			SetRadBufZ(float z) noexcept {
 				auto zbuf = this->m_rad_Buf.z();
 				Easing(&zbuf, z, 0.9f, EasingType::OutExpo);
@@ -88,15 +92,16 @@ namespace FPS_n2 {
 				bool pGoLeftPress,
 				bool pGoRightPress,
 				bool pRunPress,
+				bool pFlightMode,
 				bool pQPress,
 				bool pEPress
 			) {
-				this->m_Press_GoFront = pGoFrontPress;
-				this->m_Press_GoRear = pGoBackPress;
-				this->m_Press_GoLeft = pGoLeftPress;
-				this->m_Press_GoRight = pGoRightPress;
+				this->m_Press_GoFront = pGoFrontPress && !pFlightMode;
+				this->m_Press_GoRear = pGoBackPress && !pFlightMode;
+				this->m_Press_GoLeft = pGoLeftPress && !pFlightMode;
+				this->m_Press_GoRight = pGoRightPress && !pFlightMode;
 
-				if (!this->m_IsRun && pRunPress) {
+				if (!this->m_IsRun && (pRunPress && !pFlightMode)) {
 					this->m_RunTimer = 1.f;
 				}
 				if (this->m_RunTimer > 0.f) {
@@ -106,15 +111,15 @@ namespace FPS_n2 {
 				}
 				else {
 					this->m_RunTimer = 0.f;
-					this->m_IsRun = pRunPress;
+					this->m_IsRun = pRunPress && !pFlightMode;
 				}
 				if (GetPressRear() || (!GetPressFront() && (GetPressLeft() || GetPressRight()))) {
 					this->m_IsRun = false;
 				}
 				this->m_IsSprint = this->m_IsRun && (!GetPressFront() && !GetPressRear());
 				{
-					m_QKey.GetInput(pQPress);
-					m_EKey.GetInput(pEPress);
+					m_QKey.GetInput(pQPress && !pFlightMode);
+					m_EKey.GetInput(pEPress && !pFlightMode);
 					if (m_EKey.trigger()) {
 						if (this->m_TurnRate > -1) {
 							this->m_TurnRate--;
@@ -178,8 +183,9 @@ namespace FPS_n2 {
 		};
 		class CharacterMoveFlightControl {
 		private:
-			std::array<float, 6>								m_Vec{ 0,0,0,0,0,0 };
+			std::array<float, 7>								m_Vec{ 0,0,0,0,0,0,0 };
 			bool												m_Flightmode{ false };
+			bool												m_Press_Flight{ false };
 			bool												m_Press_GoFront{ false };
 			bool												m_Press_GoRear{ false };
 			bool												m_Press_GoLeft{ false };
@@ -190,6 +196,7 @@ namespace FPS_n2 {
 			bool												m_Press_Brake{ false };
 			float												m_FlightPer{ 0.f };
 			VECTOR_ref											m_FradAdd_Buf, m_FradAdd;
+			float												m_PressFlightTime{ 0.f };
 		private: //内部
 			void			SetVec(int pDir, bool Press) {
 				this->m_Vec[pDir] += (Press ? 1.f : -1.f)*2.f / FPS;
@@ -202,6 +209,7 @@ namespace FPS_n2 {
 			const auto		GetVecRight() const noexcept { return this->m_Vec[3]; }
 			const auto		GetVecLeftYaw() const noexcept { return this->m_Vec[4]; }
 			const auto		GetVecRightYaw() const noexcept { return this->m_Vec[5]; }
+			const auto		GetGoFlight() const noexcept { return this->m_Vec[6]; }
 			const auto		GetPressFront() const noexcept { return this->m_Press_GoFront; }
 			const auto		GetPressRear() const noexcept { return this->m_Press_GoRear; }
 			const auto		GetPressLeft() const noexcept { return this->m_Press_GoLeft; }
@@ -211,6 +219,10 @@ namespace FPS_n2 {
 
 			const auto		GetPressAccel() const noexcept { return this->m_Press_Accel; }
 			const auto		GetPressBrake() const noexcept { return this->m_Press_Brake; }
+
+			const auto		GetIsFlightMode() const noexcept { return this->m_Flightmode; }
+			void			SetIsFlightMode(bool value) noexcept { this->m_Flightmode = value; }
+
 		public:
 			void			ValueSet() {
 				this->m_FradAdd_Buf.clear();
@@ -227,16 +239,20 @@ namespace FPS_n2 {
 				bool pPress_Accel,
 				bool pPress_Brake
 			) {
-				this->m_Flightmode = pFlightMode;
+				if (this->m_PressFlightTime == 0.f && pFlightMode) {
+					this->m_PressFlightTime = 5.f;
+				}
+				this->m_Press_Flight = (this->m_PressFlightTime > (5.f - 1.f));
+				this->m_Flightmode |= this->m_Press_Flight;
 
-				this->m_Press_GoFront = pGoFrontPress;
-				this->m_Press_GoRear = pGoBackPress;
-				this->m_Press_GoLeft = pGoLeftPress;
-				this->m_Press_GoRight = pGoRightPress;
-				m_QKey.GetInput(pQPress);
-				m_EKey.GetInput(pEPress);
-				this->m_Press_Accel = pPress_Accel;
-				this->m_Press_Brake = pPress_Brake;
+				this->m_Press_GoFront = pGoFrontPress && this->m_Flightmode;
+				this->m_Press_GoRear = pGoBackPress && this->m_Flightmode;
+				this->m_Press_GoLeft = pGoLeftPress && this->m_Flightmode;
+				this->m_Press_GoRight = pGoRightPress && this->m_Flightmode;
+				m_QKey.GetInput(pQPress && this->m_Flightmode);
+				m_EKey.GetInput(pEPress && this->m_Flightmode);
+				this->m_Press_Accel = pPress_Accel && this->m_Flightmode;
+				this->m_Press_Brake = pPress_Brake && this->m_Flightmode;
 				if (m_EKey.trigger()) {
 				}
 				if (m_QKey.trigger()) {
@@ -252,7 +268,11 @@ namespace FPS_n2 {
 
 					SetVec(4, m_QKey.press());
 					SetVec(5, m_EKey.press());
+
+					SetVec(6, this->m_Press_Flight);
 				}
+				//
+				this->m_PressFlightTime = std::max(this->m_PressFlightTime - 1.f / FPS, 0.f);
 				//
 				Easing(&this->m_FlightPer, this->m_Flightmode ? 1.f : 0.f, 0.95f, EasingType::OutExpo);
 				//回転
@@ -275,13 +295,13 @@ namespace FPS_n2 {
 			CharacterMoveFlightControl							m_InputSky;
 			bool												m_KeyActive{ true };
 			//飛行関連
-			bool												m_Flightmode{ false };
 			VECTOR_ref											m_FlightVecBuf;
 			MATRIX_ref											m_FlightMatrix;
 
 			float												m_FlightSpeedAdd{ 0.f };
 			float												m_FlightSpeed_r{ 0.f };
 			float												m_FlightSpeed{ 0.f };
+			float												m_FlightReturn{ 0.f };
 			//
 			std::array<float, (int)CharaAnimeID::AnimeIDMax>	m_AnimPerBuf{ 0 };
 			VECTOR_ref											m_PosBuf;
@@ -301,7 +321,6 @@ namespace FPS_n2 {
 			CharaAnimeID										m_BottomAnimSelect;
 			MATRIX_ref											m_RightWristRot;
 			float												m_Score{ 0.f };			//スコア
-			float m_LeftHandPer{ 0.f };
 			//入力
 			bool m_Press_Shot{ false };
 			bool m_Press_Reload{ false };
@@ -312,8 +331,7 @@ namespace FPS_n2 {
 			float												m_EyeclosePer{ 0.f };
 			//サウンド
 			int													m_CharaSound{ -1 };
-			SoundHandle											m_Breath;
-			bool												m_HeartSoundFlag{ false };
+
 			std::shared_ptr<HoukiClass>							m_Houki_Ptr{ nullptr };			//箒
 		public://ゲッター
 			//
@@ -324,36 +342,24 @@ namespace FPS_n2 {
 			void			ResetFrameLocalMat(CharaFrame frame) noexcept { this->m_obj.frame_Reset(Frames[(int)frame].first); }
 			void			SetFrameLocalMat(CharaFrame frame, const MATRIX_ref&value) noexcept { this->m_obj.SetFrameLocalMatrix(Frames[(int)frame].first, value * Frames[(int)frame].second); }
 			void			SetShapePer(CharaShape pShape, float Per) noexcept { Shapes[(int)pShape].second = Per; }
-
 			auto&			GetAnimeBuf(CharaAnimeID anim) noexcept { return this->m_AnimPerBuf[(int)anim]; }
 			auto&			GetAnime(CharaAnimeID anim) noexcept { return this->m_obj.get_anime((int)anim); }
 			void			SetAnimOnce(CharaAnimeID ID, float speed) { ObjectBaseClass::SetAnimOnce((int)ID, speed); }
 			void			SetAnimLoop(CharaAnimeID ID, float speed) { ObjectBaseClass::SetAnimLoop((int)ID, speed); }
-
 			//
-			const auto		GetPressFrontGround() const noexcept { return this->m_InputGround.GetPressFront(); }
-			const auto		GetPressRearGround() const noexcept { return this->m_InputGround.GetPressRear(); }
-			const auto		GetPressLeftGround() const noexcept { return this->m_InputGround.GetPressLeft(); }
-			const auto		GetPressRightGround() const noexcept { return this->m_InputGround.GetPressRight(); }
 			const auto		GetIsRun(void) const noexcept { return this->m_InputGround.GetRun(); }
-			//
-			void SetHoukiPtr(std::shared_ptr<HoukiClass>& pHoukiPtr) noexcept { this->m_Houki_Ptr = pHoukiPtr; }
-			void AddScore(float value) noexcept { this->m_Score += value; }
-			void SetScore(float value) noexcept { this->m_Score = value; }
-			auto&			GetHoukiPtr(void) noexcept { return this->m_Houki_Ptr; }
-			const auto		GetCharaDir(void) const noexcept {
-				if (!this->m_Flightmode) {
-					return this->m_UpperMatrix * this->m_move.mat;
-				}
-				else {
-					return this->m_UpperMatrix * this->m_move.mat;
-				}
-			}
+			const auto		GetCharaDir(void) const noexcept { return this->m_UpperMatrix * this->m_move.mat; }
 			const auto		GetEyeVector(void) const noexcept { return GetCharaDir().zvec() * -1.f; }
 			const auto		GetEyePosition(void) const noexcept { return (GetFrameWorldMat(CharaFrame::LeftEye).pos() + GetFrameWorldMat(CharaFrame::RightEye).pos()) / 2.f + this->GetEyeVector().Norm() * 1.5f; }
-			const auto&		GetScore(void) const noexcept { return this->m_Score; }
-			const auto&		GetFlightPer(void) const noexcept { return this->m_InputSky.GetFlightPer(); }
 			const auto		GetTurnRatePer(void) const noexcept { return this->m_InputGround.GetTurnRatePer(); }
+			const auto&		GetScore(void) const noexcept { return this->m_Score; }
+			auto&			GetHoukiPtr(void) noexcept { return this->m_Houki_Ptr; }
+			const auto&		GetFlightPer(void) const noexcept { return this->m_InputSky.GetFlightPer(); }
+			const auto&		GetFlightMode(void) const noexcept { return this->m_InputSky.GetIsFlightMode(); }
+			const auto&		GetFlightSpeed(void) const noexcept { return this->m_FlightSpeed; }
+			void			SetHoukiPtr(std::shared_ptr<HoukiClass>& pHoukiPtr) noexcept { this->m_Houki_Ptr = pHoukiPtr; }
+			void			AddScore(float value) noexcept { this->m_Score += value; }
+			void			SetScore(float value) noexcept { this->m_Score = value; }
 		private: //更新関連
 			//以前の状態保持														//
 			void			ExecuteSavePrev(void) noexcept {
@@ -381,12 +387,12 @@ namespace FPS_n2 {
 				//
 				auto FrontP = this->m_InputGround.GetFrontP();
 				auto TmpRunPer = Leap(0.85f, 0.7f, this->m_InputGround.GetRunPer());
-				if (this->m_Flightmode) { TmpRunPer = 0.95f; }
-				if (this->m_TurnBody || (this->m_Speed > 0.1f) || this->m_Flightmode) { Easing(&this->m_yrad_Upper, this->m_InputGround.GetRad().y(), TmpRunPer, EasingType::OutExpo); }
+				if (m_InputSky.GetIsFlightMode()) { TmpRunPer = 0.95f; }
+				if (this->m_TurnBody || (this->m_Speed > 0.1f) || m_InputSky.GetIsFlightMode()) { Easing(&this->m_yrad_Upper, this->m_InputGround.GetRad().y(), TmpRunPer, EasingType::OutExpo); }
 				auto OLDP = this->m_yrad_Bottom;
 				Easing(&this->m_yrad_Bottom, this->m_yrad_Upper - FrontP, TmpRunPer, EasingType::OutExpo);
 
-				if (this->m_Flightmode) {
+				if (m_InputSky.GetIsFlightMode()) {
 					this->m_InputGround.SetRadBufX(0.f);
 				}
 				this->m_InputGround.SetRadBufZ((this->m_yrad_Bottom - OLDP) * 2.f);
@@ -439,14 +445,14 @@ namespace FPS_n2 {
 					}
 					//下半身
 					{
-						if (GetPressFrontGround()) {
+						if (this->m_InputGround.GetPressFront()) {
 							this->m_BottomAnimSelect = (this->m_InputGround.GetRun()) ? CharaAnimeID::Bottom_Run : CharaAnimeID::Bottom_Walk;
 						}
 						else {
 							this->m_BottomAnimSelect = CharaAnimeID::Bottom_Stand;
-							if (GetPressLeftGround()) { this->m_BottomAnimSelect = CharaAnimeID::Bottom_LeftStep; }
-							if (GetPressRightGround()) { this->m_BottomAnimSelect = CharaAnimeID::Bottom_RightStep; }
-							if (GetPressRearGround()) { this->m_BottomAnimSelect = CharaAnimeID::Bottom_WalkBack; }
+							if (this->m_InputGround.GetPressLeft()) { this->m_BottomAnimSelect = CharaAnimeID::Bottom_LeftStep; }
+							if (this->m_InputGround.GetPressRight()) { this->m_BottomAnimSelect = CharaAnimeID::Bottom_RightStep; }
+							if (this->m_InputGround.GetPressRear()) { this->m_BottomAnimSelect = CharaAnimeID::Bottom_WalkBack; }
 							if (this->m_InputGround.GetSprint()) { this->m_BottomAnimSelect = CharaAnimeID::Bottom_Run; }
 						}
 					}
@@ -459,14 +465,6 @@ namespace FPS_n2 {
 					SetAnimLoop(CharaAnimeID::Bottom_LeftStep, 1.15f * this->m_InputGround.GetVecLeft());
 					SetAnimLoop(CharaAnimeID::Bottom_WalkBack, 1.15f * this->m_InputGround.GetVecRear());
 					SetAnimLoop(CharaAnimeID::Bottom_RightStep, 1.15f * this->m_InputGround.GetVecRight());
-
-					Easing(&this->m_LeftHandPer,
-						(
-							GetAnimeBuf(CharaAnimeID::Upper_RunningStart) > 0.1f
-							|| GetAnimeBuf(CharaAnimeID::Upper_Running) > 0.5f
-							|| GetAnimeBuf(CharaAnimeID::Upper_Sprint) > 0.5f
-							|| GetAnimeBuf(CharaAnimeID::Upper_FlightNormal) > 0.1f
-							) ? 1.f : 0.f, 0.8f, EasingType::OutExpo);
 				}
 				//アニメセレクト
 				{
@@ -518,7 +516,7 @@ namespace FPS_n2 {
 					//
 				}
 				//足音
-				if (!this->m_Flightmode) {
+				if (!m_InputSky.GetIsFlightMode()) {
 					if (this->m_BottomAnimSelect != CharaAnimeID::Bottom_Stand) {
 						auto Time = GetAnime(this->m_BottomAnimSelect).time;
 						if (this->m_BottomAnimSelect != CharaAnimeID::Bottom_Run) {
@@ -598,48 +596,76 @@ namespace FPS_n2 {
 						Easing(&yPos, HitResult.HitPosition.y, 0.8f, EasingType::OutExpo);
 						this->m_PosBuf.y(yPos);
 						if (this->m_move.vec.y() != 0.f) {
-							this->m_Flightmode = false;
+							if (m_InputSky.GetIsFlightMode()) {
+								if (this->m_FlightReturn == 0.f) {
+									if (this->m_FlightSpeed_r <= FlightSpeedMin + (FlightSpeedMax - FlightSpeedMin) *0.3f) {
+										this->m_FlightReturn = 5.f;
+									}
+								}
+								//
+								VECTOR_ref cross = VECTOR_ref::front().cross(this->m_FlightMatrix.zvec());
+								float dotFront = VECTOR_ref::front().dot(this->m_FlightMatrix.zvec());
+								float dotUp = VECTOR_ref::up().dot(cross);
+								this->m_yrad_Upper = std::atan2f(cross.size()*(dotUp >= 0.f ? 1.f : -1.f), dotFront);
+								this->m_yrad_Bottom = this->m_yrad_Upper;
+								this->m_InputGround.SetRadBufY(this->m_yrad_Upper);
+							}
+							m_InputSky.SetIsFlightMode(false);
 						}
 						this->m_move.vec.y(0.f);
 					}
 					else {
-						if (!this->m_Flightmode) {
+						if (!m_InputSky.GetIsFlightMode()) {
 							this->m_move.vec.yadd(M_GR / (FPS * FPS));
 						}
 						else {
-							this->m_move.vec.y(0.01f);
+
+							if (this->m_FlightSpeed_r >= FlightSpeedMin) {
+								this->m_move.vec.y(0.01f);
+							}
+							else {
+								this->m_move.vec.yadd(M_GR / (FPS * FPS));
+							}
 						}
 					}
 				}
 				this->m_PosBuf += this->m_move.vec;
 				//
 				if (m_InputSky.GetPressAccel()) {
-					this->m_FlightSpeedAdd = std::clamp(this->m_FlightSpeedAdd + 10.f / FPS, 0.f, 1.f);
+					this->m_FlightSpeedAdd = std::clamp(this->m_FlightSpeedAdd + 0.1f / FPS, 0.f, 0.3f);
 				}
-				else if (m_InputSky.GetPressBrake()) {
-					this->m_FlightSpeedAdd = std::clamp(this->m_FlightSpeedAdd - 10.f / FPS, -1.f, 0.f);
+				else if (m_InputSky.GetPressBrake() && (this->m_FlightSpeed_r >= FlightSpeedMin)) {
+					this->m_FlightSpeedAdd = std::clamp(this->m_FlightSpeedAdd - 10.f / FPS, -0.75f, 0.f);
+				}
+				else {
+					float per = GetCharaDir().zvec().y();
+					Easing(&this->m_FlightSpeedAdd, (per>=0) ? (per*0.2f) : (per*0.05f), 0.95f, EasingType::OutExpo);
+				}
+				this->m_FlightSpeed_r = std::clamp(this->m_FlightSpeed_r + this->m_FlightSpeedAdd*60.f / FPS, 0.f, FlightSpeedMax);
+				Easing(&this->m_FlightSpeed, this->m_FlightSpeed_r, 0.95f, EasingType::OutExpo);
+				//
+				if (m_InputSky.GetIsFlightMode()) {
+					Easing(&this->m_FlightVecBuf,
+						((this->GetCharaDir().zvec() * -1.f) * (this->m_FlightSpeed * 1000.f / 3600.f)* (12.5f / FPS))
+						+ VECTOR_ref::up() * (this->m_FlightSpeed * 1000.f / 3600.f)* (m_InputSky.GetGoFlight()* (12.5f / FPS))
+						, 0.95f, EasingType::OutExpo);
 				}
 				else {
 					Easing(&this->m_FlightSpeedAdd, 0.f, 0.95f, EasingType::OutExpo);
-				}
-				this->m_FlightSpeed_r = std::clamp(this->m_FlightSpeed_r + this->m_FlightSpeedAdd*60.f / FPS, FlightSpeedMin, FlightSpeedMax);
-				Easing(&this->m_FlightSpeed, this->m_FlightSpeed_r, 0.95f, EasingType::OutExpo);
-				//
-				if (this->m_Flightmode) {
-					Easing(&this->m_FlightVecBuf, (this->GetCharaDir().zvec() * -1.f) * (this->m_FlightSpeed * 1000.f / 3600.f)* (12.5f / FPS), 0.95f, EasingType::OutExpo);
-				}
-				else {
+					this->m_FlightSpeed_r = FlightSpeedMin + 30.f;
+					Easing(&this->m_FlightSpeed, this->m_FlightSpeed_r, 0.95f, EasingType::OutExpo);
+
 					Easing(&this->m_FlightVecBuf, VECTOR_ref::zero(), 0.975f, EasingType::OutExpo);
 				}
 				this->m_PosBuf += this->m_FlightVecBuf;
 				col_wall(OLDpos, &this->m_PosBuf, *this->m_MapCol);
-				if (!this->m_Flightmode) {
+				if (!m_InputSky.GetIsFlightMode()) {
 					auto mat_tmp = MATRIX_ref::RotZ(this->m_InputGround.GetRad().z()) * MATRIX_ref::RotY(this->m_yrad_Bottom);
 					Easing_Matrix(&this->m_move.mat, mat_tmp, 0.8f, EasingType::OutExpo);
 					this->m_FlightMatrix = this->m_move.mat;
 				}
 				else {
-					float per = Leap(1.f, 0.5f, (this->m_FlightSpeed - FlightSpeedMin) / (FlightSpeedMax - FlightSpeedMin));
+					float per = Leap(1.f, 0.5f, this->m_FlightSpeed / (FlightSpeedMax - FlightSpeedMin));
 
 					this->m_FlightMatrix *= MATRIX_ref::RotAxis(this->m_move.mat.xvec(), this->m_InputSky.GetFradAdd().x()*per);
 					this->m_FlightMatrix *= MATRIX_ref::RotAxis(this->m_move.mat.zvec(), this->m_InputSky.GetFradAdd().y()*per);
@@ -698,74 +724,10 @@ namespace FPS_n2 {
 			}
 			~CharacterClass(void) noexcept {}
 		public: //継承
-			//
-			void move_LeftArm() noexcept {
-				auto matBase = GetFrameWorldMat(CharaFrame::Upper2).GetRot().Inverse();
-				//matBase = GetCharaDir().Inverse();
-				ResetFrameLocalMat(CharaFrame::LeftArm);
-				ResetFrameLocalMat(CharaFrame::LeftArm2);
-				ResetFrameLocalMat(CharaFrame::LeftWrist);
-				matBase = GetParentFrameWorldMat(CharaFrame::LeftArm).GetRot().Inverse();
-
-				//VECTOR_ref GunPos = this->m_Gun_Ptr->GetFrameWorldMat(GunFrame::LeftHandPos).pos();
-				//VECTOR_ref Gunyvec = this->m_Gun_Ptr->GetFrameWorldMat(GunFrame::LeftHandYvec).pos() - GunPos;
-				//VECTOR_ref Gunzvec = this->m_Gun_Ptr->GetFrameWorldMat(GunFrame::LeftHandZvec).pos() - GunPos;
-
-				VECTOR_ref GunPos = GetFrameWorldMat(CharaFrame::LeftWrist).pos();
-				VECTOR_ref Gunyvec = GetFrameWorldMat(CharaFrame::LeftWrist).yvec();
-				VECTOR_ref Gunzvec = GetFrameWorldMat(CharaFrame::LeftWrist).zvec();
-
-				moves HandAim;// = this->LEFTHAND.move;
-				HandAim.pos = Leap(GunPos, GetFrameWorldMat(CharaFrame::LeftWrist).pos(), this->m_LeftHandPer);
-				//基準
-				auto vec_a1 = MATRIX_ref::Vtrans((HandAim.pos - GetFrameWorldMat(CharaFrame::LeftArm).pos()).Norm(), matBase);//基準
-				auto vec_a1L1 = VECTOR_ref(VECTOR_ref::vget(0.f, -1.f, vec_a1.y() / -abs(vec_a1.z()))).Norm();//x=0とする
-				//vec_a1L1 = VECTOR_ref(VECTOR_ref::vget(0.f, -1.f, 0.f)).Norm();//x=0とする
-				float cos_t = GetCosFormula((GetFrameWorldMat(CharaFrame::LeftWrist).pos() - GetFrameWorldMat(CharaFrame::LeftArm2).pos()).size(), (GetFrameWorldMat(CharaFrame::LeftArm2).pos() - GetFrameWorldMat(CharaFrame::LeftArm).pos()).size(), (GetFrameWorldMat(CharaFrame::LeftArm).pos() - HandAim.pos).size());
-				auto vec_t = vec_a1 * cos_t + vec_a1L1 * std::sqrtf(1.f - cos_t * cos_t);
-				//上腕
-				SetFrameLocalMat(CharaFrame::LeftArm, MGetIdent());
-				MATRIX_ref a1_inv = MATRIX_ref::RotVec2(MATRIX_ref::Vtrans(GetFrameWorldMat(CharaFrame::LeftArm2).pos() - GetFrameWorldMat(CharaFrame::LeftArm).pos(), matBase), vec_t);
-				SetFrameLocalMat(CharaFrame::LeftArm, a1_inv);
-				//下腕
-				matBase = GetParentFrameWorldMat(CharaFrame::LeftArm2).GetRot().Inverse();
-				SetFrameLocalMat(CharaFrame::LeftArm2, MGetIdent());
-				MATRIX_ref a2_inv = MATRIX_ref::RotVec2(
-					MATRIX_ref::Vtrans(GetFrameWorldMat(CharaFrame::LeftWrist).pos() - GetFrameWorldMat(CharaFrame::LeftArm2).pos(), matBase),
-					MATRIX_ref::Vtrans(HandAim.pos - GetFrameWorldMat(CharaFrame::LeftArm2).pos(), matBase));
-				SetFrameLocalMat(CharaFrame::LeftArm2, a2_inv);
-				//手
-				matBase = GetParentFrameWorldMat(CharaFrame::LeftWrist).GetRot().Inverse();
-				MATRIX_ref mat1;
-				MATRIX_ref mat2 = GetFrameLocalMat(CharaFrame::LeftWrist);
-				{
-					auto Lmat = GetFrameLocalMat(CharaFrame::LeftWrist);
-					auto Wmat = GetFrameWorldMat(CharaFrame::LeftWrist);
-					auto zvec = MATRIX_ref::Vtrans(VECTOR_ref::vget(1, -1, 0), Wmat.GetRot());
-					auto yvec = MATRIX_ref::Vtrans(VECTOR_ref::vget(1, 1, 0), Wmat.GetRot());
-					mat1 = MATRIX_ref::RotVec2(
-						MATRIX_ref::Vtrans(zvec, matBase),
-						MATRIX_ref::Vtrans(Gunzvec, matBase));
-					SetFrameLocalMat(CharaFrame::LeftWrist, mat1);
-					mat1 = MATRIX_ref::RotVec2(
-						MATRIX_ref::Vtrans(yvec, matBase),
-						MATRIX_ref::Vtrans(Gunyvec, matBase)) * mat1;
-
-					mat1 = Lmat * mat1;
-				}
-				HandAim.mat = Leap_Matrix(mat1, mat2, this->m_LeftHandPer);
-				SetFrameLocalMat(CharaFrame::LeftWrist, HandAim.mat);
-			}
 			void			Init(void) noexcept override {
 				ObjectBaseClass::Init();
 				GetAnime(CharaAnimeID::Bottom_Stand).per=1.f;
 				GetAnime(CharaAnimeID::Upper_RunningStart).GoEnd();
-				//
-				SetCreate3DSoundFlag(TRUE);
-				this->m_Breath = SoundHandle::Load("data/Sound/SE/voice/WinningTicket/breath.wav");
-				SetCreate3DSoundFlag(FALSE);
-				this->m_Breath.vol(128);
-				Set3DPresetReverbParamSoundMem(DX_REVERB_PRESET_MOUNTAINS, this->m_Breath.get());
 			}
 			void			Execute(void) noexcept override {
 				//初回のみ更新する内容
@@ -791,7 +753,6 @@ namespace FPS_n2 {
 				this->m_Speed = 0.f;
 				this->m_RunPer2 = 0.f;
 				this->m_PrevRunPer2 = 0.f;
-				this->m_LeftHandPer = 0.f;
 				this->m_TurnBody = false;
 				this->m_RunReady = false;
 				this->m_Running = false;
@@ -799,7 +760,6 @@ namespace FPS_n2 {
 				this->m_Press_Reload = false;
 				this->m_Press_Aim = false;
 				this->m_KeyActive = false;
-				this->m_HeartSoundFlag = false;
 				//
 				this->m_Score = 0.f;
 				//動作にかかわる操作
@@ -818,30 +778,43 @@ namespace FPS_n2 {
 			void			SetInput(const InputControl& pInput, bool pReady) {
 				this->m_ReadySwitch = (this->m_KeyActive != pReady);
 				this->m_KeyActive = pReady;
+
+				bool pressFront = false;
+				bool pressFlight = false;
+
+				auto prev = this->m_FlightReturn;
+				this->m_FlightReturn = std::max(this->m_FlightReturn - 1.f / FPS, 0.f);
+				if (this->m_FlightReturn > 0.f) {
+					pressFront = true;
+				}
+				if (prev > 0 && this->m_FlightReturn == 0.f) {
+					pressFlight = true;
+				}
+
 				//空
-				this->m_Flightmode |= pInput.m_GoFlight && this->m_KeyActive;
 				m_InputSky.SetInput(
-					pInput.m_GoFrontPress && this->m_Flightmode,
-					pInput.m_GoBackPress && this->m_Flightmode,
-					pInput.m_GoLeftPress && this->m_Flightmode,
-					pInput.m_GoRightPress && this->m_Flightmode,
-					this->m_Flightmode,
-					pInput.m_QPress && this->m_Flightmode,
-					pInput.m_EPress && this->m_Flightmode,
-					pInput.m_Press_Accel && this->m_Flightmode,
-					pInput.m_Press_Brake && this->m_Flightmode
+					pInput.m_GoFrontPress,
+					pInput.m_GoBackPress,
+					pInput.m_GoLeftPress,
+					pInput.m_GoRightPress,
+					pInput.m_GoFlight || pressFlight,
+					pInput.m_QPress,
+					pInput.m_EPress,
+					pInput.m_Press_Accel,
+					pInput.m_Press_Brake
 				);
 				//地
 				m_InputGround.SetInput(
 					pInput.m_AddxRad*(1.f - GetFlightPer()), pInput.m_AddyRad*(1.f - GetFlightPer()),
 					VECTOR_ref::zero(),
-					pInput.m_GoFrontPress && !this->m_Flightmode,
-					pInput.m_GoBackPress && !this->m_Flightmode,
-					pInput.m_GoLeftPress && !this->m_Flightmode,
-					pInput.m_GoRightPress && !this->m_Flightmode,
-					pInput.m_RunPress && !this->m_Flightmode,
-					pInput.m_QPress && !this->m_Flightmode,
-					pInput.m_EPress && !this->m_Flightmode
+					pInput.m_GoFrontPress,
+					pInput.m_GoBackPress,
+					pInput.m_GoLeftPress,
+					pInput.m_GoRightPress,
+					pInput.m_RunPress || pressFront,
+					m_InputSky.GetIsFlightMode(),
+					pInput.m_QPress,
+					pInput.m_EPress
 				);
 				//
 				{

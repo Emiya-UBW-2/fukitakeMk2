@@ -35,29 +35,29 @@ namespace FPS_n2 {
 					float xp1, yp1;
 					float xs1, ys1;
 
-					xp1 = y_r(50);
-					yp1 = DrawParts->disp_y - y_r(100);
-					xs1 = y_r(80) / 2;
-					ys1 = y_r(100) / 2;
+					xp1 = (float)y_r(50);
+					yp1 = (float)DrawParts->disp_y - y_r(100);
+					xs1 = (float)y_r(80) / 2;
+					ys1 = (float)y_r(100) / 2;
 
 					DrawBox((int)(xp1 - xs1), (int)(yp1 - ys1), (int)(xp1 + xs1), (int)(yp1 + ys1), GetColor(0, 0, 0), TRUE);
 					float xp2, yp2;
 					float xs2, ys2;
 
-					xp2 = y_r(160);
-					yp2 = DrawParts->disp_y - y_r(130);
-					xs2 = y_r(120) / 2;
-					ys2 = y_r(160) / 2;
+					xp2 = (float)y_r(160);
+					yp2 = (float)DrawParts->disp_y - y_r(130);
+					xs2 = (float)y_r(120) / 2;
+					ys2 = (float)y_r(160) / 2;
 
 					DrawBox((int)(xp2 - xs2), (int)(yp2 - ys2), (int)(xp2 + xs2), (int)(yp2 + ys2), GetColor(0, 0, 0), TRUE);
 
 					float xp3, yp3;
 					float xs3, ys3;
 
-					xp3 = y_r(270);
-					yp3 = DrawParts->disp_y - y_r(100);
-					xs3 = y_r(80) / 2;
-					ys3 = y_r(100) / 2;
+					xp3 = (float)y_r(270);
+					yp3 = (float)DrawParts->disp_y - y_r(100);
+					xs3 = (float)y_r(80) / 2;
+					ys3 = (float)y_r(100) / 2;
 
 					DrawBox((int)(xp3 - xs3), (int)(yp3 - ys3), (int)(xp3 + xs3), (int)(yp3 + ys3), GetColor(0, 0, 0), TRUE);
 				}
@@ -105,6 +105,20 @@ namespace FPS_n2 {
 							yp1 += ys1;
 						}
 					}
+				}
+				//スピード
+				{
+					int xp1, yp1;
+					xp1 = DrawParts->disp_x / 2 - y_r(300);
+					yp1 = DrawParts->disp_y / 2 - y_r(10);
+					UI.Get(y_r(20)).Get_handle().DrawStringFormat_RIGHT(xp1, yp1, Green, White, "%06.2f km/h", floatParam[1]);
+				}
+				//高度
+				{
+					int xp1, yp1;
+					xp1 = DrawParts->disp_x / 2 + y_r(300);
+					yp1 = DrawParts->disp_y / 2 - y_r(10);
+					UI.Get(y_r(20)).Get_handle().DrawStringFormat(xp1, yp1, Green, White, "%07.2f m", floatParam[2]);
 				}
 			}
 

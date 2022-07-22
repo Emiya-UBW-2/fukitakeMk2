@@ -252,8 +252,9 @@ namespace FPS_n2 {
 
 									shader.Set_param(3.f*12.5f, 0, 0, 0);
 									shader.Draw_lamda([&] {
-										SetUseTextureToShader(1, DepthScreen.get());
+										SetUseTextureToShader(2, DepthScreen.get());
 										this->m_ScenesPtr->Main_Draw2();
+										SetUseTextureToShader(2, -1);
 									});
 								}
 								);
