@@ -233,7 +233,7 @@ namespace FPS_n2 {
 
 					if (FPSActive.on()) {
 						camera_main.campos = Chara->GetEyePosition();
-						camera_main.camvec = camera_main.campos + Chara->GetEyeVector();
+						camera_main.camvec = camera_main.campos + Chara->GetEyeVecMat().zvec() * -1.f;
 						camera_main.camup = Chara->GetMatrix().GetRot().yvec();
 					}
 					else {
@@ -242,9 +242,9 @@ namespace FPS_n2 {
 
 						VECTOR_ref CamVec;
 
-						CamVec = MATRIX_ref::Vtrans(Chara->GetEyeVector(), MATRIX_ref::RotAxis(Chara->GetMatrix().xvec(), TPS_XradR) * MATRIX_ref::RotAxis(Chara->GetMatrix().yvec(), TPS_YradR));
+						CamVec = MATRIX_ref::Vtrans(Chara->GetEyeVecMat().zvec() * -1.f, MATRIX_ref::RotAxis(Chara->GetMatrix().xvec(), TPS_XradR) * MATRIX_ref::RotAxis(Chara->GetMatrix().yvec(), TPS_YradR));
 
-						CamVec = Leap(Chara->GetEyeVector(), CamVec, TPS_Per);
+						CamVec = Leap(Chara->GetEyeVecMat().zvec() * -1.f, CamVec, TPS_Per);
 
 						CamPos +=
 							Leap(
@@ -253,10 +253,10 @@ namespace FPS_n2 {
 								Chara->GetFlightPer()
 							);
 
-						camera_main.campos = CamPos + CamVec * Leap(Leap(-20.f, -30.f, Chara->GetFlightPer()), -40.f, TPS_Per);
+						camera_main.campos = CamPos + CamVec * Leap(Leap(-20.f, -30.f - (Chara->GetFlightSpeed()/25.f), Chara->GetFlightPer()), -50.f, TPS_Per);
 						camera_main.camvec = CamPos + CamVec * 100.f;
 
-						camera_main.camup = Chara->GetMatrix().GetRot().yvec();
+						camera_main.camup = Chara->GetEyeVecMat().yvec();
 					}
 					Easing(&EyeRunPer, Chara->GetIsRun() ? 1.f : 0.f, 0.95f, EasingType::OutExpo);
 

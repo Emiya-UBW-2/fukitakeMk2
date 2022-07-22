@@ -297,7 +297,12 @@ namespace FPS_n2 {
 			//飛行関連
 			VECTOR_ref											m_FlightVecBuf;
 			MATRIX_ref											m_FlightMatrix;
-
+			VECTOR_ref											m_FlightKickReturnVecBuf;
+			VECTOR_ref											m_FlightKickReturnVec;
+			float												m_FlightKickReturnSpeed;
+			bool												m_FlightKickReturn{ false };
+			bool												m_FlightKickReturnAnimOne{ false };
+			bool												m_FlightKickReturnAnimLR{ false };
 			float												m_FlightSpeedAdd{ 0.f };
 			float												m_FlightSpeed_r{ 0.f };
 			float												m_FlightSpeed{ 0.f };
@@ -323,8 +328,6 @@ namespace FPS_n2 {
 			float												m_Score{ 0.f };			//スコア
 			//入力
 			bool m_Press_Shot{ false };
-			bool m_Press_Reload{ false };
-			bool m_Press_Aim{ false };
 			bool m_ReadySwitch{ false };
 			//表情
 			int													m_Eyeclose{ 0 };
@@ -343,14 +346,23 @@ namespace FPS_n2 {
 			void			SetFrameLocalMat(CharaFrame frame, const MATRIX_ref&value) noexcept { this->m_obj.SetFrameLocalMatrix(Frames[(int)frame].first, value * Frames[(int)frame].second); }
 			void			SetShapePer(CharaShape pShape, float Per) noexcept { Shapes[(int)pShape].second = Per; }
 			auto&			GetAnimeBuf(CharaAnimeID anim) noexcept { return this->m_AnimPerBuf[(int)anim]; }
-			auto&			GetAnime(CharaAnimeID anim) noexcept { return this->m_obj.get_anime((int)anim); }
+			auto&			GetAnime(CharaAnimeID anim) noexcept { return this->m_obj.get_anime((int)anim); }	
 			void			SetAnimOnce(CharaAnimeID ID, float speed) { ObjectBaseClass::SetAnimOnce((int)ID, speed); }
 			void			SetAnimLoop(CharaAnimeID ID, float speed) { ObjectBaseClass::SetAnimLoop((int)ID, speed); }
 			//
 			const auto		GetIsRun(void) const noexcept { return this->m_InputGround.GetRun(); }
 			const auto		GetCharaDir(void) const noexcept { return this->m_UpperMatrix * this->m_move.mat; }
-			const auto		GetEyeVector(void) const noexcept { return GetCharaDir().zvec() * -1.f; }
-			const auto		GetEyePosition(void) const noexcept { return (GetFrameWorldMat(CharaFrame::LeftEye).pos() + GetFrameWorldMat(CharaFrame::RightEye).pos()) / 2.f + this->GetEyeVector().Norm() * 1.5f; }
+			const auto		GetEyeVecMat(void) const noexcept {
+				MATRIX_ref Matrix;
+
+				float per = Leap(1.f, 0.5f, this->m_FlightSpeed / (FlightSpeedMax - FlightSpeedMin))*10.f;
+				Matrix *= MATRIX_ref::RotAxis(this->m_move.mat.xvec(), this->m_InputSky.GetFradAdd().x()*per);
+				Matrix *= MATRIX_ref::RotAxis(this->m_move.mat.zvec(), this->m_InputSky.GetFradAdd().y()*per);
+				Matrix *= MATRIX_ref::RotAxis(this->m_move.mat.yvec(), this->m_InputSky.GetFradAdd().z()*per);
+
+				return (GetCharaDir()*Matrix);
+			}
+			const auto		GetEyePosition(void) const noexcept { return (GetFrameWorldMat(CharaFrame::LeftEye).pos() + GetFrameWorldMat(CharaFrame::RightEye).pos()) / 2.f + this->GetEyeVecMat().zvec() * -1.5f; }
 			const auto		GetTurnRatePer(void) const noexcept { return this->m_InputGround.GetTurnRatePer(); }
 			const auto&		GetScore(void) const noexcept { return this->m_Score; }
 			auto&			GetHoukiPtr(void) noexcept { return this->m_Houki_Ptr; }
@@ -471,7 +483,33 @@ namespace FPS_n2 {
 					//上半身
 					GetAnimeBuf(CharaAnimeID::Upper_FlightNormal) = 1.f;
 					//下半身
-					GetAnimeBuf(CharaAnimeID::Bottom_FlightNormal) = 1.f;
+					if (!this->m_FlightKickReturnAnimOne) {
+						GetAnimeBuf(CharaAnimeID::Bottom_FlightNormal) = 1.f;
+
+						GetAnimeBuf(CharaAnimeID::Bottom_FlightKickLeft) = 0.f;
+						GetAnime(CharaAnimeID::Bottom_FlightKickLeft).GoStart();
+
+						GetAnimeBuf(CharaAnimeID::Bottom_FlightKickRight) = 0.f;
+						GetAnime(CharaAnimeID::Bottom_FlightKickRight).GoStart();
+					}
+					else {
+						GetAnimeBuf(CharaAnimeID::Bottom_FlightNormal) = 0.f;
+						if (this->m_FlightKickReturnAnimLR) {
+							GetAnimeBuf(CharaAnimeID::Bottom_FlightKickLeft) = 1.f;
+							SetAnimOnce(CharaAnimeID::Bottom_FlightKickLeft, 2.f);
+							if (GetAnime(CharaAnimeID::Bottom_FlightKickLeft).TimeEnd()) {
+								this->m_FlightKickReturnAnimOne = false;
+							}
+						}
+						else {
+							GetAnimeBuf(CharaAnimeID::Bottom_FlightKickRight) = 1.f;
+							SetAnimOnce(CharaAnimeID::Bottom_FlightKickRight, 2.f);
+							if (GetAnime(CharaAnimeID::Bottom_FlightKickRight).TimeEnd()) {
+								this->m_FlightKickReturnAnimOne = false;
+							}
+						}
+					}
+
 					Easing(&GetAnimeBuf(CharaAnimeID::Bottom_Turn), (this->m_TurnBody) ? abs(this->m_InputGround.GetRad().y() - this->m_yrad_Upper) / deg2rad(50.f) : 0.f, 0.8f, EasingType::OutExpo);
 					//その他
 					for (int i = 0; i < (int)CharaAnimeID::AnimeIDMax; i++) {
@@ -503,6 +541,8 @@ namespace FPS_n2 {
 						//反映
 						GetAnime((CharaAnimeID)i).per = GetAnimeBuf((CharaAnimeID)i);
 						if (
+							i == (int)CharaAnimeID::Bottom_FlightKickLeft ||
+							i == (int)CharaAnimeID::Bottom_FlightKickRight ||
 							i == (int)CharaAnimeID::Bottom_FlightNormal ||
 							i == (int)CharaAnimeID::Upper_FlightNormal
 							) {
@@ -596,25 +636,37 @@ namespace FPS_n2 {
 						Easing(&yPos, HitResult.HitPosition.y, 0.8f, EasingType::OutExpo);
 						this->m_PosBuf.y(yPos);
 						if (this->m_move.vec.y() != 0.f) {
-							if (m_InputSky.GetIsFlightMode()) {
-								if (this->m_FlightReturn == 0.f) {
-									if (this->m_FlightSpeed_r <= FlightSpeedMin + (FlightSpeedMax - FlightSpeedMin) *0.3f) {
+							if (this->m_FlightSpeed_r <= FlightSpeedMin + (FlightSpeedMax - FlightSpeedMin) *0.3f) {
+								if (m_InputSky.GetIsFlightMode()) {
+									if (this->m_FlightReturn == 0.f) {
 										this->m_FlightReturn = 5.f;
 									}
+									//
+									VECTOR_ref cross = VECTOR_ref::front().cross(this->m_FlightMatrix.zvec());
+									float dotFront = VECTOR_ref::front().dot(this->m_FlightMatrix.zvec());
+									float dotUp = VECTOR_ref::up().dot(cross);
+									this->m_yrad_Upper = std::atan2f(cross.size()*(dotUp >= 0.f ? 1.f : -1.f), dotFront);
+									this->m_yrad_Bottom = this->m_yrad_Upper;
+									this->m_InputGround.SetRadBufY(this->m_yrad_Upper);
 								}
-								//
-								VECTOR_ref cross = VECTOR_ref::front().cross(this->m_FlightMatrix.zvec());
-								float dotFront = VECTOR_ref::front().dot(this->m_FlightMatrix.zvec());
-								float dotUp = VECTOR_ref::up().dot(cross);
-								this->m_yrad_Upper = std::atan2f(cross.size()*(dotUp >= 0.f ? 1.f : -1.f), dotFront);
-								this->m_yrad_Bottom = this->m_yrad_Upper;
-								this->m_InputGround.SetRadBufY(this->m_yrad_Upper);
+								m_InputSky.SetIsFlightMode(false);
 							}
-							m_InputSky.SetIsFlightMode(false);
+							else {
+								if (!this->m_FlightKickReturn) {
+									this->m_FlightKickReturn = true;
+									this->m_FlightKickReturnSpeed = 1.f;
+									this->m_FlightKickReturnVecBuf = HitResult.Normal;
+									this->m_FlightKickReturnAnimOne = true;
+
+									VECTOR_ref cross = this->GetCharaDir().yvec().cross(this->m_FlightKickReturnVecBuf);
+									this->m_FlightKickReturnAnimLR = (this->GetCharaDir().zvec().dot(cross) > 0.f);
+								}
+							}
 						}
 						this->m_move.vec.y(0.f);
 					}
 					else {
+						this->m_FlightKickReturn = false;
 						if (!m_InputSky.GetIsFlightMode()) {
 							this->m_move.vec.yadd(M_GR / (FPS * FPS));
 						}
@@ -644,10 +696,17 @@ namespace FPS_n2 {
 				this->m_FlightSpeed_r = std::clamp(this->m_FlightSpeed_r + this->m_FlightSpeedAdd*60.f / FPS, 0.f, FlightSpeedMax);
 				Easing(&this->m_FlightSpeed, this->m_FlightSpeed_r, 0.95f, EasingType::OutExpo);
 				//
+				{
+					Easing(&this->m_FlightKickReturnVec, this->m_FlightKickReturnVecBuf*this->m_FlightKickReturnSpeed*200.f, 0.8f, EasingType::OutExpo);
+					this->m_FlightKickReturnSpeed = std::max(this->m_FlightKickReturnSpeed - 1.f / FPS, 0.f);
+				}
+				//
 				if (m_InputSky.GetIsFlightMode()) {
 					Easing(&this->m_FlightVecBuf,
-						((this->GetCharaDir().zvec() * -1.f) * (this->m_FlightSpeed * 1000.f / 3600.f)* (12.5f / FPS))
-						+ VECTOR_ref::up() * (this->m_FlightSpeed * 1000.f / 3600.f)* (m_InputSky.GetGoFlight()* (12.5f / FPS))
+						(
+							(this->GetCharaDir().zvec() * -1.f) * (this->m_FlightSpeed)
+							+ VECTOR_ref::up() * (this->m_FlightSpeed * m_InputSky.GetGoFlight())
+						) * 1000.f / 3600.f * (12.5f / FPS)
 						, 0.95f, EasingType::OutExpo);
 				}
 				else {
@@ -657,7 +716,7 @@ namespace FPS_n2 {
 
 					Easing(&this->m_FlightVecBuf, VECTOR_ref::zero(), 0.975f, EasingType::OutExpo);
 				}
-				this->m_PosBuf += this->m_FlightVecBuf;
+				this->m_PosBuf += this->m_FlightVecBuf + this->m_FlightKickReturnVec * 1000.f / 3600.f* (12.5f / FPS);
 				col_wall(OLDpos, &this->m_PosBuf, *this->m_MapCol);
 				if (!m_InputSky.GetIsFlightMode()) {
 					auto mat_tmp = MATRIX_ref::RotZ(this->m_InputGround.GetRad().z()) * MATRIX_ref::RotY(this->m_yrad_Bottom);
@@ -757,9 +816,10 @@ namespace FPS_n2 {
 				this->m_RunReady = false;
 				this->m_Running = false;
 				this->m_Press_Shot = false;
-				this->m_Press_Reload = false;
-				this->m_Press_Aim = false;
 				this->m_KeyActive = false;
+				this->m_FlightKickReturn = false;
+				this->m_FlightKickReturnAnimOne = false;
+				this->m_FlightKickReturnAnimLR = true;
 				//
 				this->m_Score = 0.f;
 				//動作にかかわる操作
@@ -807,10 +867,10 @@ namespace FPS_n2 {
 				m_InputGround.SetInput(
 					pInput.m_AddxRad*(1.f - GetFlightPer()), pInput.m_AddyRad*(1.f - GetFlightPer()),
 					VECTOR_ref::zero(),
-					pInput.m_GoFrontPress,
-					pInput.m_GoBackPress,
-					pInput.m_GoLeftPress,
-					pInput.m_GoRightPress,
+					pInput.m_GoFrontPress && !pressFront,
+					pInput.m_GoBackPress && !pressFront,
+					pInput.m_GoLeftPress && !pressFront,
+					pInput.m_GoRightPress && !pressFront,
 					pInput.m_RunPress || pressFront,
 					m_InputSky.GetIsFlightMode(),
 					pInput.m_QPress,
