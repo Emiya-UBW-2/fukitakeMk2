@@ -27,6 +27,9 @@ namespace FPS_n2 {
 			switchs RunKey;
 			//UI関連
 			UIClass UI_class;
+			//
+			float HPBuf{ 0.f };
+			float MPBuf{ 0.f };
 			float scoreBuf{ 0.f };
 			//銃関連
 			bool Reticle_on = false;
@@ -51,18 +54,16 @@ namespace FPS_n2 {
 				//BG
 				this->BackGround.Load();
 				//
+				this->Obj.Init(&this->BackGround.GetGroundCol());
 				for (int i = 0; i < chara_num; i++) {
-					this->Obj.AddObject(ObjType::Human);
-					this->Obj.LoadObj("data/Charactor/Marisa/", DX_LOADMODEL_PHYSICS_REALTIME);
-
-					this->Obj.AddObject(ObjType::Houki);
-					this->Obj.LoadObj("data/Houki/Houki01/", DX_LOADMODEL_PHYSICS_LOADCALC);
+					this->Obj.AddObject(ObjType::Human, "data/Charactor/Marisa/", DX_LOADMODEL_PHYSICS_REALTIME);
+					this->Obj.AddObject(ObjType::Houki, "data/Houki/Houki01/", DX_LOADMODEL_PHYSICS_LOADCALC);
+				}
+				for (int i = 0; i < chara_num; i++) {
+					this->Obj.AddObject(ObjType::Item, "data/Item/BluePotion/", DX_LOADMODEL_PHYSICS_LOADCALC);
 				}
 				//guide
-				this->Obj.AddObject(ObjType::Circle);
-				this->Obj.LoadObj("data/model/Circle/", DX_LOADMODEL_PHYSICS_LOADCALC);
-				//init
-				this->Obj.InitObject(&this->BackGround.GetGroundCol());
+				this->Obj.AddObject(ObjType::Circle, "data/model/Circle/", DX_LOADMODEL_PHYSICS_LOADCALC);
 				//ロード
 				SetCreate3DSoundFlag(FALSE);
 				Env = SoundHandle::Load("data/Sound/SE/envi.wav");
@@ -70,7 +71,6 @@ namespace FPS_n2 {
 				Env.vol(64);
 				//UI
 				UI_class.Set();
-				this->scoreBuf = 0.f;
 				//
 				TEMPSCENE::Set();
 				//Set
@@ -80,6 +80,19 @@ namespace FPS_n2 {
 					auto& c = (std::shared_ptr<CharacterClass>&)(this->Obj.GetObj(ObjType::Human, i));
 					c->SetHoukiPtr((std::shared_ptr<HoukiClass>&)(this->Obj.GetObj(ObjType::Houki, i)));
 					c->ValueSet(deg2rad(0.f), deg2rad(-90.f), VECTOR_ref::vget(0.f, 0.f, -52.5f + (float)(i - 1)*20.f));
+				}
+				{
+					auto& Chara = (std::shared_ptr<CharacterClass>&)(this->Obj.GetObj(ObjType::Human, 0));//自分
+					this->HPBuf = Chara->GetHP();
+					this->MPBuf = Chara->GetMP();
+					this->scoreBuf = Chara->GetScore();
+				}
+				//アイテム
+				{
+					for (int i = 0; i < chara_num; i++) {
+						auto& c = this->Obj.GetObj(ObjType::Item, i);
+						c->SetMove(MATRIX_ref::RotY(deg2rad(0)), VECTOR_ref::vget(0.f, 0.f, 20 + 20*i));
+					}
 				}
 				//ガイドサークル
 				{
@@ -170,7 +183,7 @@ namespace FPS_n2 {
 
 					TPS_Xrad += pp_x;
 					TPS_Yrad += pp_y;
-					TPS_Xrad = std::clamp(TPS_Xrad, deg2rad(-40), deg2rad(40));
+					TPS_Xrad = std::clamp(TPS_Xrad, deg2rad(-80), deg2rad(80));
 					if (TPS_Yrad >= deg2rad(180)) { TPS_Yrad -= deg2rad(360); }
 					if (TPS_Yrad <= deg2rad(-180)) { TPS_Yrad += deg2rad(360); }
 
@@ -186,6 +199,18 @@ namespace FPS_n2 {
 					InputControl Input;
 					bool isready = this->m_ReadyTime < 0.f;
 					for (int i = 0; i < chara_num; i++) {
+						auto& c = (std::shared_ptr<CharacterClass>&)(this->Obj.GetObj(ObjType::Human, i));
+						//拾い判定
+						for (int j = 0; j < chara_num; j++) {
+							auto& item = (std::shared_ptr<ItemClass>&)(this->Obj.GetObj(ObjType::Item, j));
+							if (!item->GetHaveChara()) {
+								auto p = (item->GetMatrix().pos() - c->GetMatrix().pos()).size();
+								if ((item->GetMatrix().pos() - c->GetMatrix().pos()).size() < 12.5f*1.f) {
+									c->AddItem(item);
+								}
+							}
+						}
+						//操作
 						if (i == 0
 							//&& false
 							) {
@@ -206,7 +231,6 @@ namespace FPS_n2 {
 							Chara->SetInput(Input, isready);
 							continue;
 						}
-						auto& c = (std::shared_ptr<CharacterClass>&)(this->Obj.GetObj(ObjType::Human, i));
 						Input.SetInput(
 							0.f,
 							0.f,
@@ -282,9 +306,42 @@ namespace FPS_n2 {
 					UI_class.SetIntParam(1, (int)this->scoreBuf);
 					this->scoreBuf += std::clamp((Chara->GetScore() - this->scoreBuf)*100.f, -5.f, 5.f) / FPS;
 
-					UI_class.SetIntParam(1, Chara->GetFlightMode());
+					UI_class.SetIntParam(2, Chara->GetFlightMode() ? 1 : 0);
 					UI_class.SetfloatParam(1, Chara->GetFlightSpeed());
 					UI_class.SetfloatParam(2, Chara->GetMatrix().pos().y() / 12.5f);
+
+					UI_class.SetIntParam(3, (int)Chara->GetHP());
+					UI_class.SetIntParam(4, (int)Chara->GetHPMax());
+					UI_class.SetIntParam(5, (int)(this->HPBuf + 0.5f));
+					this->HPBuf += std::clamp((Chara->GetHP() - this->HPBuf)*100.f, -5.f, 5.f) / FPS;
+
+					UI_class.SetIntParam(6, (int)Chara->GetMP());
+					UI_class.SetIntParam(7, (int)Chara->GetMPMax());
+					UI_class.SetIntParam(8, (int)(this->MPBuf + 0.5f));
+					this->MPBuf += std::clamp((Chara->GetMP() - this->MPBuf)*100.f, -5.f, 5.f) / FPS;
+
+					{
+						int i = 0;
+						int ID = -1;
+						//
+						i = 0;
+						ID = 2;
+						if (Chara->GetItemNum() <= ID) { ID = -1; }
+						UI_class.SetItemGraph(i, (ID != -1) ? (&(Chara->GetItem(ID)->GetItemGraph())) : nullptr);
+						//
+						i = 1;
+						ID = 0;
+						if(Chara->GetItemNum() <= ID) { ID = -1; }
+						UI_class.SetItemGraph(i, (ID != -1) ? (&(Chara->GetItem(ID)->GetItemGraph())) : nullptr);
+						//
+						i = 2;
+						ID = 1;
+						if (Chara->GetItemNum() <= ID) { ID = -1; }
+						UI_class.SetItemGraph(i, (ID != -1) ? (&(Chara->GetItem(ID)->GetItemGraph())) : nullptr);
+
+						UI_class.SetfloatParam(3, 1.f);
+						UI_class.SetfloatParam(4, 1.f);
+					}
 				}
 				TEMPSCENE::Update();
 				Effect_UseControl::Update_Effect();

@@ -6,8 +6,9 @@ namespace FPS_n2 {
 		class ObjectManager {
 			std::vector<std::shared_ptr<ObjectBaseClass>> m_Object;
 			switchs m_ResetP;
+			const MV1* m_MapCol = nullptr;
 		public:
-			void AddObject(ObjType ModelType) {
+			void AddObject(ObjType ModelType, const char* filepath, int PhysicsType, const char* objfilename = "model", const char* colfilename = "col") {
 				switch (ModelType) {
 				case ObjType::Human:
 					this->m_Object.resize(this->m_Object.size() + 1);
@@ -21,20 +22,31 @@ namespace FPS_n2 {
 					this->m_Object.resize(this->m_Object.size() + 1);
 					this->m_Object.back() = std::make_shared<HoukiClass>();
 					break;
+				case ObjType::Item:
+					this->m_Object.resize(this->m_Object.size() + 1);
+					this->m_Object.back() = std::make_shared<ItemClass>();
+					break;
 				default:
 					break;
 				}
-			}
-			void LoadObj(const char* filepath, int PhysicsType, const char* objfilename = "model", const char* colfilename = "col") {
-				for (auto& o : this->m_Object) {
-					if (o->GetIsBaseModel(filepath, objfilename, colfilename)) {
-						this->m_Object.back()->CopyModel(o);
-						return;
+				{
+					bool iscopy = false;
+					for (auto& o : this->m_Object) {
+						if (o->GetIsBaseModel(filepath, objfilename, colfilename)) {
+							this->m_Object.back()->CopyModel(o);
+							iscopy = true;
+							break;
+						}
+					}
+					if(!iscopy) {
+						this->m_Object.back()->LoadModel(filepath, PhysicsType, objfilename, colfilename);
 					}
 				}
-				this->m_Object.back()->LoadModel(filepath, PhysicsType, objfilename, colfilename);
-			}
 
+				this->m_Object.back()->Init();
+				this->m_Object.back()->SetFrameNum();
+				this->m_Object.back()->SetMapCol(this->m_MapCol);
+			}
 			auto& GetObj(ObjType ModelType, int num) {
 				int cnt = 0;
 				for (int i = 0; i < this->m_Object.size(); i++) {
@@ -48,13 +60,10 @@ namespace FPS_n2 {
 				}
 				return this->m_Object[0];
 			}
+			//Delobj—\’è
 		public:
-			void InitObject(const MV1* MapCol) {
-				for (auto& o : this->m_Object) {
-					o->Init();
-					o->SetFrameNum();
-					o->SetMapCol(MapCol);
-				}
+			void Init(const MV1* MapCol) {
+				this->m_MapCol = MapCol;
 			}
 			void ExecuteObject(void) noexcept {
 				for (auto& o : this->m_Object) {

@@ -28,6 +28,8 @@ using namespace DXLib_ref;
 
 #include "Enums.hpp"
 #include "MainScene/Object/CharacterEnum.hpp"
+#include "MainScene/Object/CircleEnum.hpp"
+#include "MainScene/Object/ItemEnum.hpp"
 //
 #include "sub.hpp"
 #include "sequence.hpp"
@@ -36,6 +38,7 @@ using namespace DXLib_ref;
 
 #include "MainScene/Object/ObjectBase.hpp"
 #include "MainScene/Object/Houki.hpp"
+#include "MainScene/Object/Item.hpp"
 #include "MainScene/Object/Character.hpp"
 #include "MainScene/Object/Circle.hpp"
 

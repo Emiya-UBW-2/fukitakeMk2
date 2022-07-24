@@ -19,6 +19,7 @@ namespace FPS_n2 {
 
 				SetUseTextureToShader(0, MV1GetTextureGraphHandle(this->m_obj.get(), MV1GetMaterialDifMapTexture(this->m_obj.get(), 0)));
 				this->m_obj.DrawModel();
+				SetUseTextureToShader(0, -1);	//使用するテクスチャをセット
 			}
 
 			void Draw(void) noexcept override {

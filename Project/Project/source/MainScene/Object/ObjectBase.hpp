@@ -135,9 +135,6 @@ namespace FPS_n2 {
 					case ObjType::Human://human
 						compare = (FName == CharaFrameName[i]);
 						break;
-					case ObjType::Gun://human
-						compare = (FName == GunFrameName[i]);
-						break;
 					default:
 						break;
 					}
@@ -152,9 +149,6 @@ namespace FPS_n2 {
 					switch (this->m_objType) {
 					case ObjType::Human://human
 						if (i == (int)CharaFrame::Max) { isEnd = true; }
-						break;
-					case ObjType::Gun://human
-						if (i == (int)GunFrame::Max) { isEnd = true; }
 						break;
 					default:
 						isEnd = true;

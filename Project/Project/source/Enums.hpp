@@ -25,14 +25,9 @@ namespace FPS_n2 {
 		};
 		enum class ObjType {
 			Human,
-			Gun,
-			Target,
-			Magazine,
 			Circle,
-			Gate,
-			ShootingMat,
-			Cart,
 			Houki,
+			Item,
 		};
 		enum class SoundEnum {
 			Shot_Gun,

@@ -317,9 +317,8 @@ namespace FPS_n2 {
 					printfDx("AllTime    :%5.2f ms\n", float(this->m_OldWait) / 1000.f);
 					printfDx("DrawTime   :%5.2f ms\n", float(this->m_DrawWait) / 1000.f);
 					printfDx("All-Draw   :%5.2f ms\n", float(this->m_OldWait - this->m_DrawWait) / 1000.f);
-#endif // DEBUG
-
 					//DepthScreen.DrawExtendGraph(0, 0, 960, 540, true);
+#endif // DEBUG
 				}
 			}
 			//‚’¼“¯Šú
