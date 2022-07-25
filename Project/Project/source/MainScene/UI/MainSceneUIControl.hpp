@@ -69,6 +69,7 @@ namespace FPS_n2 {
 					float xp1, yp1;
 					float xs1, ys1;
 					float xp1_r, yp1_r;
+					float xs1_r, ys1_r;
 
 					xp1 = (float)y_r(50);
 					yp1 = (float)DrawParts->disp_y - y_r(100);
@@ -78,6 +79,7 @@ namespace FPS_n2 {
 					float xp2, yp2;
 					float xs2, ys2;
 					float xp2_r, yp2_r;
+					float xs2_r, ys2_r;
 
 					xp2 = (float)y_r(160);
 					yp2 = (float)DrawParts->disp_y - y_r(130);
@@ -87,6 +89,7 @@ namespace FPS_n2 {
 					float xp3, yp3;
 					float xs3, ys3;
 					float xp3_r, yp3_r;
+					float xs3_r, ys3_r;
 
 					xp3 = (float)y_r(270);
 					yp3 = (float)DrawParts->disp_y - y_r(100);
@@ -96,29 +99,42 @@ namespace FPS_n2 {
 					float Lper = floatParam[3];//0->1Ç…Ç∑ÇÈ
 					float Rper = floatParam[4];//0->1Ç…Ç∑ÇÈ
 					//
-					xp1_r = Leap(xp2, xp1, Lper);
-					yp1_r = Leap(yp2, yp1, Lper);
-
 					DrawBox((int)(xp1 - xs1), (int)(yp1 - ys1), (int)(xp1 + xs1), (int)(yp1 + ys1), GetColor(0, 0, 0), TRUE);
-					if (ItemGraphPtr[0] != nullptr) {
-						ItemGraphPtr[0]->DrawExtendGraph((int)(xp1_r - xs1), (int)(yp1_r - ys1), (int)(xp1_r + xs1), (int)(yp1_r + ys1), true);
-					}
-					//
-					xp2_r = Leap(xp1, Leap(xp3, xp2, Lper), Rper);
-					yp2_r = Leap(yp1, Leap(yp3, yp2, Lper), Rper);
-
 					DrawBox((int)(xp2 - xs2), (int)(yp2 - ys2), (int)(xp2 + xs2), (int)(yp2 + ys2), GetColor(0, 0, 0), TRUE);
-					if (ItemGraphPtr[1] != nullptr) {
-						ItemGraphPtr[1]->DrawExtendGraph((int)(xp2_r - xs2), (int)(yp2_r - ys2), (int)(xp2_r + xs2), (int)(yp2_r + ys2), true);
-					}
-					//
-					xp3_r = Leap(xp2, xp3, Rper);
-					yp3_r = Leap(yp2, yp3, Rper);
-
 					DrawBox((int)(xp3 - xs3), (int)(yp3 - ys3), (int)(xp3 + xs3), (int)(yp3 + ys3), GetColor(0, 0, 0), TRUE);
-					if (ItemGraphPtr[2] != nullptr) {
-						ItemGraphPtr[2]->DrawExtendGraph((int)(xp3_r - xs3), (int)(yp3_r - ys3), (int)(xp3_r + xs3), (int)(yp3_r + ys3), true);
+					//
+					xp1_r = Lerp(xp2, xp1, Lper);
+					yp1_r = Lerp(yp2, yp1, Lper);
+					xs1_r = Lerp(xs2, Lerp(0.f, xs1, Rper), Lper);
+					ys1_r = Lerp(ys2, Lerp(0.f, ys1, Rper), Lper);
+					//
+					xp2_r = Lerp(xp1, Lerp(xp3, xp2, Lper), Rper);
+					yp2_r = Lerp(yp1, Lerp(yp3, yp2, Lper), Rper);
+					xs2_r = Lerp(xs1, Lerp(xs3, xs2, Lper), Rper);
+					ys2_r = Lerp(ys1, Lerp(ys3, ys2, Lper), Rper);
+					//
+					xp3_r = Lerp(xp2, xp3, Rper);
+					yp3_r = Lerp(yp2, yp3, Rper);
+					xs3_r = Lerp(xs2, Lerp(0.f, xs3, Lper), Rper);
+					ys3_r = Lerp(ys2, Lerp(0.f, ys3, Lper), Rper);
+
+					int col;
+					col = (int)Lerp(255.f, 128.f, Lper*Rper);
+					SetDrawBright(col, col, col);
+					if (ItemGraphPtr[0] != nullptr) {
+						ItemGraphPtr[0]->DrawExtendGraph((int)(xp1_r - xs1_r), (int)(yp1_r - ys1_r), (int)(xp1_r + xs1_r), (int)(yp1_r + ys1_r), true);
 					}
+					if (ItemGraphPtr[2] != nullptr) {
+						ItemGraphPtr[2]->DrawExtendGraph((int)(xp3_r - xs3_r), (int)(yp3_r - ys3_r), (int)(xp3_r + xs3_r), (int)(yp3_r + ys3_r), true);
+					}
+					//íÜâõ
+					col = (int)Lerp(128.f, 255.f, Lper*Rper);
+					SetDrawBright(col, col, col);
+					if (ItemGraphPtr[1] != nullptr) {
+						ItemGraphPtr[1]->DrawExtendGraph((int)(xp2_r - xs2_r), (int)(yp2_r - ys2_r), (int)(xp2_r + xs2_r), (int)(yp2_r + ys2_r), true);
+					}
+
+					SetDrawBright(255, 255, 255);
 				}
 				//ÉåÅ[É_Å[
 				{

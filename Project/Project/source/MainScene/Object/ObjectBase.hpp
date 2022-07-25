@@ -209,8 +209,8 @@ namespace FPS_n2 {
 						for (int i = 1; i <= Max; i++) {
 							this->m_obj.SetMatrix(
 								
-								Leap_Matrix(this->m_PrevMat.GetRot(), NowMat.GetRot(), (float)i / (float)Max)
-								* MATRIX_ref::Mtrans(Leap(this->m_PrevMat.pos(), NowMat.pos(), (float)i / (float)Max)));
+								Lerp_Matrix(this->m_PrevMat.GetRot(), NowMat.GetRot(), (float)i / (float)Max)
+								* MATRIX_ref::Mtrans(Lerp(this->m_PrevMat.pos(), NowMat.pos(), (float)i / (float)Max)));
 							this->m_obj.PhysicsCalculation(1000.0f / FPS * 60.f);
 						}
 					}

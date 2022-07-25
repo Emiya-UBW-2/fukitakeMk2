@@ -18,6 +18,8 @@ namespace FPS_n2 {
 		private:
 			CharacterMoveGroundControl							m_InputGround;
 			CharacterMoveFlightControl							m_InputSky;
+			switchs												m_Mkey;
+			switchs												m_Nkey;
 			bool												m_KeyActive{ true };
 			//飛行関連
 			VECTOR_ref											m_FlightVecBuf;
@@ -62,6 +64,7 @@ namespace FPS_n2 {
 			std::shared_ptr<HoukiClass>							m_Houki_Ptr{ nullptr };					//箒
 			//アイテム
 			std::vector<std::shared_ptr<ItemClass>>				m_Item_Ptrs;
+			int													m_ItemSel;
 		public://ゲッター
 			//
 			const auto		GetFrameLocalMat(CharaFrame frame) const noexcept { return this->m_obj.GetFrameLocalMatrix(Frames[(int)frame].first); }
@@ -82,7 +85,7 @@ namespace FPS_n2 {
 			const auto		GetEyeVecMat(void) const noexcept {
 				MATRIX_ref Matrix;
 
-				float per = Leap(1.f, 0.5f, this->m_FlightSpeed / (FlightSpeedMax - FlightSpeedMin))*10.f;
+				float per = Lerp(1.f, 0.5f, this->m_FlightSpeed / (FlightSpeedMax - FlightSpeedMin))*10.f;
 				Matrix *= MATRIX_ref::RotAxis(this->m_move.mat.xvec(), this->m_InputSky.GetFradAdd().x()*per);
 				Matrix *= MATRIX_ref::RotAxis(this->m_move.mat.zvec(), this->m_InputSky.GetFradAdd().y()*per);
 				Matrix *= MATRIX_ref::RotAxis(this->m_move.mat.yvec(), this->m_InputSky.GetFradAdd().z()*per);
@@ -207,6 +210,16 @@ namespace FPS_n2 {
 					pInput.m_EPress
 				);
 				//
+				m_Mkey.GetInput(pInput.m_MPress);
+				m_Nkey.GetInput(pInput.m_NPress);
+
+				if (m_Mkey.trigger()) {
+					AddItemSel();
+				}
+				if (m_Nkey.trigger()) {
+					SubItemSel();
+				}
+				//
 				{
 					auto TmpReady = GetIsRun();
 					this->m_RunReadyFirst = (TmpReady && !this->m_RunReady);
@@ -216,7 +229,7 @@ namespace FPS_n2 {
 			void			SetEyeVec(const VECTOR_ref& camvec) noexcept {
 				this->m_obj.frame_Reset(this->Frames[(int)CharaFrame::Head].first);
 				auto v1 = (GetFrameWorldMat(CharaFrame::Head).GetRot() * GetCharaDir().Inverse()).zvec()*-1.f;
-				auto v2 = Leap(MATRIX_ref::Vtrans(camvec.Norm(), GetCharaDir().Inverse()), v1, m_NeckPer);
+				auto v2 = Lerp(MATRIX_ref::Vtrans(camvec.Norm(), GetCharaDir().Inverse()), v1, m_NeckPer);
 
 				auto radlimit = deg2rad(70);
 				if (v1.dot(v2) <= cos(radlimit)) {
@@ -233,9 +246,26 @@ namespace FPS_n2 {
 				std::swap(this->m_Item_Ptrs[id], this->m_Item_Ptrs.back());
 				this->m_Item_Ptrs.back()->SetCharaPtr(false);
 				this->m_Item_Ptrs.pop_back();
+				if (this->m_ItemSel >= this->m_Item_Ptrs.size()) {
+					this->m_ItemSel = this->m_Item_Ptrs.size() - 1;
+				}
 			}
 			const auto		GetItemNum(void) const noexcept { return this->m_Item_Ptrs.size(); }
 			const auto&		GetItem(int id) const noexcept { return this->m_Item_Ptrs[id]; }
+
+			const auto&		GetItemSel() const noexcept { return this->m_ItemSel; }
+			void		AddItemSel() noexcept {
+				this->m_ItemSel++;
+				if (this->m_ItemSel > this->m_Item_Ptrs.size() - 1) {
+					this->m_ItemSel = 0;
+				}
+			}
+			void		SubItemSel() noexcept {
+				this->m_ItemSel--;
+				if (this->m_ItemSel < 0) {
+					this->m_ItemSel = this->m_Item_Ptrs.size() - 1;
+				}
+			}
 		private: //更新関連
 			//以前の状態保持														//
 			void			ExecuteSavePrev(void) noexcept {
@@ -262,7 +292,7 @@ namespace FPS_n2 {
 				}
 				//
 				auto FrontP = this->m_InputGround.GetFrontP();
-				auto TmpRunPer = Leap(0.85f, 0.7f, this->m_InputGround.GetRunPer());
+				auto TmpRunPer = Lerp(0.85f, 0.7f, this->m_InputGround.GetRunPer());
 				if (m_InputSky.GetIsFlightMode()) { TmpRunPer = 0.95f; }
 				if (this->m_TurnBody || (this->m_Speed > 0.1f) || m_InputSky.GetIsFlightMode()) { Easing(&this->m_yrad_Upper, this->m_InputGround.GetRad().y(), TmpRunPer, EasingType::OutExpo); }
 				auto OLDP = this->m_yrad_Bottom;
@@ -277,7 +307,7 @@ namespace FPS_n2 {
 			void			ExecuteUpperMatrix(void) noexcept {
 				this->m_UpperMatrix = MATRIX_ref::RotX(this->m_InputGround.GetRad().x()) * MATRIX_ref::RotY(this->m_InputGround.GetRad().y() - this->m_yrad_Bottom);
 				this->m_obj.frame_Reset(this->Frames[(int)CharaFrame::Upper].first);
-				SetFrameLocalMat(CharaFrame::Upper, GetFrameLocalMat(CharaFrame::Upper).GetRot() * Leap_Matrix(this->m_UpperMatrix, MATRIX_ref::zero(), GetFlightPer()));
+				SetFrameLocalMat(CharaFrame::Upper, GetFrameLocalMat(CharaFrame::Upper).GetRot() * Lerp_Matrix(this->m_UpperMatrix, MATRIX_ref::zero(), GetFlightPer()));
 			}
 			//SetMat指示															//0.03ms
 			void			ExecuteAnim(void) noexcept {
@@ -476,7 +506,7 @@ namespace FPS_n2 {
 			}
 			//SetMat指示更新														//0.03ms
 			void			ExecuteMatrix(void) noexcept {
-				this->m_RunPer2 = Leap(0.35f, (SpeedLimit * (1.f + 0.5f * this->m_InputGround.GetSprintPer())), this->m_InputGround.GetRunPer());
+				this->m_RunPer2 = Lerp(0.35f, (SpeedLimit * (1.f + 0.5f * this->m_InputGround.GetSprintPer())), this->m_InputGround.GetRunPer());
 				if (this->m_PrevRunPer2 == 0.f) {
 					this->m_PrevRunPer2 = this->m_RunPer2;
 				}
@@ -609,7 +639,7 @@ namespace FPS_n2 {
 					this->m_FlightMatrix = this->m_move.mat;
 				}
 				else {
-					float per = Leap(1.f, 0.5f, this->m_FlightSpeed / (FlightSpeedMax - FlightSpeedMin));
+					float per = Lerp(1.f, 0.5f, this->m_FlightSpeed / (FlightSpeedMax - FlightSpeedMin));
 
 					this->m_FlightMatrix *= MATRIX_ref::RotAxis(this->m_move.mat.xvec(), this->m_InputSky.GetFradAdd().x()*per);
 					this->m_FlightMatrix *= MATRIX_ref::RotAxis(this->m_move.mat.zvec(), this->m_InputSky.GetFradAdd().y()*per);
@@ -638,9 +668,9 @@ namespace FPS_n2 {
 							GetFrameWorldMat(CharaFrame::Upper2).GetRot().yvec() * -1.75f +
 							GetFrameWorldMat(CharaFrame::Upper2).GetRot().zvec() * 1.75f;
 					}
-					auto yVec = Leap(yVec1, yVec2, this->m_SlingHoukiPer);
-					auto zVec = Leap(zVec1, zVec2, this->m_SlingHoukiPer);
-					auto PosBuf = Leap(Pos1, Pos2, this->m_SlingHoukiPer);
+					auto yVec = Lerp(yVec1, yVec2, this->m_SlingHoukiPer);
+					auto zVec = Lerp(zVec1, zVec2, this->m_SlingHoukiPer);
+					auto PosBuf = Lerp(Pos1, Pos2, this->m_SlingHoukiPer);
 					auto tmp_gunrat = MATRIX_ref::RotVec2(VECTOR_ref::vget(0, 0, -1).Norm(), zVec);
 					tmp_gunrat *= MATRIX_ref::RotVec2(tmp_gunrat.yvec(), yVec);
 					tmp_gunrat *= GetCharaDir() * MATRIX_ref::Mtrans(PosBuf);
@@ -672,6 +702,8 @@ namespace FPS_n2 {
 				ObjectBaseClass::Init();
 				GetAnime(CharaAnimeID::Bottom_Stand).per = 1.f;
 				GetAnime(CharaAnimeID::Upper_RunningStart).GoEnd();
+				this->m_Item_Ptrs.clear();
+				this->m_ItemSel = 0;
 			}
 			void			Execute(void) noexcept override {
 				//初回のみ更新する内容

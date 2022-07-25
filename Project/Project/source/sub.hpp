@@ -15,18 +15,20 @@ namespace FPS_n2 {
 	//“ü—Í
 	class InputControl {
 	public:
-		float m_AddxRad; float m_AddyRad;
-
-		bool m_GoFrontPress;
-		bool m_GoBackPress;
-		bool m_GoLeftPress;
-		bool m_GoRightPress;
-		bool m_RunPress;
-		bool m_QPress;
-		bool m_EPress;
-		bool m_GoFlight;
+		float m_AddxRad{ 0.f };
+		float m_AddyRad{ 0.f };
+		bool m_GoFrontPress{ false };
+		bool m_GoBackPress{ false };
+		bool m_GoLeftPress{ false };
+		bool m_GoRightPress{ false };
+		bool m_RunPress{ false };
+		bool m_QPress{ false };
+		bool m_EPress{ false };
+		bool m_GoFlight{ false };
 		bool m_Press_Accel{ false };
 		bool m_Press_Brake{ false };
+		bool m_MPress{ false };
+		bool m_NPress{ false };
 	public:
 		void			SetInput(
 			float pAddxRad, float pAddyRad,
@@ -40,7 +42,9 @@ namespace FPS_n2 {
 			bool pEPress,
 			bool pGoFlight,
 			bool pPress_Accel,
-			bool pPress_Brake
+			bool pPress_Brake,
+			bool pMPress,
+			bool pNPress
 		) {
 			this->m_AddxRad = pAddxRad;
 			this->m_AddyRad = pAddyRad;
@@ -54,6 +58,8 @@ namespace FPS_n2 {
 			this->m_GoFlight = pGoFlight;
 			this->m_Press_Accel = pPress_Accel;
 			this->m_Press_Brake = pPress_Brake;
+			this->m_MPress = pMPress;
+			this->m_NPress = pNPress;
 		}
 	};
 	//ƒLƒƒƒ‰“ü—Í
@@ -205,7 +211,7 @@ namespace FPS_n2 {
 			}
 			//‰ñ“]
 			{
-				auto limchange = Leap(1.f, powf(1.f - this->GetVecFront(), 0.5f), this->m_RunPer * 0.8f);
+				auto limchange = Lerp(1.f, powf(1.f - this->GetVecFront(), 0.5f), this->m_RunPer * 0.8f);
 				auto tmp = 1.f;
 				Easing(&this->m_radAdd, pAddRadvec, 0.95f, EasingType::OutExpo);
 

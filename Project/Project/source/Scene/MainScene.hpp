@@ -11,7 +11,7 @@ namespace FPS_n2 {
 			SoundHandle Env;
 			//
 			static const int chara_num = 3;
-			static const int tgt_num = 2;
+			static const int item_num = 6;
 			static const int cart_num = 2;
 			//関連
 			int tgtSel = 0;
@@ -31,6 +31,9 @@ namespace FPS_n2 {
 			float HPBuf{ 0.f };
 			float MPBuf{ 0.f };
 			float scoreBuf{ 0.f };
+			float AddItemBuf{ 1.f };
+			float SubItemBuf{ 1.f };
+			int PrevPointSel{ 0 };
 			//銃関連
 			bool Reticle_on = false;
 			float Reticle_xpos = 0;
@@ -59,8 +62,11 @@ namespace FPS_n2 {
 					this->Obj.AddObject(ObjType::Human, "data/Charactor/Marisa/", DX_LOADMODEL_PHYSICS_REALTIME);
 					this->Obj.AddObject(ObjType::Houki, "data/Houki/Houki01/", DX_LOADMODEL_PHYSICS_LOADCALC);
 				}
-				for (int i = 0; i < chara_num; i++) {
+				for (int i = 0; i < item_num/2; i++) {
 					this->Obj.AddObject(ObjType::Item, "data/Item/BluePotion/", DX_LOADMODEL_PHYSICS_LOADCALC);
+				}
+				for (int i = 0; i < item_num/2; i++) {
+					this->Obj.AddObject(ObjType::Item, "data/Item/YellowPotion/", DX_LOADMODEL_PHYSICS_LOADCALC);
 				}
 				//guide
 				this->Obj.AddObject(ObjType::Circle, "data/model/Circle/", DX_LOADMODEL_PHYSICS_LOADCALC);
@@ -89,9 +95,9 @@ namespace FPS_n2 {
 				}
 				//アイテム
 				{
-					for (int i = 0; i < chara_num; i++) {
+					for (int i = 0; i < item_num; i++) {
 						auto& c = this->Obj.GetObj(ObjType::Item, i);
-						c->SetMove(MATRIX_ref::RotY(deg2rad(0)), VECTOR_ref::vget(0.f, 0.f, 20 + 20*i));
+						c->SetMove(MATRIX_ref::RotY(deg2rad(0)), VECTOR_ref::vget(20 * (i / (item_num / 2)), 0.f, 20 + 20 * (i% (item_num / 2))));
 					}
 				}
 				//ガイドサークル
@@ -143,6 +149,7 @@ namespace FPS_n2 {
 					SetMousePoint(DXDraw::Instance()->disp_x / 2, DXDraw::Instance()->disp_y / 2);
 					Env.play(DX_PLAYTYPE_LOOP, TRUE);
 					this->m_ReadyTime = 1.f;
+					PrevPointSel = Chara->GetItemSel();
 				}
 				//
 				{
@@ -201,7 +208,7 @@ namespace FPS_n2 {
 					for (int i = 0; i < chara_num; i++) {
 						auto& c = (std::shared_ptr<CharacterClass>&)(this->Obj.GetObj(ObjType::Human, i));
 						//拾い判定
-						for (int j = 0; j < chara_num; j++) {
+						for (int j = 0; j < item_num; j++) {
 							auto& item = (std::shared_ptr<ItemClass>&)(this->Obj.GetObj(ObjType::Item, j));
 							if (!item->GetHaveChara()) {
 								auto p = (item->GetMatrix().pos() - c->GetMatrix().pos()).size();
@@ -226,7 +233,9 @@ namespace FPS_n2 {
 								(CheckHitKeyWithCheck(KEY_INPUT_E) != 0) && isready,
 								(CheckHitKeyWithCheck(KEY_INPUT_SPACE) != 0) && isready,
 								(CheckHitKeyWithCheck(KEY_INPUT_R) != 0) && isready,
-								(CheckHitKeyWithCheck(KEY_INPUT_F) != 0) && isready
+								(CheckHitKeyWithCheck(KEY_INPUT_F) != 0) && isready,
+								(CheckHitKeyWithCheck(KEY_INPUT_M) != 0) && isready,
+								(CheckHitKeyWithCheck(KEY_INPUT_N) != 0) && isready
 							);
 							Chara->SetInput(Input, isready);
 							continue;
@@ -234,6 +243,8 @@ namespace FPS_n2 {
 						Input.SetInput(
 							0.f,
 							0.f,
+							(false) && isready,
+							(false) && isready,
 							(false) && isready,
 							(false) && isready,
 							(false) && isready,
@@ -268,16 +279,16 @@ namespace FPS_n2 {
 
 						CamVec = MATRIX_ref::Vtrans(Chara->GetEyeVecMat().zvec() * -1.f, MATRIX_ref::RotAxis(Chara->GetMatrix().xvec(), TPS_XradR) * MATRIX_ref::RotAxis(Chara->GetMatrix().yvec(), TPS_YradR));
 
-						CamVec = Leap(Chara->GetEyeVecMat().zvec() * -1.f, CamVec, TPS_Per);
+						CamVec = Lerp(Chara->GetEyeVecMat().zvec() * -1.f, CamVec, TPS_Per);
 
 						CamPos +=
-							Leap(
-								Leap((UpperMat.xvec()*-8.f + UpperMat.yvec()*3.f), (UpperMat.xvec()*-3.f + UpperMat.yvec()*4.f), EyeRunPer),
-								Leap(UpperMat.yvec()*4.f, UpperMat.yvec()*8.f, TPS_Per),
+							Lerp(
+								Lerp((UpperMat.xvec()*-8.f + UpperMat.yvec()*3.f), (UpperMat.xvec()*-3.f + UpperMat.yvec()*4.f), EyeRunPer),
+								Lerp(UpperMat.yvec()*4.f, UpperMat.yvec()*8.f, TPS_Per),
 								Chara->GetFlightPer()
 							);
 
-						camera_main.campos = CamPos + CamVec * Leap(Leap(-20.f, -30.f - (Chara->GetFlightSpeed()/25.f), Chara->GetFlightPer()), -50.f, TPS_Per);
+						camera_main.campos = CamPos + CamVec * Lerp(Lerp(-20.f, -30.f - (Chara->GetFlightSpeed()/25.f), Chara->GetFlightPer()), -50.f, TPS_Per);
 						camera_main.camvec = CamPos + CamVec * 100.f;
 
 						camera_main.camup = Chara->GetEyeVecMat().yvec();
@@ -325,22 +336,44 @@ namespace FPS_n2 {
 						int ID = -1;
 						//
 						i = 0;
-						ID = 2;
+						ID = (Chara->GetItemSel() - 1);
+						if (ID <= -1) { ID = Chara->GetItemNum() - 1; }
 						if (Chara->GetItemNum() <= ID) { ID = -1; }
 						UI_class.SetItemGraph(i, (ID != -1) ? (&(Chara->GetItem(ID)->GetItemGraph())) : nullptr);
 						//
 						i = 1;
-						ID = 0;
-						if(Chara->GetItemNum() <= ID) { ID = -1; }
+						ID = Chara->GetItemSel();
+						if (Chara->GetItemNum() <= ID) { ID = -1; }
 						UI_class.SetItemGraph(i, (ID != -1) ? (&(Chara->GetItem(ID)->GetItemGraph())) : nullptr);
 						//
 						i = 2;
-						ID = 1;
+						ID = (Chara->GetItemSel() + 1);
+						if (ID >= Chara->GetItemNum()) { ID = 0; }
 						if (Chara->GetItemNum() <= ID) { ID = -1; }
 						UI_class.SetItemGraph(i, (ID != -1) ? (&(Chara->GetItem(ID)->GetItemGraph())) : nullptr);
 
-						UI_class.SetfloatParam(3, 1.f);
-						UI_class.SetfloatParam(4, 1.f);
+						if (PrevPointSel > Chara->GetItemSel()) {
+							if (Chara->GetItemSel() == 0 && PrevPointSel == Chara->GetItemNum() - 1) {
+								AddItemBuf = 0.f;
+							}
+							else {
+								SubItemBuf = 0.f;
+							}
+						}
+						else if (PrevPointSel < Chara->GetItemSel()) {
+							if (Chara->GetItemSel() == Chara->GetItemNum() - 1 && PrevPointSel == 0) {
+								SubItemBuf = 0.f;
+							}
+							else {
+								AddItemBuf = 0.f;
+							}
+						}
+						PrevPointSel = Chara->GetItemSel();
+
+						UI_class.SetfloatParam(3, AddItemBuf);
+						UI_class.SetfloatParam(4, SubItemBuf);
+						Easing(&AddItemBuf, 1.f, 0.9f, EasingType::OutExpo);
+						Easing(&SubItemBuf, 1.f, 0.9f, EasingType::OutExpo);
 					}
 				}
 				TEMPSCENE::Update();
