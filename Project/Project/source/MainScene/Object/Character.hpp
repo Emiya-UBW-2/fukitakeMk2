@@ -20,6 +20,7 @@ namespace FPS_n2 {
 			CharacterMoveFlightControl							m_InputSky;
 			switchs												m_Mkey;
 			switchs												m_Nkey;
+			switchs												m_Jkey;
 			bool												m_KeyActive{ true };
 			//飛行関連
 			VECTOR_ref											m_FlightVecBuf;
@@ -49,6 +50,7 @@ namespace FPS_n2 {
 			bool												m_RunReadyFirst{ false };
 			bool												m_Running{ false };
 			bool												m_ReadySwitch{ false };
+			bool												m_UsingItem{ false };
 			CharaAnimeID										m_UpperAnimSelect, m_PrevUpperAnimSel;
 			CharaAnimeID										m_BottomAnimSelect;
 			//
@@ -63,7 +65,7 @@ namespace FPS_n2 {
 			//箒
 			std::shared_ptr<HoukiClass>							m_Houki_Ptr{ nullptr };					//箒
 			//アイテム
-			std::vector<std::shared_ptr<ItemClass>>				m_Item_Ptrs;
+			std::vector <std::pair<ItemType,std::vector<std::shared_ptr<ItemClass>>>>	m_Item_Ptrs;
 			int													m_ItemSel;
 		public://ゲッター
 			//
@@ -145,6 +147,7 @@ namespace FPS_n2 {
 				this->m_RunReadyFirst = false;
 				this->m_Running = false;
 				this->m_ReadySwitch = false;
+				this->m_UsingItem = false;
 				//this->m_UpperAnimSelect;
 				//this->m_PrevUpperAnimSel;
 				//this->m_BottomAnimSelect;
@@ -212,12 +215,20 @@ namespace FPS_n2 {
 				//
 				m_Mkey.GetInput(pInput.m_MPress);
 				m_Nkey.GetInput(pInput.m_NPress);
+				m_Jkey.GetInput(pInput.m_JPress);
 
 				if (m_Mkey.trigger()) {
 					AddItemSel();
 				}
 				if (m_Nkey.trigger()) {
 					SubItemSel();
+				}
+				if (!this->m_UsingItem && (this->m_Item_Ptrs.size() > 0)) {
+					if (m_Jkey.trigger()) {
+						this->m_UsingItem = true;
+						GetAnime(CharaAnimeID::Upper_UseItem).GoStart();
+						GetAnime(CharaAnimeID::Upper_FlightUseItem).GoStart();
+					}
 				}
 				//
 				{
@@ -239,19 +250,41 @@ namespace FPS_n2 {
 			}
 
 			void			AddItem(std::shared_ptr<ItemClass>& pItemPtr) noexcept {
-				this->m_Item_Ptrs.emplace_back(pItemPtr);
-				this->m_Item_Ptrs.back()->SetCharaPtr(true);
+				for (auto& i : this->m_Item_Ptrs) {
+					if (i.first == pItemPtr->GetItemType()) {
+						i.second.emplace_back(pItemPtr);
+						i.second.back()->SetCharaPtr(true);
+						return;
+					}
+				}
+				this->m_Item_Ptrs.resize(this->m_Item_Ptrs.size() + 1);
+				this->m_Item_Ptrs.back().first = pItemPtr->GetItemType();
+				this->m_Item_Ptrs.back().second.emplace_back(pItemPtr);
+				this->m_Item_Ptrs.back().second.back()->SetCharaPtr(true);
 			}
-			void			DelItem(int id) noexcept {
-				std::swap(this->m_Item_Ptrs[id], this->m_Item_Ptrs.back());
-				this->m_Item_Ptrs.back()->SetCharaPtr(false);
-				this->m_Item_Ptrs.pop_back();
-				if (this->m_ItemSel >= this->m_Item_Ptrs.size()) {
-					this->m_ItemSel = this->m_Item_Ptrs.size() - 1;
+			void			DelItem(ItemType id) noexcept {
+				for(int i=0;i< this->m_Item_Ptrs.size();i++){
+					if (this->m_Item_Ptrs[i].first == id) {
+						if (this->m_Item_Ptrs[i].second.size() > 0) {
+							this->m_Item_Ptrs[i].second.back()->SetCharaPtr(false);
+							this->m_Item_Ptrs[i].second.back()->SetUsed(true);
+							this->m_Item_Ptrs[i].second.pop_back();
+							if (this->m_Item_Ptrs[i].second.size() == 0) {
+								std::swap(this->m_Item_Ptrs[i], this->m_Item_Ptrs.back());
+								this->m_Item_Ptrs.pop_back();
+								SubItemSel();
+							}
+						}
+						else {
+							//エラー
+						}
+						return;
+					}
 				}
 			}
-			const auto		GetItemNum(void) const noexcept { return this->m_Item_Ptrs.size(); }
-			const auto&		GetItem(int id) const noexcept { return this->m_Item_Ptrs[id]; }
+			const auto		GetItemNum(void) const noexcept { return this->m_Item_Ptrs.size(); }//カテゴリごとのアイテム数
+			const auto&		GetItem(int id) const noexcept { return this->m_Item_Ptrs[id].second.front(); }
+			const auto		GetItemCnt(int id) const noexcept { return this->m_Item_Ptrs[id].second.size(); }
 
 			const auto&		GetItemSel() const noexcept { return this->m_ItemSel; }
 			void		AddItemSel() noexcept {
@@ -263,7 +296,7 @@ namespace FPS_n2 {
 			void		SubItemSel() noexcept {
 				this->m_ItemSel--;
 				if (this->m_ItemSel < 0) {
-					this->m_ItemSel = this->m_Item_Ptrs.size() - 1;
+					this->m_ItemSel = std::max(0, (int)(this->m_Item_Ptrs.size()) - 1);
 				}
 			}
 		private: //更新関連
@@ -317,6 +350,16 @@ namespace FPS_n2 {
 					//上半身
 					{
 						this->m_UpperAnimSelect = CharaAnimeID::Upper_Down;
+						if (this->m_UsingItem) {
+							this->m_UpperAnimSelect = CharaAnimeID::Upper_UseItem;
+							SetAnimOnce(CharaAnimeID::Upper_UseItem, 1.f);
+							SetAnimOnce(CharaAnimeID::Upper_FlightUseItem, 1.f);
+							if (GetAnime(CharaAnimeID::Upper_UseItem).TimeEnd()) {
+								this->m_UsingItem = false;
+								AddHP(30.f);
+								DelItem(this->GetItem(this->m_ItemSel)->GetItemType());
+							}
+						}
 						if (this->m_ReadySwitch) {
 							this->m_RunReadyFirst = false;
 							GetAnime(CharaAnimeID::Upper_RunningStart).GoEnd();
@@ -376,6 +419,11 @@ namespace FPS_n2 {
 				{
 					//上半身
 					GetAnimeBuf(CharaAnimeID::Upper_FlightNormal) = 1.f;
+					GetAnimeBuf(CharaAnimeID::Upper_FlightUseItem) = 0.f;
+					if (this->m_UsingItem) {
+						GetAnimeBuf(CharaAnimeID::Upper_FlightNormal) = 0.f;
+						GetAnimeBuf(CharaAnimeID::Upper_FlightUseItem) = 1.f;
+					}
 					//下半身
 					if (!this->m_FlightKickReturnAnimOne) {
 						GetAnimeBuf(CharaAnimeID::Bottom_FlightNormal) = 1.f;
@@ -413,7 +461,8 @@ namespace FPS_n2 {
 							i == (int)CharaAnimeID::Upper_Down ||
 							i == (int)CharaAnimeID::Upper_RunningStart ||
 							i == (int)CharaAnimeID::Upper_Running ||
-							i == (int)CharaAnimeID::Upper_Sprint
+							i == (int)CharaAnimeID::Upper_Sprint ||
+							i == (int)CharaAnimeID::Upper_UseItem
 							)
 						{
 							GetAnimeBuf((CharaAnimeID)i) += ((i == (int)this->m_UpperAnimSelect) ? 1.f : -1.f)*3.f / FPS;
@@ -438,6 +487,7 @@ namespace FPS_n2 {
 							i == (int)CharaAnimeID::Bottom_FlightKickLeft ||
 							i == (int)CharaAnimeID::Bottom_FlightKickRight ||
 							i == (int)CharaAnimeID::Bottom_FlightNormal ||
+							i == (int)CharaAnimeID::Upper_FlightUseItem ||
 							i == (int)CharaAnimeID::Upper_FlightNormal
 							) {
 							GetAnime((CharaAnimeID)i).per = GetAnime((CharaAnimeID)i).per * GetFlightPer();
@@ -717,6 +767,13 @@ namespace FPS_n2 {
 				ExecuteAnim();				//AnimUpdte//0.03ms
 				ExecuteMatrix();			//SetMat指示//0.03ms
 				ExecuteShape();				//顔//スコープ内0.01ms
+				if (this->m_UsingItem) {
+					this->GetItem(this->m_ItemSel)->SetHand(
+						MATRIX_ref::RotVec2(VECTOR_ref::vget(0, 1, 0), VECTOR_ref::vget(0, 0, -1))
+						*GetFrameWorldMat(CharaFrame::LeftHandJoint).GetRot(),
+						GetFrameWorldMat(CharaFrame::LeftHandJoint).pos());
+				}
+
 			}
 			//void			Draw(void) noexcept override { ObjectBaseClass::Draw(); }
 		};

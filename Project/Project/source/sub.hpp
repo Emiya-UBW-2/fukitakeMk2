@@ -29,6 +29,7 @@ namespace FPS_n2 {
 		bool m_Press_Brake{ false };
 		bool m_MPress{ false };
 		bool m_NPress{ false };
+		bool m_JPress{ false };
 	public:
 		void			SetInput(
 			float pAddxRad, float pAddyRad,
@@ -44,7 +45,8 @@ namespace FPS_n2 {
 			bool pPress_Accel,
 			bool pPress_Brake,
 			bool pMPress,
-			bool pNPress
+			bool pNPress,
+			bool pJPress
 		) {
 			this->m_AddxRad = pAddxRad;
 			this->m_AddyRad = pAddyRad;
@@ -60,6 +62,7 @@ namespace FPS_n2 {
 			this->m_Press_Brake = pPress_Brake;
 			this->m_MPress = pMPress;
 			this->m_NPress = pNPress;
+			this->m_JPress = pJPress;
 		}
 	};
 	//ƒLƒƒƒ‰“ü—Í

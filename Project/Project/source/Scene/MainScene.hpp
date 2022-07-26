@@ -11,7 +11,7 @@ namespace FPS_n2 {
 			SoundHandle Env;
 			//
 			static const int chara_num = 3;
-			static const int item_num = 6;
+			static const int item_num = 9;
 			static const int cart_num = 2;
 			//関連
 			int tgtSel = 0;
@@ -24,7 +24,6 @@ namespace FPS_n2 {
 			float EyeRunPer = 0.f;
 			switchs FPSActive;
 			switchs MouseActive;
-			switchs RunKey;
 			//UI関連
 			UIClass UI_class;
 			//
@@ -62,11 +61,14 @@ namespace FPS_n2 {
 					this->Obj.AddObject(ObjType::Human, "data/Charactor/Marisa/", DX_LOADMODEL_PHYSICS_REALTIME);
 					this->Obj.AddObject(ObjType::Houki, "data/Houki/Houki01/", DX_LOADMODEL_PHYSICS_LOADCALC);
 				}
-				for (int i = 0; i < item_num/2; i++) {
+				for (int i = 0; i < item_num / 3; i++) {
 					this->Obj.AddObject(ObjType::Item, "data/Item/BluePotion/", DX_LOADMODEL_PHYSICS_LOADCALC);
 				}
-				for (int i = 0; i < item_num/2; i++) {
+				for (int i = 0; i < item_num / 3; i++) {
 					this->Obj.AddObject(ObjType::Item, "data/Item/YellowPotion/", DX_LOADMODEL_PHYSICS_LOADCALC);
+				}
+				for (int i = 0; i < item_num / 3; i++) {
+					this->Obj.AddObject(ObjType::Item, "data/Item/RedPotion/", DX_LOADMODEL_PHYSICS_LOADCALC);
 				}
 				//guide
 				this->Obj.AddObject(ObjType::Circle, "data/model/Circle/", DX_LOADMODEL_PHYSICS_LOADCALC);
@@ -83,12 +85,12 @@ namespace FPS_n2 {
 				//オブジェ
 				//人
 				for (int i = 0; i < chara_num; i++) {
-					auto& c = (std::shared_ptr<CharacterClass>&)(this->Obj.GetObj(ObjType::Human, i));
-					c->SetHoukiPtr((std::shared_ptr<HoukiClass>&)(this->Obj.GetObj(ObjType::Houki, i)));
+					auto& c = (std::shared_ptr<CharacterClass>&)(*this->Obj.GetObj(ObjType::Human, i));
+					c->SetHoukiPtr((std::shared_ptr<HoukiClass>&)(*this->Obj.GetObj(ObjType::Houki, i)));
 					c->ValueSet(deg2rad(0.f), deg2rad(-90.f), VECTOR_ref::vget(0.f, 0.f, -52.5f + (float)(i - 1)*20.f));
 				}
 				{
-					auto& Chara = (std::shared_ptr<CharacterClass>&)(this->Obj.GetObj(ObjType::Human, 0));//自分
+					auto& Chara = (std::shared_ptr<CharacterClass>&)(*this->Obj.GetObj(ObjType::Human, 0));//自分
 					this->HPBuf = Chara->GetHP();
 					this->MPBuf = Chara->GetMP();
 					this->scoreBuf = Chara->GetScore();
@@ -96,13 +98,13 @@ namespace FPS_n2 {
 				//アイテム
 				{
 					for (int i = 0; i < item_num; i++) {
-						auto& c = this->Obj.GetObj(ObjType::Item, i);
-						c->SetMove(MATRIX_ref::RotY(deg2rad(0)), VECTOR_ref::vget(20 * (i / (item_num / 2)), 0.f, 20 + 20 * (i% (item_num / 2))));
+						auto& c = *this->Obj.GetObj(ObjType::Item, i);
+						c->SetMove(MATRIX_ref::RotY(deg2rad(0)), VECTOR_ref::vget(20.f * (i / (item_num / 3)), 0.f, 20.f + 20.f * (i% (item_num / 3))));
 					}
 				}
 				//ガイドサークル
 				{
-					auto& c = this->Obj.GetObj(ObjType::Circle, 0);
+					auto& c = *this->Obj.GetObj(ObjType::Circle, 0);
 					c->SetMove(MATRIX_ref::RotY(deg2rad(-90)), VECTOR_ref::vget(-10.f, 0, -20));
 				}
 				//UI
@@ -143,7 +145,7 @@ namespace FPS_n2 {
 			}
 			//
 			bool Update(void) noexcept override {
-				auto& Chara = (std::shared_ptr<CharacterClass>&)(this->Obj.GetObj(ObjType::Human, 0));//自分
+				auto& Chara = (std::shared_ptr<CharacterClass>&)(*this->Obj.GetObj(ObjType::Human, 0));//自分
 				//FirstDoing
 				if (IsFirstLoop) {
 					SetMousePoint(DXDraw::Instance()->disp_x / 2, DXDraw::Instance()->disp_y / 2);
@@ -166,9 +168,6 @@ namespace FPS_n2 {
 				//Input,AI
 				{
 					MouseActive.GetInput(CheckHitKeyWithCheck(KEY_INPUT_TAB) != 0);
-					FPSActive.GetInput(CheckHitKeyWithCheck(KEY_INPUT_V) != 0);
-					RunKey.GetInput(CheckHitKeyWithCheck(KEY_INPUT_LSHIFT) != 0);
-					auto MidPress = (GetMouseInputWithCheck() & MOUSE_INPUT_RIGHT) != 0;
 					int mx = DXDraw::Instance()->disp_x / 2, my = DXDraw::Instance()->disp_y / 2;
 					if (MouseActive.on()) {
 						if (MouseActive.trigger()) {
@@ -185,8 +184,88 @@ namespace FPS_n2 {
 					float cam_per = ((camera_main.fov / deg2rad(75)) / (is_lens() ? zoom_lens() : 1.f)) / 100.f;
 					float pp_x = std::clamp(-(float)(my - DXDraw::Instance()->disp_y / 2)*1.f, -9.f, 9.f) * cam_per;
 					float pp_y = std::clamp((float)(mx - DXDraw::Instance()->disp_x / 2)*1.f, -9.f, 9.f) * cam_per;
+					bool w_key = (CheckHitKeyWithCheck(KEY_INPUT_W) != 0);
+					bool s_key = (CheckHitKeyWithCheck(KEY_INPUT_S) != 0);
+					bool a_key = (CheckHitKeyWithCheck(KEY_INPUT_A) != 0);
+					bool d_key = (CheckHitKeyWithCheck(KEY_INPUT_D) != 0);
+					bool Lshift_key = (CheckHitKeyWithCheck(KEY_INPUT_LSHIFT) != 0);
+					bool q_key = (CheckHitKeyWithCheck(KEY_INPUT_Q) != 0);
+					bool e_key = (CheckHitKeyWithCheck(KEY_INPUT_E) != 0);
+					bool space_key = (CheckHitKeyWithCheck(KEY_INPUT_SPACE) != 0);
+					bool r_key = (CheckHitKeyWithCheck(KEY_INPUT_R) != 0);
+					bool f_key = (CheckHitKeyWithCheck(KEY_INPUT_F) != 0);
+					bool m_key = (CheckHitKeyWithCheck(KEY_INPUT_M) != 0);
+					bool n_key = (CheckHitKeyWithCheck(KEY_INPUT_N) != 0);
+					bool j_key = (CheckHitKeyWithCheck(KEY_INPUT_J) != 0);
+					bool look_key = (GetMouseInputWithCheck() & MOUSE_INPUT_RIGHT) != 0;
+					bool eyechange_key = CheckHitKeyWithCheck(KEY_INPUT_V) != 0;
 
-					Easing(&TPS_Per, (!FPSActive.on() && MidPress) ? 1.f : 0.f, 0.9f, EasingType::OutExpo);
+					if (GetJoypadNum() > 0) {
+						DINPUT_JOYSTATE input;
+						int padID = DX_INPUT_PAD1;
+						GetJoypadInputState(padID);
+						switch (GetJoypadType(padID)) {
+						case DX_PADTYPE_OTHER:
+						case DX_PADTYPE_DUAL_SHOCK_4:
+						case DX_PADTYPE_DUAL_SENSE:
+						case DX_PADTYPE_SWITCH_JOY_CON_L:
+						case DX_PADTYPE_SWITCH_JOY_CON_R:
+						case DX_PADTYPE_SWITCH_PRO_CTRL:
+						case DX_PADTYPE_SWITCH_HORI_PAD:
+							GetJoypadDirectInputState(DX_INPUT_PAD1, &input);
+							{
+								pp_x = std::clamp(-(float)(-input.Rz) / 100.f*1.f, -9.f, 9.f) * cam_per;
+								pp_y = std::clamp((float)(input.Z) / 100.f*1.f, -9.f, 9.f) * cam_per;
+
+								float deg = rad2deg(atan2f((float)input.X, -(float)input.Y));
+								if (!(input.X == 0 && input.Y == 0)) {
+									w_key = (-50.f <= deg && deg <= 50.f);
+									a_key = (-140.f <= deg && deg <= -40.f);
+									s_key = (130.f <= deg || deg <= -130.f);
+									d_key = (40.f <= deg && deg <= 140.f);
+								}
+								else {
+									w_key = false;
+									a_key = false;
+									s_key = false;
+									d_key = false;
+								}
+								//走り(未定)
+								Lshift_key = (input.Buttons[10] != 0);
+								space_key = (input.Buttons[10] != 0);
+								//視点切り替え
+								look_key = (input.Buttons[11] != 0);
+								//eyechange_key = (input.Buttons[11]!=0);
+								//ヨー
+								q_key = (input.Buttons[6] != 0);
+								e_key = (input.Buttons[7] != 0);
+								//加減速
+								f_key = (input.Buttons[4] != 0);
+								r_key = (input.Buttons[5] != 0);
+								//十字
+								deg = (float)(input.POV[0]) / 100.f;
+								//w_key = (310.f <= deg || deg <= 50.f);
+								n_key = (220.f <= deg && deg <= 320.f);
+								//s_key = (130.f <= deg && deg <= 230.f);
+								m_key = (40.f <= deg && deg <= 140.f);
+								//ボタン
+								j_key = (input.Buttons[3] != 0);//□
+								//_key = (input.Buttons[0] != 0);//△
+								//_key = (input.Buttons[1] != 0);//〇
+								//_key = (input.Buttons[2] != 0);//×
+							}
+							break;
+						case DX_PADTYPE_XBOX_360:
+						case DX_PADTYPE_XBOX_ONE:
+							break;
+						default:
+							break;
+						}
+					}
+
+					FPSActive.GetInput(eyechange_key);
+
+					Easing(&TPS_Per, (!FPSActive.on() && look_key) ? 1.f : 0.f, 0.9f, EasingType::OutExpo);
 
 					TPS_Xrad += pp_x;
 					TPS_Yrad += pp_y;
@@ -205,18 +284,21 @@ namespace FPS_n2 {
 
 					InputControl Input;
 					bool isready = this->m_ReadyTime < 0.f;
+
+
 					for (int i = 0; i < chara_num; i++) {
-						auto& c = (std::shared_ptr<CharacterClass>&)(this->Obj.GetObj(ObjType::Human, i));
+						auto& c = (std::shared_ptr<CharacterClass>&)(*this->Obj.GetObj(ObjType::Human, i));
 						//拾い判定
 						for (int j = 0; j < item_num; j++) {
-							auto& item = (std::shared_ptr<ItemClass>&)(this->Obj.GetObj(ObjType::Item, j));
-							if (!item->GetHaveChara()) {
-								auto p = (item->GetMatrix().pos() - c->GetMatrix().pos()).size();
+							if (this->Obj.GetObj(ObjType::Item, j) == nullptr) { break; }
+							auto& item = (std::shared_ptr<ItemClass>&)(*this->Obj.GetObj(ObjType::Item, j));
+							if (!item->GetHaveChara() && !item->GetUsed()) {
 								if ((item->GetMatrix().pos() - c->GetMatrix().pos()).size() < 12.5f*1.f) {
 									c->AddItem(item);
 								}
 							}
 						}
+
 						//操作
 						if (i == 0
 							//&& false
@@ -224,18 +306,19 @@ namespace FPS_n2 {
 							Input.SetInput(
 								pp_x*(1.f - TPS_Per),
 								pp_y*(1.f - TPS_Per),
-								(CheckHitKeyWithCheck(KEY_INPUT_W) != 0) && isready,
-								(CheckHitKeyWithCheck(KEY_INPUT_S) != 0) && isready,
-								(CheckHitKeyWithCheck(KEY_INPUT_A) != 0) && isready,
-								(CheckHitKeyWithCheck(KEY_INPUT_D) != 0) && isready,
-								(CheckHitKeyWithCheck(KEY_INPUT_LSHIFT) != 0) && isready,
-								(CheckHitKeyWithCheck(KEY_INPUT_Q) != 0) && isready,
-								(CheckHitKeyWithCheck(KEY_INPUT_E) != 0) && isready,
-								(CheckHitKeyWithCheck(KEY_INPUT_SPACE) != 0) && isready,
-								(CheckHitKeyWithCheck(KEY_INPUT_R) != 0) && isready,
-								(CheckHitKeyWithCheck(KEY_INPUT_F) != 0) && isready,
-								(CheckHitKeyWithCheck(KEY_INPUT_M) != 0) && isready,
-								(CheckHitKeyWithCheck(KEY_INPUT_N) != 0) && isready
+								w_key && isready,
+								s_key && isready,
+								a_key && isready,
+								d_key && isready,
+								Lshift_key && isready,
+								q_key && isready,
+								e_key && isready,
+								space_key && isready,
+								r_key && isready,
+								f_key && isready,
+								m_key && isready,
+								n_key && isready,
+								j_key && isready
 							);
 							Chara->SetInput(Input, isready);
 							continue;
@@ -254,6 +337,7 @@ namespace FPS_n2 {
 							(false) && isready,
 							(false) && isready,
 							(false) && isready,
+							(false) && isready,
 							(false) && isready
 						);
 						c->SetInput(Input, isready);
@@ -261,6 +345,15 @@ namespace FPS_n2 {
 				}
 				//Execute
 				this->Obj.ExecuteObject();
+				//アイテム削除
+				for (int i = 0; i < item_num; i++) {
+					if (this->Obj.GetObj(ObjType::Item, i) == nullptr) { break; }
+					auto& item = (std::shared_ptr<ItemClass>&)(*this->Obj.GetObj(ObjType::Item, i));
+					if (item->GetUsed()) {
+						this->Obj.DelObj(ObjType::Item, i);
+						i = 0;
+					}
+				}
 				//col
 
 				//視点
@@ -334,23 +427,37 @@ namespace FPS_n2 {
 					{
 						int i = 0;
 						int ID = -1;
-						//
-						i = 0;
-						ID = (Chara->GetItemSel() - 1);
-						if (ID <= -1) { ID = Chara->GetItemNum() - 1; }
-						if (Chara->GetItemNum() <= ID) { ID = -1; }
-						UI_class.SetItemGraph(i, (ID != -1) ? (&(Chara->GetItem(ID)->GetItemGraph())) : nullptr);
+						int ID1 = -1;
+						int ID2 = -1;
 						//
 						i = 1;
 						ID = Chara->GetItemSel();
 						if (Chara->GetItemNum() <= ID) { ID = -1; }
+						ID1 = ID;
+
 						UI_class.SetItemGraph(i, (ID != -1) ? (&(Chara->GetItem(ID)->GetItemGraph())) : nullptr);
+						UI_class.SetIntParam(9 + i, (ID != -1) ? (int)(Chara->GetItemCnt(ID)) : 0);
+						//
+						i = 0;
+						ID = (Chara->GetItemSel() - 1);
+						if (ID <= -1) { ID = (int)(Chara->GetItemNum()) - 1; }
+						ID2 = ID;
+
+						if (Chara->GetItemNum() <= ID) { ID = -1; }
+						if (ID1 == ID) { ID = -1; }
+
+						UI_class.SetItemGraph(i, (ID != -1) ? (&(Chara->GetItem(ID)->GetItemGraph())) : nullptr);
+						UI_class.SetIntParam(9 + i, (ID != -1) ? (int)(Chara->GetItemCnt(ID)) : 0);
 						//
 						i = 2;
 						ID = (Chara->GetItemSel() + 1);
 						if (ID >= Chara->GetItemNum()) { ID = 0; }
+
 						if (Chara->GetItemNum() <= ID) { ID = -1; }
+						if (ID1 == ID) { ID = -1; }
+						//if (ID2 == ID) { ID = -1; }
 						UI_class.SetItemGraph(i, (ID != -1) ? (&(Chara->GetItem(ID)->GetItemGraph())) : nullptr);
+						UI_class.SetIntParam(9 + i, (ID != -1) ? (int)(Chara->GetItemCnt(ID)) : 0);
 
 						if (PrevPointSel > Chara->GetItemSel()) {
 							if (Chara->GetItemSel() == 0 && PrevPointSel == Chara->GetItemNum() - 1) {

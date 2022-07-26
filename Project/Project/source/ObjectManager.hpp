@@ -47,18 +47,32 @@ namespace FPS_n2 {
 				this->m_Object.back()->SetFrameNum();
 				this->m_Object.back()->SetMapCol(this->m_MapCol);
 			}
-			auto& GetObj(ObjType ModelType, int num) {
+			std::shared_ptr<ObjectBaseClass>* GetObj(ObjType ModelType, int num) {
 				int cnt = 0;
 				for (int i = 0; i < this->m_Object.size(); i++) {
 					auto& o = this->m_Object[i];
 					if (o->GetobjType() == ModelType) {
 						if (cnt == num) {
-							return this->m_Object[i];
+							return &this->m_Object[i];
 						}
 						cnt++;
 					}
 				}
-				return this->m_Object[0];
+				return nullptr;
+			}
+			void DelObj(ObjType ModelType, int num) {
+				int cnt = 0;
+				for (int i = 0; i < this->m_Object.size(); i++) {
+					auto& o = this->m_Object[i];
+					if (o->GetobjType() == ModelType) {
+						if (cnt == num) {
+							//‡”Ô‚ÌˆÛŽ‚Ì‚½‚ß‚±‚±‚Íerase
+							this->m_Object.erase(this->m_Object.begin() + i);
+							break;
+						}
+						cnt++;
+					}
+				}
 			}
 			//Delobj—\’è
 		public:

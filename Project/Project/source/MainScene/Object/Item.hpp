@@ -2,15 +2,28 @@
 #include"Header.hpp"
 
 namespace FPS_n2 {
+	enum class ItemType {
+		YellowPotion,
+		BluePotion,
+		RedPotion,
+	};
+
 	namespace Sceneclass {
 		class ItemClass : public ObjectBaseClass {
+			bool													m_Used;
 			bool													m_Have;
+			bool													m_Hand;
 			GraphHandle												m_ItemGraph;
+			ItemType												m_type;
 		public:
 			auto& GetItemGraph() const noexcept { return m_ItemGraph; }
-			
+			const auto& GetItemType() const noexcept { return m_type; }
+
 			void SetCharaPtr(bool value) noexcept { m_Have = value; }
 			const auto GetHaveChara() const noexcept { return m_Have; }
+
+			void SetUsed(bool value) noexcept { m_Used = value; }
+			const auto GetUsed() const noexcept { return m_Used; }
 		public:
 			ItemClass(void) noexcept { this->m_objType = ObjType::Item; }
 			~ItemClass(void) noexcept {}
@@ -18,8 +31,20 @@ namespace FPS_n2 {
 			void			Init(void) noexcept override {
 				ObjectBaseClass::Init();
 				this->m_move.vec.clear();
+				this->m_Hand = false;
 				this->m_Have = false;
+				this->m_Used = false;
 				this->m_ItemGraph = GraphHandle::Load(this->m_FilePath + "pic.png");
+				//todo:ƒAƒCƒeƒ€Ý’è
+				if (this->m_FilePath.find("YellowPotion") != std::string::npos) {
+					this->m_type = ItemType::YellowPotion;
+				}
+				else if (this->m_FilePath.find("BluePotion") != std::string::npos) {
+					this->m_type = ItemType::BluePotion;
+				}
+				else if (this->m_FilePath.find("RedPotion") != std::string::npos) {
+					this->m_type = ItemType::RedPotion;
+				}
 			}
 			void Execute(void) noexcept override {
 				if (!this->m_Have) {
@@ -38,9 +63,17 @@ namespace FPS_n2 {
 
 					UpdateMove();
 				}
-				else {
+				else if(!this->m_Hand){
 					this->m_IsActive = false;
 				}
+				this->m_Hand = false;
+			}
+			void SetHand(const MATRIX_ref& mat, const VECTOR_ref& pos) noexcept {
+				this->m_Hand = true;
+				this->m_IsActive = true;
+				this->m_move.mat = mat;
+				this->m_move.pos = pos;
+				UpdateMove();
 			}
 		};
 	};

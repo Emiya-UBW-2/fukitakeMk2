@@ -9,7 +9,7 @@ namespace FPS_n2 {
 
 			FontPool UI;
 
-			int intParam[9]{ 0 };
+			int intParam[12]{ 0 };
 			float floatParam[5]{ 0 };
 			GraphHandle* ItemGraphPtr[3]{ 0 };
 
@@ -123,15 +123,18 @@ namespace FPS_n2 {
 					SetDrawBright(col, col, col);
 					if (ItemGraphPtr[0] != nullptr) {
 						ItemGraphPtr[0]->DrawExtendGraph((int)(xp1_r - xs1_r), (int)(yp1_r - ys1_r), (int)(xp1_r + xs1_r), (int)(yp1_r + ys1_r), true);
+						UI.Get(y_r(20)).Get_handle().DrawStringFormat_RIGHT((int)(xp1_r + xs1_r), (int)(yp1_r + ys1_r) - y_r(20), Green, White, "%d", intParam[9]);
 					}
 					if (ItemGraphPtr[2] != nullptr) {
 						ItemGraphPtr[2]->DrawExtendGraph((int)(xp3_r - xs3_r), (int)(yp3_r - ys3_r), (int)(xp3_r + xs3_r), (int)(yp3_r + ys3_r), true);
+						UI.Get(y_r(20)).Get_handle().DrawStringFormat_RIGHT((int)(xp3_r + xs3_r), (int)(yp3_r + ys3_r) - y_r(20), Green, White, "%d", intParam[11]);
 					}
 					//’†‰›
 					col = (int)Lerp(128.f, 255.f, Lper*Rper);
 					SetDrawBright(col, col, col);
 					if (ItemGraphPtr[1] != nullptr) {
 						ItemGraphPtr[1]->DrawExtendGraph((int)(xp2_r - xs2_r), (int)(yp2_r - ys2_r), (int)(xp2_r + xs2_r), (int)(yp2_r + ys2_r), true);
+						UI.Get(y_r(20)).Get_handle().DrawStringFormat_RIGHT((int)(xp2_r + xs2_r), (int)(yp2_r + ys2_r) - y_r(20), Green, White, "%d", intParam[10]);
 					}
 
 					SetDrawBright(255, 255, 255);

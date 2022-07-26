@@ -23,6 +23,10 @@ namespace FPS_n2 {
 			Bottom_FlightKickLeft,
 			Bottom_FlightKickRight,
 
+			Upper_UseItem,
+
+			Upper_FlightUseItem,
+
 			AnimeIDMax,
 		};
 		enum class CharaFrame {
