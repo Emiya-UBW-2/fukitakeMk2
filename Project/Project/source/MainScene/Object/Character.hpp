@@ -18,9 +18,12 @@ namespace FPS_n2 {
 		private:
 			CharacterMoveGroundControl							m_InputGround;
 			CharacterMoveFlightControl							m_InputSky;
-			switchs												m_Mkey;
-			switchs												m_Nkey;
-			switchs												m_Jkey;
+			switchs												m_Rightkey;
+			switchs												m_Leftkey;
+			switchs												m_UseItemkey;
+			switchs												m_Upkey;
+			switchs												m_Downkey;
+			switchs												m_UseMagickey;
 			bool												m_KeyActive{ true };
 			//飛行関連
 			VECTOR_ref											m_FlightVecBuf;
@@ -51,6 +54,9 @@ namespace FPS_n2 {
 			bool												m_Running{ false };
 			bool												m_ReadySwitch{ false };
 			bool												m_UsingItem{ false };
+			bool												m_SetMagic{ false };
+			float												m_SetMagicPer{ 0.f };
+			float												m_SetMagicTime{ 0.f };
 			CharaAnimeID										m_UpperAnimSelect, m_PrevUpperAnimSel;
 			CharaAnimeID										m_BottomAnimSelect;
 			//
@@ -67,6 +73,8 @@ namespace FPS_n2 {
 			//アイテム
 			std::vector <std::pair<ItemType,std::vector<std::shared_ptr<ItemClass>>>>	m_Item_Ptrs;
 			int													m_ItemSel;
+			int													m_MagicSel;
+			int													m_MagicNum;
 		public://ゲッター
 			//
 			const auto		GetFrameLocalMat(CharaFrame frame) const noexcept { return this->m_obj.GetFrameLocalMatrix(Frames[(int)frame].first); }
@@ -148,6 +156,9 @@ namespace FPS_n2 {
 				this->m_Running = false;
 				this->m_ReadySwitch = false;
 				this->m_UsingItem = false;
+				this->m_SetMagic = false;
+				this->m_SetMagicPer = 0.f;
+				this->m_SetMagicTime = 0.f;
 				//this->m_UpperAnimSelect;
 				//this->m_PrevUpperAnimSel;
 				//this->m_BottomAnimSelect;
@@ -160,6 +171,9 @@ namespace FPS_n2 {
 				//サウンド
 				this->m_CharaSound = -1;
 				//this->m_Houki_Ptr{ nullptr };					//箒
+				this->m_ItemSel = 0;
+				this->m_MagicSel = 0;
+				this->m_MagicNum = 4;
 				//動作にかかわる操作
 				this->m_InputGround.ValueSet(pxRad, pyRad);
 				this->m_InputSky.ValueSet();
@@ -213,21 +227,38 @@ namespace FPS_n2 {
 					pInput.m_EPress
 				);
 				//
-				m_Mkey.GetInput(pInput.m_MPress);
-				m_Nkey.GetInput(pInput.m_NPress);
-				m_Jkey.GetInput(pInput.m_JPress);
+				m_Rightkey.GetInput(pInput.m_RightPress);
+				m_Leftkey.GetInput(pInput.m_LeftPress);
+				m_UseItemkey.GetInput(pInput.m_UseItemPress);
+				m_Upkey.GetInput(pInput.m_UpPress);
+				m_Downkey.GetInput(pInput.m_DownPress);
+				m_UseMagickey.GetInput(pInput.m_UseMagicPress);
 
-				if (m_Mkey.trigger()) {
+				if (m_Rightkey.trigger()) {
 					AddItemSel();
 				}
-				if (m_Nkey.trigger()) {
+				if (m_Leftkey.trigger()) {
 					SubItemSel();
 				}
-				if (!this->m_UsingItem && (this->m_Item_Ptrs.size() > 0)) {
-					if (m_Jkey.trigger()) {
+				if (!this->m_SetMagic && !this->m_UsingItem && (this->m_Item_Ptrs.size() > 0)) {
+					if (m_UseItemkey.trigger()) {
 						this->m_UsingItem = true;
 						GetAnime(CharaAnimeID::Upper_UseItem).GoStart();
 						GetAnime(CharaAnimeID::Upper_FlightUseItem).GoStart();
+					}
+				}
+				if (m_Downkey.trigger()) {
+					AddMagicSel();
+					if (!this->m_SetMagic && !this->m_UsingItem) {
+						this->m_SetMagic = true;
+						this->m_SetMagicTime = 1.f;
+					}
+				}
+				if (m_Upkey.trigger()) {
+					SubMagicSel();
+					if (!this->m_SetMagic && !this->m_UsingItem) {
+						this->m_SetMagic = true;
+						this->m_SetMagicTime = 1.f;
 					}
 				}
 				//
@@ -285,7 +316,6 @@ namespace FPS_n2 {
 			const auto		GetItemNum(void) const noexcept { return this->m_Item_Ptrs.size(); }//カテゴリごとのアイテム数
 			const auto&		GetItem(int id) const noexcept { return this->m_Item_Ptrs[id].second.front(); }
 			const auto		GetItemCnt(int id) const noexcept { return this->m_Item_Ptrs[id].second.size(); }
-
 			const auto&		GetItemSel() const noexcept { return this->m_ItemSel; }
 			void		AddItemSel() noexcept {
 				this->m_ItemSel++;
@@ -297,6 +327,21 @@ namespace FPS_n2 {
 				this->m_ItemSel--;
 				if (this->m_ItemSel < 0) {
 					this->m_ItemSel = std::max(0, (int)(this->m_Item_Ptrs.size()) - 1);
+				}
+			}
+			//
+			const auto&		GetMagicNum() const noexcept { return this->m_MagicNum; }
+			const auto&		GetMagicSel() const noexcept { return this->m_MagicSel; }
+			void		AddMagicSel() noexcept {
+				this->m_MagicSel++;
+				if (this->m_MagicSel > this->m_MagicNum - 1) {
+					this->m_MagicSel = 0;
+				}
+			}
+			void		SubMagicSel() noexcept {
+				this->m_MagicSel--;
+				if (this->m_MagicSel < 0) {
+					this->m_MagicSel = std::max(0, (int)(this->m_MagicNum) - 1);
 				}
 			}
 		private: //更新関連
@@ -350,6 +395,9 @@ namespace FPS_n2 {
 					//上半身
 					{
 						this->m_UpperAnimSelect = CharaAnimeID::Upper_Down;
+						if (this->m_SetMagic) {
+							this->m_UpperAnimSelect = CharaAnimeID::Upper_SetMagic;
+						}
 						if (this->m_UsingItem) {
 							this->m_UpperAnimSelect = CharaAnimeID::Upper_UseItem;
 							SetAnimOnce(CharaAnimeID::Upper_UseItem, 1.f);
@@ -418,7 +466,17 @@ namespace FPS_n2 {
 				//アニメセレクト
 				{
 					//上半身
-					GetAnimeBuf(CharaAnimeID::Upper_FlightNormal) = 1.f;
+					if (this->m_SetMagic && (this->m_SetMagicTime > 0.f)) {
+						this->m_SetMagicTime -= 1.f / FPS;
+						if (this->m_SetMagicTime <= 0.f) {
+							this->m_SetMagicTime = 0.f;
+							this->m_SetMagic = false;
+						}
+					}
+					Easing(&this->m_SetMagicPer, (this->m_SetMagic) ? 1.f : 0.f, 0.9f, EasingType::OutExpo);
+
+					GetAnimeBuf(CharaAnimeID::Upper_FlightNormal) = 1.f - this->m_SetMagicPer;
+					GetAnimeBuf(CharaAnimeID::Upper_FlightSetMagic) = this->m_SetMagicPer;
 					GetAnimeBuf(CharaAnimeID::Upper_FlightUseItem) = 0.f;
 					if (this->m_UsingItem) {
 						GetAnimeBuf(CharaAnimeID::Upper_FlightNormal) = 0.f;
@@ -462,7 +520,8 @@ namespace FPS_n2 {
 							i == (int)CharaAnimeID::Upper_RunningStart ||
 							i == (int)CharaAnimeID::Upper_Running ||
 							i == (int)CharaAnimeID::Upper_Sprint ||
-							i == (int)CharaAnimeID::Upper_UseItem
+							i == (int)CharaAnimeID::Upper_UseItem ||
+							i == (int)CharaAnimeID::Upper_SetMagic
 							)
 						{
 							GetAnimeBuf((CharaAnimeID)i) += ((i == (int)this->m_UpperAnimSelect) ? 1.f : -1.f)*3.f / FPS;
@@ -488,6 +547,7 @@ namespace FPS_n2 {
 							i == (int)CharaAnimeID::Bottom_FlightKickRight ||
 							i == (int)CharaAnimeID::Bottom_FlightNormal ||
 							i == (int)CharaAnimeID::Upper_FlightUseItem ||
+							i == (int)CharaAnimeID::Upper_FlightSetMagic ||
 							i == (int)CharaAnimeID::Upper_FlightNormal
 							) {
 							GetAnime((CharaAnimeID)i).per = GetAnime((CharaAnimeID)i).per * GetFlightPer();
@@ -706,7 +766,12 @@ namespace FPS_n2 {
 						auto mat = (this->m_move.mat*GetCharaDir().Inverse());
 						yVec1 = mat.yvec();
 						zVec1 = mat.zvec()*-1.f;
-						Pos1 = GetFrameWorldMat(CharaFrame::RightHandJoint).pos();
+						if (this->m_SetMagicPer>0.1f) {
+							Pos1 = GetFrameWorldMat(CharaFrame::LeftHandJoint).pos();
+						}
+						else {
+							Pos1 = GetFrameWorldMat(CharaFrame::RightHandJoint).pos();
+						}
 					}
 					//背負い場所探索
 					VECTOR_ref yVec2, zVec2, Pos2;

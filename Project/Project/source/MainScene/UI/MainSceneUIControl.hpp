@@ -9,7 +9,7 @@ namespace FPS_n2 {
 
 			FontPool UI;
 
-			int intParam[12]{ 0 };
+			int intParam[14]{ 0 };
 			float floatParam[5]{ 0 };
 			GraphHandle* ItemGraphPtr[3]{ 0 };
 
@@ -155,7 +155,7 @@ namespace FPS_n2 {
 				//î•ñ
 				{
 					int xp1, yp1;
-					int Num = 4;
+					int Num = intParam[13];
 					int ys1 = y_r(30);
 					//–¼‘OA‘Ì—ÍA–‚—Í
 					{
@@ -191,14 +191,20 @@ namespace FPS_n2 {
 					{
 						xp1 = DrawParts->disp_x - y_r(300);
 						yp1 = DrawParts->disp_y - y_r(30) - ys1 * Num;
-						for (int s = 0; s < Num; s++) {
-							UI.Get(y_r(20)).Get_handle().DrawStringFormat(xp1, yp1, Green, White, "%s", "MAGIC");
 
+						int sel = intParam[12];
+
+						UI.Get(y_r(20)).Get_handle().DrawString_RIGHT(xp1, yp1 + ys1* sel,"¨", Green, White);
+
+						for (int s = 0; s < Num; s++) {
+							UI.Get(y_r(20)).Get_handle().DrawStringFormat(xp1, yp1, (sel == s) ? Green : GetColor(15, 110, 50), White, "%s", "MAGIC");
+
+							auto color = GetColorU8((sel == s) ? 255 : 240, (sel == s) ? 255 : 192, 0, 255);
 							DrawGauge(
 								xp1 + y_r(100), yp1 + y_r(2), xp1 + y_r(100) + y_r(160), yp1 + y_r(2) + y_r(12),
-								100, 100, 100, GetColorU8(255, 255, 0,255), GetColorU8(255, 255, 0, 255), GetColorU8(255, 255, 0, 255),
+								100, 100, 100, color, color, color,
 								GetColor(0, 0, 255), GetColor(255, 0, 0)
-								);
+							);
 							yp1 += ys1;
 						}
 					}

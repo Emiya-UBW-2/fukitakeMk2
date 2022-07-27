@@ -27,9 +27,12 @@ namespace FPS_n2 {
 		bool m_GoFlight{ false };
 		bool m_Press_Accel{ false };
 		bool m_Press_Brake{ false };
-		bool m_MPress{ false };
-		bool m_NPress{ false };
-		bool m_JPress{ false };
+		bool m_RightPress{ false };
+		bool m_LeftPress{ false };
+		bool m_UseItemPress{ false };
+		bool m_UpPress{ false };
+		bool m_DownPress{ false };
+		bool m_UseMagicPress{ false };
 	public:
 		void			SetInput(
 			float pAddxRad, float pAddyRad,
@@ -44,9 +47,12 @@ namespace FPS_n2 {
 			bool pGoFlight,
 			bool pPress_Accel,
 			bool pPress_Brake,
-			bool pMPress,
-			bool pNPress,
-			bool pJPress
+			bool pRightPress,
+			bool pLeftPress,
+			bool pUseItemPress,
+			bool pUpPress,
+			bool pDownPress,
+			bool pUseMagicPress
 		) {
 			this->m_AddxRad = pAddxRad;
 			this->m_AddyRad = pAddyRad;
@@ -60,9 +66,12 @@ namespace FPS_n2 {
 			this->m_GoFlight = pGoFlight;
 			this->m_Press_Accel = pPress_Accel;
 			this->m_Press_Brake = pPress_Brake;
-			this->m_MPress = pMPress;
-			this->m_NPress = pNPress;
-			this->m_JPress = pJPress;
+			this->m_RightPress = pRightPress;
+			this->m_LeftPress = pLeftPress;
+			this->m_UseItemPress = pUseItemPress;
+			this->m_UpPress = pUpPress;
+			this->m_DownPress = pDownPress;
+			this->m_UseMagicPress = pUseMagicPress;
 		}
 	};
 	//ƒLƒƒƒ‰“ü—Í

@@ -27,6 +27,9 @@ namespace FPS_n2 {
 
 			Upper_FlightUseItem,
 
+			Upper_SetMagic,
+			Upper_FlightSetMagic,
+
 			AnimeIDMax,
 		};
 		enum class CharaFrame {

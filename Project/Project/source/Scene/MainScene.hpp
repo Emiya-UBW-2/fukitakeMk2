@@ -194,10 +194,16 @@ namespace FPS_n2 {
 					bool space_key = (CheckHitKeyWithCheck(KEY_INPUT_SPACE) != 0);
 					bool r_key = (CheckHitKeyWithCheck(KEY_INPUT_R) != 0);
 					bool f_key = (CheckHitKeyWithCheck(KEY_INPUT_F) != 0);
-					bool m_key = (CheckHitKeyWithCheck(KEY_INPUT_M) != 0);
-					bool n_key = (CheckHitKeyWithCheck(KEY_INPUT_N) != 0);
-					bool j_key = (CheckHitKeyWithCheck(KEY_INPUT_J) != 0);
-					bool look_key = (GetMouseInputWithCheck() & MOUSE_INPUT_RIGHT) != 0;
+					bool right_key = (CheckHitKeyWithCheck(KEY_INPUT_RIGHT) != 0);
+					bool left_key = (CheckHitKeyWithCheck(KEY_INPUT_LEFT) != 0);
+					bool useItem_key = (CheckHitKeyWithCheck(KEY_INPUT_J) != 0);
+					bool up_key = (CheckHitKeyWithCheck(KEY_INPUT_UP) != 0);
+					bool down_key = (CheckHitKeyWithCheck(KEY_INPUT_DOWN) != 0);
+					auto wheel = GetMouseWheelRotVol();
+					up_key |= (wheel > 0);
+					down_key |= (wheel < 0);
+					bool useMagic_key = ((GetMouseInputWithCheck() & MOUSE_INPUT_LEFT) != 0);
+					bool look_key = ((GetMouseInputWithCheck() & MOUSE_INPUT_RIGHT) != 0);
 					bool eyechange_key = CheckHitKeyWithCheck(KEY_INPUT_V) != 0;
 
 					if (GetJoypadNum() > 0) {
@@ -244,14 +250,14 @@ namespace FPS_n2 {
 								r_key = (input.Buttons[5] != 0);
 								//十字
 								deg = (float)(input.POV[0]) / 100.f;
-								//w_key = (310.f <= deg || deg <= 50.f);
-								n_key = (220.f <= deg && deg <= 320.f);
-								//s_key = (130.f <= deg && deg <= 230.f);
-								m_key = (40.f <= deg && deg <= 140.f);
+								up_key = (310.f <= deg || deg <= 50.f);
+								left_key = (220.f <= deg && deg <= 320.f);
+								down_key = (130.f <= deg && deg <= 230.f);
+								right_key = (40.f <= deg && deg <= 140.f);
 								//ボタン
-								j_key = (input.Buttons[3] != 0);//□
+								useItem_key = (input.Buttons[3] != 0);//□
 								//_key = (input.Buttons[0] != 0);//△
-								//_key = (input.Buttons[1] != 0);//〇
+								useMagic_key = (input.Buttons[1] != 0);//〇
 								//_key = (input.Buttons[2] != 0);//×
 							}
 							break;
@@ -316,9 +322,12 @@ namespace FPS_n2 {
 								space_key && isready,
 								r_key && isready,
 								f_key && isready,
-								m_key && isready,
-								n_key && isready,
-								j_key && isready
+								right_key && isready,
+								left_key && isready,
+								useItem_key && isready,
+								up_key && isready,
+								down_key && isready,
+								useMagic_key && isready
 							);
 							Chara->SetInput(Input, isready);
 							continue;
@@ -326,6 +335,9 @@ namespace FPS_n2 {
 						Input.SetInput(
 							0.f,
 							0.f,
+							(false) && isready,
+							(false) && isready,
+							(false) && isready,
 							(false) && isready,
 							(false) && isready,
 							(false) && isready,
@@ -423,7 +435,7 @@ namespace FPS_n2 {
 					UI_class.SetIntParam(7, (int)Chara->GetMPMax());
 					UI_class.SetIntParam(8, (int)(this->MPBuf + 0.5f));
 					this->MPBuf += std::clamp((Chara->GetMP() - this->MPBuf)*100.f, -5.f, 5.f) / FPS;
-
+					//アイテム
 					{
 						int i = 0;
 						int ID = -1;
@@ -481,6 +493,11 @@ namespace FPS_n2 {
 						UI_class.SetfloatParam(4, SubItemBuf);
 						Easing(&AddItemBuf, 1.f, 0.9f, EasingType::OutExpo);
 						Easing(&SubItemBuf, 1.f, 0.9f, EasingType::OutExpo);
+					}
+					//魔法
+					{
+						UI_class.SetIntParam(12, Chara->GetMagicSel());
+						UI_class.SetIntParam(13, Chara->GetMagicNum());
 					}
 				}
 				TEMPSCENE::Update();
