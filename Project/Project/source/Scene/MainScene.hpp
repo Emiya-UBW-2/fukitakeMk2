@@ -71,7 +71,7 @@ namespace FPS_n2 {
 					this->Obj.AddObject(ObjType::Item, "data/Item/RedPotion/", DX_LOADMODEL_PHYSICS_LOADCALC);
 				}
 				//guide
-				this->Obj.AddObject(ObjType::Circle, "data/model/Circle/", DX_LOADMODEL_PHYSICS_LOADCALC);
+				//this->Obj.AddObject(ObjType::Circle, "data/model/Circle/", DX_LOADMODEL_PHYSICS_LOADCALC);
 				//ロード
 				SetCreate3DSoundFlag(FALSE);
 				Env = SoundHandle::Load("data/Sound/SE/envi.wav");
@@ -104,8 +104,8 @@ namespace FPS_n2 {
 				}
 				//ガイドサークル
 				{
-					auto& c = *this->Obj.GetObj(ObjType::Circle, 0);
-					c->SetMove(MATRIX_ref::RotY(deg2rad(-90)), VECTOR_ref::vget(-10.f, 0, -20));
+					//auto& c = *this->Obj.GetObj(ObjType::Circle, 0);
+					//c->SetMove(MATRIX_ref::RotY(deg2rad(-90)), VECTOR_ref::vget(-10.f, 0, -20));
 				}
 				//UI
 				tgtSel = -1;

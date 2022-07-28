@@ -81,6 +81,8 @@ namespace FPS_n2 {
 					this->g_fTime = 0.f;
 					this->OldTime = GetNowCount();
 				}
+
+				MV1SetDifColorScale(Sky.get(), GetColorF(0.9f, 0.9f, 0.9f, 1.0f));
 			}
 			//
 			void Execute(void) noexcept {

@@ -14,6 +14,9 @@ namespace FPS_n2 {
 		ef_hitblood,//血しぶき
 		ef_greexp,	//グレ爆発
 		ef_greexp2,	//グレ爆発2
+		ef_FireBallStart,	//火はじめ
+		ef_FireBallLoop,	//火ループ
+		ef_FireBallHit,		//火ヒット
 		effects,	//読み込む
 	};
 	namespace Sceneclass {

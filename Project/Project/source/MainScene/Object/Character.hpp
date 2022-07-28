@@ -3,7 +3,57 @@
 
 namespace FPS_n2 {
 	namespace Sceneclass {
-		class CharacterClass : public ObjectBaseClass {
+		class FireBallClass {
+		private://キャラパラメーター
+			bool m_IsActive{ false };
+			moves m_move;
+			float m_speed{ 0.f };
+			float m_yAdd{ 0.f };
+			float m_Timer{ 0.f };
+			float m_HitTimer{ 0.f };
+			moves m_move_Hit;
+		public:
+			void Set(const MATRIX_ref& mat, const VECTOR_ref& pos, float speed) noexcept {
+				this->m_IsActive = true;
+				this->m_move.mat = mat;
+				this->m_move.pos = pos;
+				this->m_move.repos = this->m_move.pos;
+				this->m_yAdd = 0.f;
+				this->m_speed = speed;
+				this->m_Timer = 0.f;
+				this->m_HitTimer = 10.f;
+			}
+			void Execute(void) noexcept {
+				if (this->m_IsActive) {
+					this->m_move.repos = this->m_move.pos;
+					this->m_move.vec = this->m_move.mat.zvec() * (-1.f * this->m_speed * 60.f / FPS) + VECTOR_ref::up()*this->m_yAdd;
+					this->m_move.pos += this->m_move.vec;
+					//this->m_yAdd += (M_GR / (FPS*FPS));
+				}
+				if (this->m_Timer > std::min(10.f, this->m_HitTimer)) {
+					this->m_IsActive = false;
+				}
+				this->m_Timer += 1.f / FPS;
+			}
+			bool CheckBullet(const MV1* pCol) noexcept {
+				if (this->m_IsActive) {
+					auto HitResult = pCol->CollCheck_Line(this->m_move.repos, this->m_move.pos);
+					if (HitResult.HitFlag == TRUE) {
+						this->m_move_Hit.pos = HitResult.HitPosition;
+						this->m_move_Hit.vec = HitResult.Normal;
+						this->m_IsActive = false;
+						this->m_HitTimer = this->m_Timer + 0.5f;
+						return true;
+					}
+				}
+				return false;
+			}
+		public:
+			const auto* Get_Move(void) noexcept { return (this->m_IsActive) ? &this->m_move : (const moves*)nullptr; }
+			const auto& GetMoveHit(void) noexcept { return this->m_move_Hit; }
+		};
+
+		class CharacterClass : public ObjectBaseClass, public Effect_UseControl {
 		private://キャラパラメーター
 			const float SpeedLimit{ 2.f };
 			const float UpperTimerLimit = 3.f;
@@ -57,8 +107,15 @@ namespace FPS_n2 {
 			bool												m_SetMagic{ false };
 			float												m_SetMagicPer{ 0.f };
 			float												m_SetMagicTime{ 0.f };
+			bool												m_UsingMagic{ false };
+			bool												m_MagicEffectStart{ false };
+			bool												m_MagicEffectLoop{ false };
 			CharaAnimeID										m_UpperAnimSelect, m_PrevUpperAnimSel;
 			CharaAnimeID										m_BottomAnimSelect;
+			//
+			std::array<FireBallClass, 6>						m_fireBall;
+			int													m_NowfireBall{ 0 };
+
 			//
 			float												m_HP{ 0.f };							//スコア
 			float												m_MP{ 0.f };							//スコア
@@ -159,6 +216,10 @@ namespace FPS_n2 {
 				this->m_SetMagic = false;
 				this->m_SetMagicPer = 0.f;
 				this->m_SetMagicTime = 0.f;
+				this->m_UsingMagic = false;
+				this->m_MagicEffectStart = false;
+				this->m_MagicEffectLoop = false;
+				
 				//this->m_UpperAnimSelect;
 				//this->m_PrevUpperAnimSel;
 				//this->m_BottomAnimSelect;
@@ -240,8 +301,8 @@ namespace FPS_n2 {
 				if (m_Leftkey.trigger()) {
 					SubItemSel();
 				}
-				if (!this->m_SetMagic && !this->m_UsingItem && (this->m_Item_Ptrs.size() > 0)) {
-					if (m_UseItemkey.trigger()) {
+				if (m_UseItemkey.trigger() && (this->m_Item_Ptrs.size() > 0)) {
+					if (!this->m_SetMagic && !this->m_UsingItem && !this->m_UsingMagic) {
 						this->m_UsingItem = true;
 						GetAnime(CharaAnimeID::Upper_UseItem).GoStart();
 						GetAnime(CharaAnimeID::Upper_FlightUseItem).GoStart();
@@ -249,16 +310,31 @@ namespace FPS_n2 {
 				}
 				if (m_Downkey.trigger()) {
 					AddMagicSel();
-					if (!this->m_SetMagic && !this->m_UsingItem) {
+					if (!this->m_SetMagic && !this->m_UsingItem && !this->m_UsingMagic) {
 						this->m_SetMagic = true;
 						this->m_SetMagicTime = 1.f;
 					}
 				}
 				if (m_Upkey.trigger()) {
 					SubMagicSel();
-					if (!this->m_SetMagic && !this->m_UsingItem) {
+					if (!this->m_SetMagic && !this->m_UsingItem && !this->m_UsingMagic) {
 						this->m_SetMagic = true;
 						this->m_SetMagicTime = 1.f;
+					}
+				}
+				if (m_UseMagickey.trigger()) {
+					if (!this->m_SetMagic && !this->m_UsingItem && !this->m_UsingMagic) {
+						this->m_SetMagic = true;
+						this->m_SetMagicTime = 1.f;
+					}
+				}
+				if (m_UseMagickey.trigger() && (true)) {
+					if ((this->m_SetMagicPer > 0.95f) && !this->m_UsingMagic) {
+						this->m_UsingMagic = true;
+						this->m_MagicEffectStart = true;
+						this->m_MagicEffectLoop = true;
+						GetAnime(CharaAnimeID::Upper_UseMagic1).GoStart();
+						GetAnime(CharaAnimeID::Upper_FlightUseMagic1).GoStart();
 					}
 				}
 				//
@@ -388,6 +464,11 @@ namespace FPS_n2 {
 				SetFrameLocalMat(CharaFrame::Upper, GetFrameLocalMat(CharaFrame::Upper).GetRot() * Lerp_Matrix(this->m_UpperMatrix, MATRIX_ref::zero(), GetFlightPer()));
 			}
 			//SetMat指示															//0.03ms
+			const auto* GetLatestAmmoMove(void) noexcept {
+				auto Now = this->m_NowfireBall - 1;
+				if (Now < 0) { Now = (int)(this->m_fireBall.size()) - 1; }
+				return this->m_fireBall[Now].Get_Move();
+			}
 			void			ExecuteAnim(void) noexcept {
 				auto SE = SoundPool::Instance();
 				//アニメ演算
@@ -398,6 +479,48 @@ namespace FPS_n2 {
 						if (this->m_SetMagic) {
 							this->m_UpperAnimSelect = CharaAnimeID::Upper_SetMagic;
 						}
+						if (this->m_UsingMagic) {
+							this->m_UpperAnimSelect = CharaAnimeID::Upper_UseMagic1;
+							SetAnimOnce(CharaAnimeID::Upper_UseMagic1, 1.5f);
+							SetAnimOnce(CharaAnimeID::Upper_FlightUseMagic1, 1.5f);
+
+							if (this->m_MagicEffectStart && GetAnime(CharaAnimeID::Upper_UseMagic1).time > 30) {
+								MATRIX_ref mat = GetFrameWorldMat(CharaFrame::RightHandJoint);
+								Effect_UseControl::Set_Effect(Effect::ef_FireBallStart, mat.pos(), GetCharaDir().yvec(), 0.25f);
+								this->m_MagicEffectStart = false;
+							}
+							if (this->m_MagicEffectLoop && GetAnime(CharaAnimeID::Upper_UseMagic1).time > 35) {
+								MATRIX_ref mat = GetFrameWorldMat(CharaFrame::RightHandJoint);
+								Effect_UseControl::Set_LoopEffect(Effect::ef_FireBallLoop, mat.pos());
+								this->m_MagicEffectLoop = false;
+
+								float Spd = (this->m_FlightSpeed + 100.f) * 1000.f / 3600.f * 12.5f / 60.f;
+								this->m_fireBall[this->m_NowfireBall].Set(GetCharaDir(), mat.pos(), Spd);
+								++this->m_NowfireBall %= this->m_fireBall.size();
+							}
+
+							if (GetAnime(CharaAnimeID::Upper_UseMagic1).TimeEnd()) {
+								this->m_UsingMagic = false;
+							}
+						}
+
+						Effect_UseControl::SetSpeed_Effect(Effect::ef_FireBallStart, 2.f);
+						{
+							auto* nowptr = GetLatestAmmoMove();
+							if (nowptr != nullptr) {
+								Effect_UseControl::Update_LoopEffect(Effect::ef_FireBallLoop, nowptr->pos, nowptr->mat.yvec(), 0.25f);
+							}
+							else {
+								Effect_UseControl::Stop_Effect(Effect::ef_FireBallLoop);
+							}
+							for (auto& b : this->m_fireBall) {
+								if (b.CheckBullet(this->m_MapCol)) {
+									auto mat = b.GetMoveHit();
+									Effect_UseControl::Set_Effect(Effect::ef_FireBallStart, mat.pos, mat.vec, 0.25f);
+								}
+							}
+						}
+
 						if (this->m_UsingItem) {
 							this->m_UpperAnimSelect = CharaAnimeID::Upper_UseItem;
 							SetAnimOnce(CharaAnimeID::Upper_UseItem, 1.f);
@@ -468,6 +591,9 @@ namespace FPS_n2 {
 					//上半身
 					if (this->m_SetMagic && (this->m_SetMagicTime > 0.f)) {
 						this->m_SetMagicTime -= 1.f / FPS;
+						if (this->m_UsingMagic) {
+							this->m_SetMagicTime = 1.f;
+						}
 						if (this->m_SetMagicTime <= 0.f) {
 							this->m_SetMagicTime = 0.f;
 							this->m_SetMagic = false;
@@ -478,9 +604,15 @@ namespace FPS_n2 {
 					GetAnimeBuf(CharaAnimeID::Upper_FlightNormal) = 1.f - this->m_SetMagicPer;
 					GetAnimeBuf(CharaAnimeID::Upper_FlightSetMagic) = this->m_SetMagicPer;
 					GetAnimeBuf(CharaAnimeID::Upper_FlightUseItem) = 0.f;
+					GetAnimeBuf(CharaAnimeID::Upper_FlightUseMagic1) = 0.f;
 					if (this->m_UsingItem) {
 						GetAnimeBuf(CharaAnimeID::Upper_FlightNormal) = 0.f;
 						GetAnimeBuf(CharaAnimeID::Upper_FlightUseItem) = 1.f;
+					}
+					if (this->m_UsingMagic) {
+						GetAnimeBuf(CharaAnimeID::Upper_FlightSetMagic) = 0.f;
+						GetAnimeBuf(CharaAnimeID::Upper_FlightNormal) = 0.f;
+						GetAnimeBuf(CharaAnimeID::Upper_FlightUseMagic1) = 1.f;
 					}
 					//下半身
 					if (!this->m_FlightKickReturnAnimOne) {
@@ -521,7 +653,8 @@ namespace FPS_n2 {
 							i == (int)CharaAnimeID::Upper_Running ||
 							i == (int)CharaAnimeID::Upper_Sprint ||
 							i == (int)CharaAnimeID::Upper_UseItem ||
-							i == (int)CharaAnimeID::Upper_SetMagic
+							i == (int)CharaAnimeID::Upper_SetMagic ||
+							i == (int)CharaAnimeID::Upper_UseMagic1
 							)
 						{
 							GetAnimeBuf((CharaAnimeID)i) += ((i == (int)this->m_UpperAnimSelect) ? 1.f : -1.f)*3.f / FPS;
@@ -548,6 +681,7 @@ namespace FPS_n2 {
 							i == (int)CharaAnimeID::Bottom_FlightNormal ||
 							i == (int)CharaAnimeID::Upper_FlightUseItem ||
 							i == (int)CharaAnimeID::Upper_FlightSetMagic ||
+							i == (int)CharaAnimeID::Upper_FlightUseMagic1 ||
 							i == (int)CharaAnimeID::Upper_FlightNormal
 							) {
 							GetAnime((CharaAnimeID)i).per = GetAnime((CharaAnimeID)i).per * GetFlightPer();
@@ -766,7 +900,7 @@ namespace FPS_n2 {
 						auto mat = (this->m_move.mat*GetCharaDir().Inverse());
 						yVec1 = mat.yvec();
 						zVec1 = mat.zvec()*-1.f;
-						if (this->m_SetMagicPer>0.1f) {
+						if (this->m_SetMagicPer > 0.05f) {
 							Pos1 = GetFrameWorldMat(CharaFrame::LeftHandJoint).pos();
 						}
 						else {
@@ -838,9 +972,16 @@ namespace FPS_n2 {
 						*GetFrameWorldMat(CharaFrame::LeftHandJoint).GetRot(),
 						GetFrameWorldMat(CharaFrame::LeftHandJoint).pos());
 				}
-
+				for (auto& b : this->m_fireBall) {
+					b.Execute();
+				}
+				Effect_UseControl::Update_Effect();
 			}
 			//void			Draw(void) noexcept override { ObjectBaseClass::Draw(); }
+			void			Dispose(void) noexcept override {
+				ObjectBaseClass::Dispose();
+				Effect_UseControl::Dispose_Effect();
+			}
 		};
 	};
 };

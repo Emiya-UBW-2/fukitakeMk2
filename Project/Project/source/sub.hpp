@@ -452,7 +452,7 @@ namespace FPS_n2 {
 		void Update_Effect(void) noexcept {
 			for (auto& t : this->effcs) {
 				const size_t index = &t - &this->effcs.front();
-				if (index != (int)Effect::ef_smoke) {
+				if (index != (int)Effect::ef_smoke && index != (int)Effect::ef_FireBallLoop) {
 					t.put(effectControl.effsorce[index]);
 				}
 			}

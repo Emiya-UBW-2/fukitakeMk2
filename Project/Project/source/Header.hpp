@@ -8,7 +8,8 @@
 
 #endif // _DEBUG
 
-//#define DEBUG
+//ここをコメントアウト
+#define DEBUG
 
 
 #include <D3D11.h>

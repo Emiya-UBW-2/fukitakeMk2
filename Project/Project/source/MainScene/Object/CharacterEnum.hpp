@@ -24,11 +24,13 @@ namespace FPS_n2 {
 			Bottom_FlightKickRight,
 
 			Upper_UseItem,
-
 			Upper_FlightUseItem,
 
 			Upper_SetMagic,
 			Upper_FlightSetMagic,
+
+			Upper_UseMagic1,
+			Upper_FlightUseMagic1,
 
 			AnimeIDMax,
 		};
