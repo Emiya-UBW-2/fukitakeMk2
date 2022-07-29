@@ -17,6 +17,9 @@ namespace FPS_n2 {
 		ef_FireBallStart,	//火はじめ
 		ef_FireBallLoop,	//火ループ
 		ef_FireBallHit,		//火ヒット
+
+		ef_ThunderStart,	//雷はじめ
+		ef_ThunderLoop,		//雷ループ
 		effects,	//読み込む
 	};
 	namespace Sceneclass {

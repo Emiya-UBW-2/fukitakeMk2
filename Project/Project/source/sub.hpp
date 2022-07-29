@@ -421,6 +421,7 @@ namespace FPS_n2 {
 		std::array<EffectS, 256> effcs_G;					/*エフェクト*/
 		int G_cnt = 0;
 	public:
+		const auto CheckPlayEffect(Effect ef_) const noexcept { return this->effcs[(int)ef_].GetIsPlaying(); }
 		void Set_FootEffect(const VECTOR_ref& pos_t, const VECTOR_ref& nomal_t, float scale = 1.f) noexcept {
 			this->effcs_G[this->G_cnt].Stop();
 			this->effcs_G[this->G_cnt].Set(pos_t, nomal_t, scale);
@@ -452,7 +453,12 @@ namespace FPS_n2 {
 		void Update_Effect(void) noexcept {
 			for (auto& t : this->effcs) {
 				const size_t index = &t - &this->effcs.front();
-				if (index != (int)Effect::ef_smoke && index != (int)Effect::ef_FireBallLoop) {
+				if (
+					index != (int)Effect::ef_smoke
+					&& index != (int)Effect::ef_FireBallLoop
+					&& index != (int)Effect::ef_ThunderStart	//雷はじめ
+					&& index != (int)Effect::ef_ThunderLoop		//雷ループ
+					) {
 					t.put(effectControl.effsorce[index]);
 				}
 			}

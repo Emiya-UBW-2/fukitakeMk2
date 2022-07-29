@@ -483,20 +483,41 @@ namespace FPS_n2 {
 							this->m_UpperAnimSelect = CharaAnimeID::Upper_UseMagic1;
 							SetAnimOnce(CharaAnimeID::Upper_UseMagic1, 1.5f);
 							SetAnimOnce(CharaAnimeID::Upper_FlightUseMagic1, 1.5f);
+							switch (this->m_MagicSel){
+							case 0:
+								if (this->m_MagicEffectStart && GetAnime(CharaAnimeID::Upper_UseMagic1).time > 30) {
+									MATRIX_ref mat = GetFrameWorldMat(CharaFrame::RightHandJoint);
+									Effect_UseControl::Set_Effect(Effect::ef_FireBallStart, mat.pos(), GetCharaDir().yvec(), 0.25f);
+									this->m_MagicEffectStart = false;
+								}
+								if (this->m_MagicEffectLoop && GetAnime(CharaAnimeID::Upper_UseMagic1).time > 35) {
+									MATRIX_ref mat = GetFrameWorldMat(CharaFrame::RightHandJoint);
+									Effect_UseControl::Set_LoopEffect(Effect::ef_FireBallLoop, mat.pos());
+									this->m_MagicEffectLoop = false;
 
-							if (this->m_MagicEffectStart && GetAnime(CharaAnimeID::Upper_UseMagic1).time > 30) {
-								MATRIX_ref mat = GetFrameWorldMat(CharaFrame::RightHandJoint);
-								Effect_UseControl::Set_Effect(Effect::ef_FireBallStart, mat.pos(), GetCharaDir().yvec(), 0.25f);
-								this->m_MagicEffectStart = false;
-							}
-							if (this->m_MagicEffectLoop && GetAnime(CharaAnimeID::Upper_UseMagic1).time > 35) {
-								MATRIX_ref mat = GetFrameWorldMat(CharaFrame::RightHandJoint);
-								Effect_UseControl::Set_LoopEffect(Effect::ef_FireBallLoop, mat.pos());
-								this->m_MagicEffectLoop = false;
+									float Spd = (this->m_FlightSpeed + 100.f) * 1000.f / 3600.f * 12.5f / 60.f;
+									this->m_fireBall[this->m_NowfireBall].Set(GetCharaDir(), mat.pos(), Spd);
+									++this->m_NowfireBall %= this->m_fireBall.size();
+								}
+								break;
+							case 1:
+								if (this->m_MagicEffectStart && GetAnime(CharaAnimeID::Upper_UseMagic1).time > 0) {
+									MATRIX_ref mat = GetFrameWorldMat(CharaFrame::RightHandJoint);
+									Effect_UseControl::Set_LoopEffect(Effect::ef_ThunderStart, mat.pos());
+									this->m_MagicEffectStart = false;
+								}
+								if (this->m_MagicEffectLoop && GetAnime(CharaAnimeID::Upper_UseMagic1).time > 40) {
+									MATRIX_ref mat = GetFrameWorldMat(CharaFrame::RightHandJoint);
+									Effect_UseControl::Set_LoopEffect(Effect::ef_ThunderLoop, mat.pos());
+									this->m_MagicEffectLoop = false;
 
-								float Spd = (this->m_FlightSpeed + 100.f) * 1000.f / 3600.f * 12.5f / 60.f;
-								this->m_fireBall[this->m_NowfireBall].Set(GetCharaDir(), mat.pos(), Spd);
-								++this->m_NowfireBall %= this->m_fireBall.size();
+									float Spd = (this->m_FlightSpeed + 800.f) * 1000.f / 3600.f * 12.5f / 60.f;
+									this->m_fireBall[this->m_NowfireBall].Set(GetCharaDir(), mat.pos(), Spd);
+									++this->m_NowfireBall %= this->m_fireBall.size();
+								}
+								break;
+							default:
+								break;
 							}
 
 							if (GetAnime(CharaAnimeID::Upper_UseMagic1).TimeEnd()) {
@@ -507,17 +528,32 @@ namespace FPS_n2 {
 						Effect_UseControl::SetSpeed_Effect(Effect::ef_FireBallStart, 2.f);
 						{
 							auto* nowptr = GetLatestAmmoMove();
-							if (nowptr != nullptr) {
-								Effect_UseControl::Update_LoopEffect(Effect::ef_FireBallLoop, nowptr->pos, nowptr->mat.yvec(), 0.25f);
-							}
-							else {
-								Effect_UseControl::Stop_Effect(Effect::ef_FireBallLoop);
-							}
-							for (auto& b : this->m_fireBall) {
-								if (b.CheckBullet(this->m_MapCol)) {
-									auto mat = b.GetMoveHit();
-									Effect_UseControl::Set_Effect(Effect::ef_FireBallStart, mat.pos, mat.vec, 0.25f);
+							switch (this->m_MagicSel) {
+							case 0:
+								if (nowptr != nullptr) {
+									Effect_UseControl::Update_LoopEffect(Effect::ef_FireBallLoop, nowptr->pos, nowptr->mat.yvec(), 0.25f);
 								}
+								else {
+									Effect_UseControl::Stop_Effect(Effect::ef_FireBallLoop);
+								}
+								for (auto& b : this->m_fireBall) {
+									if (b.CheckBullet(this->m_MapCol)) {
+										auto mat = b.GetMoveHit();
+										Effect_UseControl::Set_Effect(Effect::ef_FireBallStart, mat.pos, mat.vec, 0.25f);
+									}
+								}
+								break;
+							case 1:
+								if (!this->m_MagicEffectStart) {
+									MATRIX_ref mat = GetFrameWorldMat(CharaFrame::RightHandJoint);
+									Effect_UseControl::Update_LoopEffect(Effect::ef_ThunderStart, mat.pos(), GetCharaDir().zvec()*-1.f, 0.05f);
+								}
+								if (nowptr != nullptr) {
+									Effect_UseControl::Update_LoopEffect(Effect::ef_ThunderLoop, nowptr->pos, nowptr->mat.yvec(), 0.25f);
+								}
+								break;
+							default:
+								break;
 							}
 						}
 
