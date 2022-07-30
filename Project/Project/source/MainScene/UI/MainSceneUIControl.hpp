@@ -11,6 +11,7 @@ namespace FPS_n2 {
 
 			int intParam[14]{ 0 };
 			float floatParam[5]{ 0 };
+			std::string	strParam[2];
 			GraphHandle* ItemGraphPtr[3]{ 0 };
 
 			int Blend3Int(int pInt1, int pInt2, int pInt3, float per) {
@@ -139,19 +140,6 @@ namespace FPS_n2 {
 
 					SetDrawBright(255, 255, 255);
 				}
-				//ƒŒ[ƒ_[
-				{
-					int xp1, yp1;
-					int xs1, ys1;
-
-					xs1 = y_r(256) / 2;
-					ys1 = y_r(256) / 2;
-					xp1 = DrawParts->disp_x - y_r(80) - xs1;
-					yp1 = DrawParts->disp_y - y_r(300) - ys1;
-					DrawBox((int)(xp1 - xs1), (int)(yp1 - ys1), (int)(xp1 + xs1), (int)(yp1 + ys1), Green, FALSE);
-					DrawBox((int)(xp1 - xs1) + 1, (int)(yp1 - ys1) + 1, (int)(xp1 + xs1) - 1, (int)(yp1 + ys1) - 1, GetColor(0,0,0), FALSE);
-					DrawBox((int)(xp1 - xs1) + 2, (int)(yp1 - ys1) + 2, (int)(xp1 + xs1) - 2, (int)(yp1 + ys1) - 2, Green, FALSE);
-				}
 				//î•ñ
 				{
 					int xp1, yp1;
@@ -162,7 +150,7 @@ namespace FPS_n2 {
 						xp1 = DrawParts->disp_x - y_r(300);
 						yp1 = DrawParts->disp_y - y_r(30) - ys1 * Num - y_r(110);
 
-						UI.Get(y_r(20)).Get_handle().DrawStringFormat(xp1 + y_r(50), yp1, Green, White, "%s", "Name");
+						UI.Get(y_r(20)).Get_handle().DrawStringFormat(xp1 + y_r(50), yp1, Green, White, "%s", strParam[0].c_str());
 						yp1 += y_r(25);
 
 						UI.Get(y_r(20)).Get_handle().DrawString(xp1, yp1, "HP", Green, White);
@@ -227,7 +215,10 @@ namespace FPS_n2 {
 
 			void SetIntParam(int ID, int value) { intParam[ID] = value; }
 			void SetfloatParam(int ID, float value) { floatParam[ID] = value; }
+			void SetStrParam(int ID, std::string_view value) { strParam[ID] = value; }
 			void SetItemGraph(int ID, const GraphHandle* value) { ItemGraphPtr[ID] = (GraphHandle*)value; }
+
+			auto&		GetFont(void) noexcept { return this->UI; }
 		};
 	};
 };

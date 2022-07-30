@@ -20,6 +20,8 @@ namespace FPS_n2 {
 
 		ef_ThunderStart,	//—‹‚Í‚¶‚ß
 		ef_ThunderLoop,		//—‹ƒ‹[ƒv
+
+		ef_Sonic,			//ÕŒ‚”g
 		effects,	//“Ç‚İ‚Ş
 	};
 	namespace Sceneclass {

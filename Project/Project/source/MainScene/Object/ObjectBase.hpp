@@ -22,10 +22,15 @@ namespace FPS_n2 {
 			bool										m_IsDraw{ true };
 			float										m_DistanceToCam{ 0.f };
 			bool										m_IsBaseModel{ false };
+			VECTOR_ref									m_CameraPosition;
+			float										m_CameraSize;
 		public:
 			void			SetActive(bool value) noexcept { this->m_IsActive = value; }
 			void			SetMapCol(const MV1* MapCol) noexcept { this->m_MapCol = MapCol; }
 			void			SetResetP(bool value) { this->m_IsResetPhysics = value; }
+			void			SetCameraPosition(const VECTOR_ref& value) { this->m_CameraPosition = value; }
+			void			SetCameraSize(float value) { this->m_CameraSize = value; }
+
 			const auto		GetMatrix(void) const noexcept { return this->m_obj.GetMatrix(); }
 			const auto		GetIsBaseModel(const char* filepath, const char* objfilename, const char* colfilename) const noexcept {
 				return (
@@ -36,6 +41,8 @@ namespace FPS_n2 {
 			}
 			const auto&		GetobjType(void) const noexcept { return this->m_objType; }
 			const auto&		GetCol(void) const noexcept { return this->m_col; }
+			const auto&		GetCameraPosition(void) const noexcept { return this->m_CameraPosition; }
+			const auto&		GetCameraSize(void) const noexcept { return this->m_CameraSize; }
 			//
 			void			SetAnimOnce(int ID, float speed) {
 				this->m_obj.get_anime(ID).time += 30.f / FPS * speed;

@@ -65,6 +65,7 @@ namespace FPS_n2 {
 
 			const float HPMax = 100.f;
 			const float MPMax = 100.f;
+			std::string											m_Name;
 		private:
 			CharacterMoveGroundControl							m_InputGround;
 			CharacterMoveFlightControl							m_InputSky;
@@ -132,6 +133,8 @@ namespace FPS_n2 {
 			int													m_ItemSel;
 			int													m_MagicSel;
 			int													m_MagicNum;
+			//
+			bool												m_SendCamShake{ false };
 		public://ゲッター
 			//
 			const auto		GetFrameLocalMat(CharaFrame frame) const noexcept { return this->m_obj.GetFrameLocalMatrix(Frames[(int)frame].first); }
@@ -169,6 +172,9 @@ namespace FPS_n2 {
 			const auto&		GetMPMax(void) const noexcept { return MPMax; }
 			const auto&		GetHoukiPtr(void) const noexcept { return this->m_Houki_Ptr; }
 			const auto&		GetFlightSpeed(void) const noexcept { return this->m_FlightSpeed; }
+			const auto&		GetSendCamShake(void) const noexcept { return this->m_SendCamShake; }
+			const auto&		GetName(void) const noexcept { return this->m_Name; }
+
 			void			SetHoukiPtr(std::shared_ptr<HoukiClass>& pHoukiPtr) noexcept { this->m_Houki_Ptr = pHoukiPtr; }
 			void			AddScore(float value) noexcept { this->m_Score += value; }
 			void			SubScore(float value) noexcept { this->m_Score -= value; }
@@ -233,6 +239,7 @@ namespace FPS_n2 {
 				this->m_CharaSound = -1;
 				//this->m_Houki_Ptr{ nullptr };					//箒
 				this->m_ItemSel = 0;
+				this->m_Item_Ptrs.clear();
 				this->m_MagicSel = 0;
 				this->m_MagicNum = 4;
 				//動作にかかわる操作
@@ -393,13 +400,13 @@ namespace FPS_n2 {
 			const auto&		GetItem(int id) const noexcept { return this->m_Item_Ptrs[id].second.front(); }
 			const auto		GetItemCnt(int id) const noexcept { return this->m_Item_Ptrs[id].second.size(); }
 			const auto&		GetItemSel() const noexcept { return this->m_ItemSel; }
-			void		AddItemSel() noexcept {
+			void			AddItemSel() noexcept {
 				this->m_ItemSel++;
 				if (this->m_ItemSel > this->m_Item_Ptrs.size() - 1) {
 					this->m_ItemSel = 0;
 				}
 			}
-			void		SubItemSel() noexcept {
+			void			SubItemSel() noexcept {
 				this->m_ItemSel--;
 				if (this->m_ItemSel < 0) {
 					this->m_ItemSel = std::max(0, (int)(this->m_Item_Ptrs.size()) - 1);
@@ -408,13 +415,13 @@ namespace FPS_n2 {
 			//
 			const auto&		GetMagicNum() const noexcept { return this->m_MagicNum; }
 			const auto&		GetMagicSel() const noexcept { return this->m_MagicSel; }
-			void		AddMagicSel() noexcept {
+			void			AddMagicSel() noexcept {
 				this->m_MagicSel++;
 				if (this->m_MagicSel > this->m_MagicNum - 1) {
 					this->m_MagicSel = 0;
 				}
 			}
-			void		SubMagicSel() noexcept {
+			void			SubMagicSel() noexcept {
 				this->m_MagicSel--;
 				if (this->m_MagicSel < 0) {
 					this->m_MagicSel = std::max(0, (int)(this->m_MagicNum) - 1);
@@ -464,7 +471,7 @@ namespace FPS_n2 {
 				SetFrameLocalMat(CharaFrame::Upper, GetFrameLocalMat(CharaFrame::Upper).GetRot() * Lerp_Matrix(this->m_UpperMatrix, MATRIX_ref::zero(), GetFlightPer()));
 			}
 			//SetMat指示															//0.03ms
-			const auto* GetLatestAmmoMove(void) noexcept {
+			const auto*		GetLatestAmmoMove(void) noexcept {
 				auto Now = this->m_NowfireBall - 1;
 				if (Now < 0) { Now = (int)(this->m_fireBall.size()) - 1; }
 				return this->m_fireBall[Now].Get_Move();
@@ -516,6 +523,24 @@ namespace FPS_n2 {
 									++this->m_NowfireBall %= this->m_fireBall.size();
 								}
 								break;
+							case 2:
+								if (this->m_MagicEffectStart && GetAnime(CharaAnimeID::Upper_UseMagic1).time > 30) {
+									MATRIX_ref mat = GetFrameWorldMat(CharaFrame::Upper);
+									if (this->m_InputSky.GetIsFlightMode()) {
+										Effect_UseControl::Set_Effect(Effect::ef_Sonic, mat.pos() + GetCharaDir().zvec()*-1.f * this->m_FlightSpeed * 60.f / FPS, GetCharaDir().yvec(), 1.f);
+									}
+									else {
+										Effect_UseControl::Set_Effect(Effect::ef_Sonic, mat.pos(), GetCharaDir().yvec(), 1.f);
+									}
+									this->m_MagicEffectStart = false;
+								}
+								this->m_SendCamShake = false;
+								if (this->m_MagicEffectLoop && GetAnime(CharaAnimeID::Upper_UseMagic1).time > 35) {
+									this->m_SendCamShake = true;
+									this->m_MagicEffectLoop = false;
+								}
+
+								break;
 							default:
 								break;
 							}
@@ -525,11 +550,11 @@ namespace FPS_n2 {
 							}
 						}
 
-						Effect_UseControl::SetSpeed_Effect(Effect::ef_FireBallStart, 2.f);
 						{
 							auto* nowptr = GetLatestAmmoMove();
 							switch (this->m_MagicSel) {
 							case 0:
+								Effect_UseControl::SetSpeed_Effect(Effect::ef_FireBallStart, 2.f);
 								if (nowptr != nullptr) {
 									Effect_UseControl::Update_LoopEffect(Effect::ef_FireBallLoop, nowptr->pos, nowptr->mat.yvec(), 0.25f);
 								}
@@ -551,6 +576,9 @@ namespace FPS_n2 {
 								if (nowptr != nullptr) {
 									Effect_UseControl::Update_LoopEffect(Effect::ef_ThunderLoop, nowptr->pos, nowptr->mat.yvec(), 0.25f);
 								}
+								break;
+							case 2:
+								Effect_UseControl::SetSpeed_Effect(Effect::ef_Sonic, 1.5f);
 								break;
 							default:
 								break;
@@ -987,8 +1015,7 @@ namespace FPS_n2 {
 				ObjectBaseClass::Init();
 				GetAnime(CharaAnimeID::Bottom_Stand).per = 1.f;
 				GetAnime(CharaAnimeID::Upper_RunningStart).GoEnd();
-				this->m_Item_Ptrs.clear();
-				this->m_ItemSel = 0;
+				this->m_Name = "Name";
 			}
 			void			Execute(void) noexcept override {
 				//初回のみ更新する内容

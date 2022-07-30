@@ -26,13 +26,19 @@ namespace FPS_n2 {
 			switchs MouseActive;
 			//UI関連
 			UIClass UI_class;
-			//
 			float HPBuf{ 0.f };
 			float MPBuf{ 0.f };
 			float scoreBuf{ 0.f };
 			float AddItemBuf{ 1.f };
 			float SubItemBuf{ 1.f };
 			int PrevPointSel{ 0 };
+			//
+			float m_CamShake{ 0.f };
+			VECTOR_ref m_CamShake1;
+			VECTOR_ref m_CamShake2;
+			//
+			float m_Rader = 1.f;
+			float m_Rader_r = 1.f;
 			//銃関連
 			bool Reticle_on = false;
 			float Reticle_xpos = 0;
@@ -370,6 +376,12 @@ namespace FPS_n2 {
 
 				//視点
 				{
+					if (Chara->GetSendCamShake()) {
+						m_CamShake = 1.f;
+					}
+					Easing(&m_CamShake1, VECTOR_ref::vget(GetRandf(m_CamShake), GetRandf(m_CamShake), GetRandf(m_CamShake)), 0.8f, EasingType::OutExpo);
+					Easing(&m_CamShake2, m_CamShake1, 0.8f, EasingType::OutExpo);
+					m_CamShake = std::max(m_CamShake - 1.f / FPS, 0.f);
 
 					if (FPSActive.on()) {
 						camera_main.campos = Chara->GetEyePosition();
@@ -393,10 +405,10 @@ namespace FPS_n2 {
 								Chara->GetFlightPer()
 							);
 
-						camera_main.campos = CamPos + CamVec * Lerp(Lerp(-20.f, -30.f - (Chara->GetFlightSpeed()/25.f), Chara->GetFlightPer()), -50.f, TPS_Per);
+						camera_main.campos = (CamPos + CamVec * Lerp(Lerp(-20.f, -30.f - (Chara->GetFlightSpeed()/25.f), Chara->GetFlightPer()), -50.f, TPS_Per)) + m_CamShake2*5.f;
 						camera_main.camvec = CamPos + CamVec * 100.f;
 
-						camera_main.camup = Chara->GetEyeVecMat().yvec();
+						camera_main.camup = Chara->GetEyeVecMat().yvec() + m_CamShake2 * 0.25f;
 					}
 					Easing(&EyeRunPer, Chara->GetIsRun() ? 1.f : 0.f, 0.95f, EasingType::OutExpo);
 
@@ -499,6 +511,11 @@ namespace FPS_n2 {
 						UI_class.SetIntParam(12, Chara->GetMagicSel());
 						UI_class.SetIntParam(13, Chara->GetMagicNum());
 					}
+					//
+					{
+						UI_class.SetStrParam(0, Chara->GetName());
+					}
+					//
 				}
 				TEMPSCENE::Update();
 				Effect_UseControl::Update_Effect();
@@ -534,6 +551,20 @@ namespace FPS_n2 {
 					Set_is_Blackout(false);
 					Set_is_lens(false);
 				}
+				for (int i = 1; i < chara_num; i++) {
+					auto& c = (std::shared_ptr<CharacterClass>&)(*this->Obj.GetObj(ObjType::Human, i));
+					auto pos = c->GetFrameWorldMat(CharaFrame::Upper).pos();
+					VECTOR_ref campos = ConvWorldPosToScreenPos(pos.get());
+					if (0.f < campos.z() && campos.z() < 1.f) {
+						c->SetCameraPosition(campos);
+						c->SetCameraSize(
+							std::max(
+								20.f / ((pos - GetCameraPosition()).size() / 2.f),
+								0.2f
+							)
+						);
+					}
+				}
 			}
 			void Main_Draw2(void) noexcept override {
 				this->Obj.DrawDepthObject();
@@ -542,7 +573,115 @@ namespace FPS_n2 {
 			}
 			//UI表示
 			void UI_Draw(void) noexcept  override {
+				auto& Chara = (std::shared_ptr<CharacterClass>&)(*this->Obj.GetObj(ObjType::Human, 0));//自分
+
+				auto* DrawParts = DXDraw::Instance();
+				auto Red = GetColor(255, 0, 0);
+				auto Green = GetColor(43, 163, 91);
+				auto White = GetColor(212, 255, 239);
+				//キャラ
+				for (int i = 1; i < chara_num; i++) {
+					auto& c = (std::shared_ptr<CharacterClass>&)(*this->Obj.GetObj(ObjType::Human, i));
+					auto campos = c->GetCameraPosition();
+					if (0.f < campos.z() && campos.z() < 1.f) {
+						int xp, yp, xs, ys;
+						xp = (int)(campos.x());
+						yp = (int)(campos.y());
+						xs = (int)(100.f*c->GetCameraSize());
+						ys = (int)(100.f*c->GetCameraSize());
+						int siz = y_r(std::max((int)(20.f*c->GetCameraSize()), 10));
+						int p = 0;
+						DrawBox(xp - xs + p, yp - ys + p, xp + xs - p, yp + ys - p, White, FALSE);
+						p = 1;
+						DrawBox(xp - xs + p, yp - ys + p, xp + xs - p, yp + ys - p, Red, FALSE);
+						p = 2;
+						DrawBox(xp - xs + p, yp - ys + p, xp + xs - p, yp + ys - p, White, FALSE);
+
+						UI_class.GetFont().Get(siz).Get_handle().DrawStringFormat_MID(xp, yp - ys - siz, Red, White, "%s", c->GetName().c_str());
+
+						UI_class.GetFont().Get(siz).Get_handle().DrawStringFormat(xp + xs, yp + ys, Red, White, "%dm", (int)((c->GetMatrix().pos() - Chara->GetMatrix().pos()).size() / 12.5f));
+					}
+				}
+				//UI
 				UI_class.Draw();
+				//レーダー
+				{
+					Easing(&m_Rader_r, m_Rader, 0.8f, EasingType::OutExpo);
+
+					int xp1, yp1;
+					int xs1, ys1, xs2, ys2;
+
+					xs1 = y_r((int)(256.f * 0.5f));
+					ys1 = y_r((int)(256.f * 0.8f));
+					xs2 = y_r((int)(256.f * 0.5f));
+					ys2 = y_r((int)(256.f * 0.2f));
+					xp1 = DrawParts->disp_x - y_r(80) - xs1;
+					yp1 = DrawParts->disp_y - y_r(300) - ys1;
+
+					DrawLine((int)(xp1 - xs1), (int)(yp1), (int)(xp1 + xs2), (int)(yp1), Green, 3);
+					DrawLine((int)(xp1), (int)(yp1 - ys1), (int)(xp1), (int)(yp1 + ys2), Green, 3);
+					DrawLine((int)(xp1 - xs1), (int)(yp1), (int)(xp1 + xs2), (int)(yp1), White);
+					DrawLine((int)(xp1), (int)(yp1 - ys1), (int)(xp1), (int)(yp1 + ys2), White);
+					DrawBox((int)(xp1 - xs1), (int)(yp1 - ys1), (int)(xp1 + xs2), (int)(yp1 + ys2), Green, FALSE);
+					DrawBox((int)(xp1 - xs1) + 1, (int)(yp1 - ys1) + 1, (int)(xp1 + xs2) - 1, (int)(yp1 + ys2) - 1, White, FALSE);
+					DrawBox((int)(xp1 - xs1) + 2, (int)(yp1 - ys1) + 2, (int)(xp1 + xs2) - 2, (int)(yp1 + ys2) - 2, Green, FALSE);
+
+					xs1 = y_r((int)(256.f * 0.5f*m_Rader_r));
+					ys1 = y_r((int)(256.f * 0.8f*m_Rader_r));
+					xs2 = y_r((int)(256.f * 0.5f*m_Rader_r));
+					ys2 = y_r((int)(256.f * 0.2f*m_Rader_r));
+					DrawBox((int)(xp1 - xs1), (int)(yp1 - ys1), (int)(xp1 + xs2), (int)(yp1 + ys2), Green, FALSE);
+					DrawBox((int)(xp1 - xs1) + 1, (int)(yp1 - ys1) + 1, (int)(xp1 + xs2) - 1, (int)(yp1 + ys2) - 1, White, FALSE);
+					DrawBox((int)(xp1 - xs1) + 2, (int)(yp1 - ys1) + 2, (int)(xp1 + xs2) - 2, (int)(yp1 + ys2) - 2, Green, FALSE);
+
+					auto BaseBos = Chara->GetMatrix().pos();
+
+					xs1 = y_r((int)(256.f * 0.5f));
+					ys1 = y_r((int)(256.f * 0.8f));
+					xs2 = y_r((int)(256.f * 0.5f));
+					ys2 = y_r((int)(256.f * 0.2f));
+					auto base = Chara->GetCharaDir().zvec()*-1.f;
+					base.y(0.f);
+					base = base.Norm();
+					auto vec = VECTOR_ref::front();
+					auto rad = std::atan2f(base.cross(vec).y(), base.dot(vec));
+					{
+						m_Rader = 1.f;
+						bool isout = true;
+						auto tmpRader = 1.f;
+						int div = 4;
+						for (int i = 1; i < chara_num; i++) {
+							auto& c = (std::shared_ptr<CharacterClass>&)(*this->Obj.GetObj(ObjType::Human, i));
+							tmpRader = 1.f;
+							for (int j = 0; j < div; j++) {
+								auto pos = MATRIX_ref::Vtrans(c->GetMatrix().pos() - BaseBos, MATRIX_ref::RotY(rad))*((1.f / 12.5f) * tmpRader);
+								if (((-xs1 < pos.x() && pos.x() < xs2) && (-ys1 < -pos.z() && -pos.z() < ys2))) {
+									if (m_Rader >= tmpRader) {
+										m_Rader = tmpRader;
+									}
+									isout = false;
+									break;
+								}
+								tmpRader -= 1.f / div;
+							}
+						}
+						if (isout) {
+							m_Rader = tmpRader + 1.f / div;
+						}
+					}
+
+					for (int i = 1; i < chara_num; i++) {
+						auto& c = (std::shared_ptr<CharacterClass>&)(*this->Obj.GetObj(ObjType::Human, i));
+						auto pos = MATRIX_ref::Vtrans(c->GetMatrix().pos() - BaseBos, MATRIX_ref::RotY(rad))*((1.f / 12.5f) * m_Rader_r);
+						if ((-xs1 < pos.x() && pos.x() < xs2) && (-ys1 < -pos.z() && -pos.z() < ys2)) {
+							int xp, yp;
+							xp = xp1 + (int)(pos.x());
+							yp = yp1 + (int)(-pos.z());
+							DrawCircle(xp, yp, 5, Red, TRUE);
+						}
+					}
+				}
+				//
 			}
 		};
 	};
