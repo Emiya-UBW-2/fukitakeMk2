@@ -6,14 +6,14 @@ namespace FPS_n2 {
 	static const float Frame_Rate{ 60.f };
 
 	enum class Effect {
-		ef_fire,	//”­–C‰Š
-		ef_reco,	//¬ŒûŒa’µ’e
-		ef_smoke,	//e‚Ì‹OÕ
-		ef_gndsmoke,//’n–Ê‚Ì‹OÕ
-		ef_fire2,	//”­–C‰Š
-		ef_hitblood,//ŒŒ‚µ‚Ô‚«
-		ef_greexp,	//ƒOƒŒ”š”­
-		ef_greexp2,	//ƒOƒŒ”š”­2
+		ef_fire,			//”­–C‰Š
+		ef_reco,			//¬ŒûŒa’µ’e
+		ef_smoke,			//e‚Ì‹OÕ
+		ef_gndsmoke,		//’n–Ê‚Ì‹OÕ
+		ef_fire2,			//”­–C‰Š
+		ef_hitblood,		//ŒŒ‚µ‚Ô‚«
+		ef_greexp,			//ƒOƒŒ”š”­
+		ef_greexp2,			//ƒOƒŒ”š”­2
 		ef_FireBallStart,	//‰Î‚Í‚¶‚ß
 		ef_FireBallLoop,	//‰Îƒ‹[ƒv
 		ef_FireBallHit,		//‰Îƒqƒbƒg
@@ -22,7 +22,7 @@ namespace FPS_n2 {
 		ef_ThunderLoop,		//—‹ƒ‹[ƒv
 
 		ef_Sonic,			//ÕŒ‚”g
-		effects,	//“Ç‚İ‚Ş
+		effects,			//“Ç‚İ‚Ş‘—Ê
 	};
 	namespace Sceneclass {
 		enum class scenes

@@ -3,7 +3,7 @@
 
 namespace FPS_n2 {
 	namespace Sceneclass {
-		class FireBallClass {
+		class BulletClass {
 		private://キャラパラメーター
 			bool m_IsActive{ false };
 			moves m_move;
@@ -66,16 +66,17 @@ namespace FPS_n2 {
 			const float HPMax = 100.f;
 			const float MPMax = 100.f;
 			std::string											m_Name;
+			CharaTypeID											m_CharaType;
 		private:
+			bool												m_KeyActive{ true };
 			CharacterMoveGroundControl							m_InputGround;
 			CharacterMoveFlightControl							m_InputSky;
 			switchs												m_Rightkey;
 			switchs												m_Leftkey;
-			switchs												m_UseItemkey;
 			switchs												m_Upkey;
 			switchs												m_Downkey;
+			switchs												m_UseItemkey;
 			switchs												m_UseMagickey;
-			bool												m_KeyActive{ true };
 			//飛行関連
 			VECTOR_ref											m_FlightVecBuf;
 			MATRIX_ref											m_FlightMatrix;
@@ -114,9 +115,8 @@ namespace FPS_n2 {
 			CharaAnimeID										m_UpperAnimSelect, m_PrevUpperAnimSel;
 			CharaAnimeID										m_BottomAnimSelect;
 			//
-			std::array<FireBallClass, 6>						m_fireBall;
-			int													m_NowfireBall{ 0 };
-
+			std::array<BulletClass, 6>							m_Bullet;
+			int													m_NowBullet{ 0 };
 			//
 			float												m_HP{ 0.f };							//スコア
 			float												m_MP{ 0.f };							//スコア
@@ -129,7 +129,7 @@ namespace FPS_n2 {
 			//箒
 			std::shared_ptr<HoukiClass>							m_Houki_Ptr{ nullptr };					//箒
 			//アイテム
-			std::vector <std::pair<ItemType,std::vector<std::shared_ptr<ItemClass>>>>	m_Item_Ptrs;
+			std::vector <std::pair<ItemType, std::vector<std::shared_ptr<ItemClass>>>>	m_Item_Ptrs;
 			int													m_ItemSel;
 			int													m_MagicSel;
 			int													m_MagicNum;
@@ -137,17 +137,17 @@ namespace FPS_n2 {
 			bool												m_SendCamShake{ false };
 		public://ゲッター
 			//
-			const auto		GetFrameLocalMat(CharaFrame frame) const noexcept { return this->m_obj.GetFrameLocalMatrix(Frames[(int)frame].first); }
-			const auto		GetParentFrameLocalMat(CharaFrame frame) const noexcept { return this->m_obj.GetFrameLocalMatrix((int)this->m_obj.frame_parent(Frames[(int)frame].first)); }
-			const auto		GetFrameWorldMat(CharaFrame frame) const noexcept { return this->m_obj.GetFrameLocalWorldMatrix(Frames[(int)frame].first); }
-			const auto		GetParentFrameWorldMat(CharaFrame frame) const noexcept { return this->m_obj.GetFrameLocalWorldMatrix((int)this->m_obj.frame_parent(Frames[(int)frame].first)); }
-			void			ResetFrameLocalMat(CharaFrame frame) noexcept { this->m_obj.frame_Reset(Frames[(int)frame].first); }
-			void			SetFrameLocalMat(CharaFrame frame, const MATRIX_ref&value) noexcept { this->m_obj.SetFrameLocalMatrix(Frames[(int)frame].first, value * Frames[(int)frame].second); }
-			void			SetShapePer(CharaShape pShape, float Per) noexcept { Shapes[(int)pShape].second = Per; }
+			void			SetAnimOnce(CharaAnimeID ID, float speed) noexcept { ObjectBaseClass::SetAnimOnce((int)ID, speed); }
+			void			SetAnimLoop(CharaAnimeID ID, float speed) noexcept { ObjectBaseClass::SetAnimLoop((int)ID, speed); }
+			void			ResetFrameLocalMat(CharaFrame frame) noexcept { this->m_obj.frame_Reset(m_Frames[(int)frame].first); }
+			void			SetFrameLocalMat(CharaFrame frame, const MATRIX_ref&value) noexcept { this->m_obj.SetFrameLocalMatrix(m_Frames[(int)frame].first, value * m_Frames[(int)frame].second); }
+			void			SetShapePer(CharaShape pShape, float Per) noexcept { m_Shapes[(int)pShape].second = Per; }
+			const auto		GetFrameLocalMat(CharaFrame frame) const noexcept { return this->m_obj.GetFrameLocalMatrix(m_Frames[(int)frame].first); }
+			const auto		GetParentFrameLocalMat(CharaFrame frame) const noexcept { return this->m_obj.GetFrameLocalMatrix((int)this->m_obj.frame_parent(m_Frames[(int)frame].first)); }
+			const auto		GetFrameWorldMat(CharaFrame frame) const noexcept { return this->m_obj.GetFrameLocalWorldMatrix(m_Frames[(int)frame].first); }
+			const auto		GetParentFrameWorldMat(CharaFrame frame) const noexcept { return this->m_obj.GetFrameLocalWorldMatrix((int)this->m_obj.frame_parent(m_Frames[(int)frame].first)); }
 			auto&			GetAnimeBuf(CharaAnimeID anim) noexcept { return this->m_AnimPerBuf[(int)anim]; }
 			auto&			GetAnime(CharaAnimeID anim) noexcept { return this->m_obj.get_anime((int)anim); }
-			void			SetAnimOnce(CharaAnimeID ID, float speed) { ObjectBaseClass::SetAnimOnce((int)ID, speed); }
-			void			SetAnimLoop(CharaAnimeID ID, float speed) { ObjectBaseClass::SetAnimLoop((int)ID, speed); }
 			//
 			const auto		GetIsRun(void) const noexcept { return this->m_InputGround.GetRun(); }
 			const auto		GetTurnRatePer(void) const noexcept { return this->m_InputGround.GetTurnRatePer(); }
@@ -165,6 +165,7 @@ namespace FPS_n2 {
 			const auto		GetEyePosition(void) const noexcept { return (GetFrameWorldMat(CharaFrame::LeftEye).pos() + GetFrameWorldMat(CharaFrame::RightEye).pos()) / 2.f + this->GetEyeVecMat().zvec() * -1.5f; }
 			const auto		GetFlightPer(void) const noexcept { return this->m_InputSky.GetFlightPer(); }
 			const auto		GetFlightMode(void) const noexcept { return this->m_InputSky.GetIsFlightMode(); }
+			const auto&		GetCharaType(void) const noexcept { return this->m_CharaType; }
 			const auto&		GetScore(void) const noexcept { return this->m_Score; }
 			const auto&		GetHP(void) const noexcept { return this->m_HP; }
 			const auto&		GetHPMax(void) const noexcept { return HPMax; }
@@ -175,20 +176,19 @@ namespace FPS_n2 {
 			const auto&		GetSendCamShake(void) const noexcept { return this->m_SendCamShake; }
 			const auto&		GetName(void) const noexcept { return this->m_Name; }
 
+			void			SetCharaType(CharaTypeID value) noexcept { this->m_CharaType = value; }
 			void			SetHoukiPtr(std::shared_ptr<HoukiClass>& pHoukiPtr) noexcept { this->m_Houki_Ptr = pHoukiPtr; }
 			void			AddScore(float value) noexcept { this->m_Score += value; }
 			void			SubScore(float value) noexcept { this->m_Score -= value; }
 			void			SetScore(float value) noexcept { this->m_Score = value; }
-
 			void			AddHP(float value) noexcept { this->m_HP = std::clamp(this->m_HP + value, 0.f, HPMax); }
 			void			SubHP(float value) noexcept { this->m_HP = std::clamp(this->m_HP - value, 0.f, HPMax); }
 			void			SetHP(float value) noexcept { this->m_HP = value; }
-
 			void			AddMP(float value) noexcept { this->m_MP = std::clamp(this->m_MP + value, 0.f, MPMax); }
 			void			SubMP(float value) noexcept { this->m_MP = std::clamp(this->m_MP - value, 0.f, MPMax); }
 			void			SetMP(float value) noexcept { this->m_MP = value; }
 
-			void			ValueSet(float pxRad, float pyRad, const VECTOR_ref& pPos) {
+			void			ValueSet(float pxRad, float pyRad, const VECTOR_ref& pPos) noexcept {
 				this->m_KeyActive = false;
 				//飛行関連
 				//this->m_FlightVecBuf;
@@ -225,7 +225,7 @@ namespace FPS_n2 {
 				this->m_UsingMagic = false;
 				this->m_MagicEffectStart = false;
 				this->m_MagicEffectLoop = false;
-				
+
 				//this->m_UpperAnimSelect;
 				//this->m_PrevUpperAnimSel;
 				//this->m_BottomAnimSelect;
@@ -352,7 +352,7 @@ namespace FPS_n2 {
 				}
 			}
 			void			SetEyeVec(const VECTOR_ref& camvec) noexcept {
-				this->m_obj.frame_Reset(this->Frames[(int)CharaFrame::Head].first);
+				this->m_obj.frame_Reset(this->m_Frames[(int)CharaFrame::Head].first);
 				auto v1 = (GetFrameWorldMat(CharaFrame::Head).GetRot() * GetCharaDir().Inverse()).zvec()*-1.f;
 				auto v2 = Lerp(MATRIX_ref::Vtrans(camvec.Norm(), GetCharaDir().Inverse()), v1, m_NeckPer);
 
@@ -377,7 +377,7 @@ namespace FPS_n2 {
 				this->m_Item_Ptrs.back().second.back()->SetCharaPtr(true);
 			}
 			void			DelItem(ItemType id) noexcept {
-				for(int i=0;i< this->m_Item_Ptrs.size();i++){
+				for (int i = 0; i < this->m_Item_Ptrs.size(); i++) {
 					if (this->m_Item_Ptrs[i].first == id) {
 						if (this->m_Item_Ptrs[i].second.size() > 0) {
 							this->m_Item_Ptrs[i].second.back()->SetCharaPtr(false);
@@ -467,14 +467,14 @@ namespace FPS_n2 {
 			//上半身回転															//0.06ms
 			void			ExecuteUpperMatrix(void) noexcept {
 				this->m_UpperMatrix = MATRIX_ref::RotX(this->m_InputGround.GetRad().x()) * MATRIX_ref::RotY(this->m_InputGround.GetRad().y() - this->m_yrad_Bottom);
-				this->m_obj.frame_Reset(this->Frames[(int)CharaFrame::Upper].first);
+				this->m_obj.frame_Reset(this->m_Frames[(int)CharaFrame::Upper].first);
 				SetFrameLocalMat(CharaFrame::Upper, GetFrameLocalMat(CharaFrame::Upper).GetRot() * Lerp_Matrix(this->m_UpperMatrix, MATRIX_ref::zero(), GetFlightPer()));
 			}
 			//SetMat指示															//0.03ms
-			const auto*		GetLatestAmmoMove(void) noexcept {
-				auto Now = this->m_NowfireBall - 1;
-				if (Now < 0) { Now = (int)(this->m_fireBall.size()) - 1; }
-				return this->m_fireBall[Now].Get_Move();
+			const auto*		GetLatestBulletMove(void) noexcept {
+				auto Now = this->m_NowBullet - 1;
+				if (Now < 0) { Now = (int)(this->m_Bullet.size()) - 1; }
+				return this->m_Bullet[Now].Get_Move();
 			}
 			void			ExecuteAnim(void) noexcept {
 				auto SE = SoundPool::Instance();
@@ -490,7 +490,7 @@ namespace FPS_n2 {
 							this->m_UpperAnimSelect = CharaAnimeID::Upper_UseMagic1;
 							SetAnimOnce(CharaAnimeID::Upper_UseMagic1, 1.5f);
 							SetAnimOnce(CharaAnimeID::Upper_FlightUseMagic1, 1.5f);
-							switch (this->m_MagicSel){
+							switch (this->m_MagicSel) {
 							case 0:
 								if (this->m_MagicEffectStart && GetAnime(CharaAnimeID::Upper_UseMagic1).time > 30) {
 									MATRIX_ref mat = GetFrameWorldMat(CharaFrame::RightHandJoint);
@@ -503,8 +503,8 @@ namespace FPS_n2 {
 									this->m_MagicEffectLoop = false;
 
 									float Spd = (this->m_FlightSpeed + 100.f) * 1000.f / 3600.f * 12.5f / 60.f;
-									this->m_fireBall[this->m_NowfireBall].Set(GetCharaDir(), mat.pos(), Spd);
-									++this->m_NowfireBall %= this->m_fireBall.size();
+									this->m_Bullet[this->m_NowBullet].Set(GetCharaDir(), mat.pos(), Spd);
+									++this->m_NowBullet %= this->m_Bullet.size();
 								}
 								break;
 							case 1:
@@ -519,8 +519,8 @@ namespace FPS_n2 {
 									this->m_MagicEffectLoop = false;
 
 									float Spd = (this->m_FlightSpeed + 800.f) * 1000.f / 3600.f * 12.5f / 60.f;
-									this->m_fireBall[this->m_NowfireBall].Set(GetCharaDir(), mat.pos(), Spd);
-									++this->m_NowfireBall %= this->m_fireBall.size();
+									this->m_Bullet[this->m_NowBullet].Set(GetCharaDir(), mat.pos(), Spd);
+									++this->m_NowBullet %= this->m_Bullet.size();
 								}
 								break;
 							case 2:
@@ -551,7 +551,7 @@ namespace FPS_n2 {
 						}
 
 						{
-							auto* nowptr = GetLatestAmmoMove();
+							auto* nowptr = GetLatestBulletMove();
 							switch (this->m_MagicSel) {
 							case 0:
 								Effect_UseControl::SetSpeed_Effect(Effect::ef_FireBallStart, 2.f);
@@ -561,7 +561,7 @@ namespace FPS_n2 {
 								else {
 									Effect_UseControl::Stop_Effect(Effect::ef_FireBallLoop);
 								}
-								for (auto& b : this->m_fireBall) {
+								for (auto& b : this->m_Bullet) {
 									if (b.CheckBullet(this->m_MapCol)) {
 										auto mat = b.GetMoveHit();
 										Effect_UseControl::Set_Effect(Effect::ef_FireBallStart, mat.pos, mat.vec, 0.25f);
@@ -1016,6 +1016,7 @@ namespace FPS_n2 {
 				GetAnime(CharaAnimeID::Bottom_Stand).per = 1.f;
 				GetAnime(CharaAnimeID::Upper_RunningStart).GoEnd();
 				this->m_Name = "Name";
+				this->m_CharaType = CharaTypeID::Enemy;
 			}
 			void			Execute(void) noexcept override {
 				//初回のみ更新する内容
@@ -1035,7 +1036,7 @@ namespace FPS_n2 {
 						*GetFrameWorldMat(CharaFrame::LeftHandJoint).GetRot(),
 						GetFrameWorldMat(CharaFrame::LeftHandJoint).pos());
 				}
-				for (auto& b : this->m_fireBall) {
+				for (auto& b : this->m_Bullet) {
 					b.Execute();
 				}
 				Effect_UseControl::Update_Effect();

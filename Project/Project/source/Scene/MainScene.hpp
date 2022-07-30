@@ -5,50 +5,43 @@ namespace FPS_n2 {
 	namespace Sceneclass {
 		class MAINLOOP : public TEMPSCENE, public Effect_UseControl {
 		private:
+			static const int		team_num = 3;
+			static const int		enemy_num = 3;
+			static const int		item_num = 9;
+		private:
 			//リソース関連
-			ObjectManager Obj;				//モデル
-			BackGroundClass BackGround;		//BG
-			SoundHandle Env;
-			//
-			static const int chara_num = 3;
-			static const int item_num = 9;
-			static const int cart_num = 2;
-			//関連
-			int tgtSel = 0;
-			float tgtTimer = 0.f;
+			ObjectManager			m_Obj;						//モデル
+			BackGroundClass			m_BackGround;				//BG
+			SoundHandle				m_Env;
 			//ルール
-			float m_ReadyTime = 0.f;
-			bool m_StartSwitch{ false };
-			bool m_RemoveSwitch{ false };
+			float					m_ReadyTime{ 0.f };
+			bool					m_StartSwitch{ false };
+			bool					m_RemoveSwitch{ false };
 			//操作関連
-			float EyeRunPer = 0.f;
-			switchs FPSActive;
-			switchs MouseActive;
+			float					m_EyeRunPer{ 0.f };
+			switchs					m_FPSActive;
+			switchs					m_MouseActive;
 			//UI関連
-			UIClass UI_class;
-			float HPBuf{ 0.f };
-			float MPBuf{ 0.f };
-			float scoreBuf{ 0.f };
-			float AddItemBuf{ 1.f };
-			float SubItemBuf{ 1.f };
-			int PrevPointSel{ 0 };
+			UIClass					m_UIclass;
+			float					m_HPBuf{ 0.f };
+			float					m_MPBuf{ 0.f };
+			float					m_ScoreBuf{ 0.f };
+			float					m_AddItemBuf{ 1.f };
+			float					m_SubItemBuf{ 1.f };
+			int						m_PrevPointSel{ 0 };
 			//
-			float m_CamShake{ 0.f };
-			VECTOR_ref m_CamShake1;
-			VECTOR_ref m_CamShake2;
+			float					m_CamShake{ 0.f };
+			VECTOR_ref				m_CamShake1;
+			VECTOR_ref				m_CamShake2;
 			//
-			float m_Rader = 1.f;
-			float m_Rader_r = 1.f;
-			//銃関連
-			bool Reticle_on = false;
-			float Reticle_xpos = 0;
-			float Reticle_ypos = 0;
-
-			float TPS_Xrad = 0;
-			float TPS_Yrad = 0;
-			float TPS_XradR = 0;
-			float TPS_YradR = 0;
-			float TPS_Per = 1.f;
+			float					m_Rader{ 1.f };
+			float					m_Rader_r{ 1.f };
+			//
+			float					m_TPS_Xrad{ 0.f };
+			float					m_TPS_Yrad{ 0.f };
+			float					m_TPS_XradR{ 0.f };
+			float					m_TPS_YradR{ 0.f };
+			float					m_TPS_Per{ 1.f };
 		public:
 			using TEMPSCENE::TEMPSCENE;
 			void Set(void) noexcept override {
@@ -60,62 +53,64 @@ namespace FPS_n2 {
 					GetColorF(0.42f, 0.41f, 0.40f, 0.0f));
 				//Load
 				//BG
-				this->BackGround.Load();
+				this->m_BackGround.Load();
 				//
-				this->Obj.Init(&this->BackGround.GetGroundCol());
-				for (int i = 0; i < chara_num; i++) {
-					this->Obj.AddObject(ObjType::Human, "data/Charactor/Marisa/", DX_LOADMODEL_PHYSICS_REALTIME);
-					this->Obj.AddObject(ObjType::Houki, "data/Houki/Houki01/", DX_LOADMODEL_PHYSICS_LOADCALC);
+				this->m_Obj.Init(&this->m_BackGround.GetGroundCol());
+				for (int i = 0; i < team_num; i++) {
+					this->m_Obj.AddObject(ObjType::Human, "data/Charactor/Marisa/", DX_LOADMODEL_PHYSICS_REALTIME);
+					this->m_Obj.AddObject(ObjType::Houki, "data/Houki/Houki01/", DX_LOADMODEL_PHYSICS_LOADCALC);
+				}
+				for (int i = 0; i < enemy_num; i++) {
+					this->m_Obj.AddObject(ObjType::Human, "data/Charactor/Marisa/", DX_LOADMODEL_PHYSICS_REALTIME);
+					this->m_Obj.AddObject(ObjType::Houki, "data/Houki/Houki01/", DX_LOADMODEL_PHYSICS_LOADCALC);
 				}
 				for (int i = 0; i < item_num / 3; i++) {
-					this->Obj.AddObject(ObjType::Item, "data/Item/BluePotion/", DX_LOADMODEL_PHYSICS_LOADCALC);
-				}
-				for (int i = 0; i < item_num / 3; i++) {
-					this->Obj.AddObject(ObjType::Item, "data/Item/YellowPotion/", DX_LOADMODEL_PHYSICS_LOADCALC);
-				}
-				for (int i = 0; i < item_num / 3; i++) {
-					this->Obj.AddObject(ObjType::Item, "data/Item/RedPotion/", DX_LOADMODEL_PHYSICS_LOADCALC);
+					this->m_Obj.AddObject(ObjType::Item, "data/Item/BluePotion/", DX_LOADMODEL_PHYSICS_LOADCALC);
+					this->m_Obj.AddObject(ObjType::Item, "data/Item/YellowPotion/", DX_LOADMODEL_PHYSICS_LOADCALC);
+					this->m_Obj.AddObject(ObjType::Item, "data/Item/RedPotion/", DX_LOADMODEL_PHYSICS_LOADCALC);
 				}
 				//guide
-				//this->Obj.AddObject(ObjType::Circle, "data/model/Circle/", DX_LOADMODEL_PHYSICS_LOADCALC);
+				//this->m_Obj.AddObject(ObjType::Circle, "data/model/Circle/", DX_LOADMODEL_PHYSICS_LOADCALC);
 				//ロード
 				SetCreate3DSoundFlag(FALSE);
-				Env = SoundHandle::Load("data/Sound/SE/envi.wav");
+				this->m_Env = SoundHandle::Load("data/Sound/SE/envi.wav");
 				SetCreate3DSoundFlag(FALSE);
-				Env.vol(64);
+				this->m_Env.vol(64);
 				//UI
-				UI_class.Set();
+				this->m_UIclass.Set();
 				//
 				TEMPSCENE::Set();
 				//Set
-				//オブジェ
 				//人
-				for (int i = 0; i < chara_num; i++) {
-					auto& c = (std::shared_ptr<CharacterClass>&)(*this->Obj.GetObj(ObjType::Human, i));
-					c->SetHoukiPtr((std::shared_ptr<HoukiClass>&)(*this->Obj.GetObj(ObjType::Houki, i)));
+				for (int i = 0; i < team_num + enemy_num; i++) {
+					auto& c = (std::shared_ptr<CharacterClass>&)(*this->m_Obj.GetObj(ObjType::Human, i));
+					c->SetHoukiPtr((std::shared_ptr<HoukiClass>&)(*this->m_Obj.GetObj(ObjType::Houki, i)));
 					c->ValueSet(deg2rad(0.f), deg2rad(-90.f), VECTOR_ref::vget(0.f, 0.f, -52.5f + (float)(i - 1)*20.f));
+					if (i < team_num) {
+						c->SetCharaType(CharaTypeID::Team);
+					}
+					else {
+						c->SetCharaType(CharaTypeID::Enemy);
+					}
 				}
 				{
-					auto& Chara = (std::shared_ptr<CharacterClass>&)(*this->Obj.GetObj(ObjType::Human, 0));//自分
-					this->HPBuf = Chara->GetHP();
-					this->MPBuf = Chara->GetMP();
-					this->scoreBuf = Chara->GetScore();
+					auto& Chara = (std::shared_ptr<CharacterClass>&)(*this->m_Obj.GetObj(ObjType::Human, 0));//自分
+					this->m_HPBuf = Chara->GetHP();
+					this->m_MPBuf = Chara->GetMP();
+					this->m_ScoreBuf = Chara->GetScore();
 				}
 				//アイテム
 				{
 					for (int i = 0; i < item_num; i++) {
-						auto& c = *this->Obj.GetObj(ObjType::Item, i);
-						c->SetMove(MATRIX_ref::RotY(deg2rad(0)), VECTOR_ref::vget(20.f * (i / (item_num / 3)), 0.f, 20.f + 20.f * (i% (item_num / 3))));
+						auto& c = *this->m_Obj.GetObj(ObjType::Item, i);
+						c->SetMove(MATRIX_ref::RotY(deg2rad(0)), VECTOR_ref::vget(20.f * (i / (item_num / 3)), 0.f, 20.f + 20.f * (i % (item_num / 3))));
 					}
 				}
 				//ガイドサークル
 				{
-					//auto& c = *this->Obj.GetObj(ObjType::Circle, 0);
+					//auto& c = *this->m_Obj.GetObj(ObjType::Circle, 0);
 					//c->SetMove(MATRIX_ref::RotY(deg2rad(-90)), VECTOR_ref::vget(-10.f, 0, -20));
 				}
-				//UI
-				tgtSel = -1;
-				tgtTimer = 0.f;
 				//Cam
 				camera_main.set_cam_info(deg2rad(65), 1.f, 100.f);
 				camera_main.set_cam_pos(VECTOR_ref::vget(0, 15, -20), VECTOR_ref::vget(0, 15, 0), VECTOR_ref::vget(0, 1, 0));
@@ -146,18 +141,18 @@ namespace FPS_n2 {
 				this->m_StartSwitch = false;
 				this->m_RemoveSwitch = false;
 				//入力
-				FPSActive.Init(false);
-				MouseActive.Init(true);
+				this->m_FPSActive.Init(false);
+				this->m_MouseActive.Init(true);
 			}
 			//
 			bool Update(void) noexcept override {
-				auto& Chara = (std::shared_ptr<CharacterClass>&)(*this->Obj.GetObj(ObjType::Human, 0));//自分
+				auto& Chara = (std::shared_ptr<CharacterClass>&)(*this->m_Obj.GetObj(ObjType::Human, 0));//自分
 				//FirstDoing
 				if (IsFirstLoop) {
 					SetMousePoint(DXDraw::Instance()->disp_x / 2, DXDraw::Instance()->disp_y / 2);
-					Env.play(DX_PLAYTYPE_LOOP, TRUE);
+					this->m_Env.play(DX_PLAYTYPE_LOOP, TRUE);
 					this->m_ReadyTime = 1.f;
-					PrevPointSel = Chara->GetItemSel();
+					this->m_PrevPointSel = Chara->GetItemSel();
 				}
 				//
 				{
@@ -173,10 +168,10 @@ namespace FPS_n2 {
 				}
 				//Input,AI
 				{
-					MouseActive.GetInput(CheckHitKeyWithCheck(KEY_INPUT_TAB) != 0);
+					this->m_MouseActive.GetInput(CheckHitKeyWithCheck(KEY_INPUT_TAB) != 0);
 					int mx = DXDraw::Instance()->disp_x / 2, my = DXDraw::Instance()->disp_y / 2;
-					if (MouseActive.on()) {
-						if (MouseActive.trigger()) {
+					if (this->m_MouseActive.on()) {
+						if (this->m_MouseActive.trigger()) {
 							SetMousePoint(DXDraw::Instance()->disp_x / 2, DXDraw::Instance()->disp_y / 2);
 						}
 						GetMousePoint(&mx, &my);
@@ -275,22 +270,22 @@ namespace FPS_n2 {
 						}
 					}
 
-					FPSActive.GetInput(eyechange_key);
+					this->m_FPSActive.GetInput(eyechange_key);
 
-					Easing(&TPS_Per, (!FPSActive.on() && look_key) ? 1.f : 0.f, 0.9f, EasingType::OutExpo);
+					Easing(&this->m_TPS_Per, (!this->m_FPSActive.on() && look_key) ? 1.f : 0.f, 0.9f, EasingType::OutExpo);
 
-					TPS_Xrad += pp_x;
-					TPS_Yrad += pp_y;
-					TPS_Xrad = std::clamp(TPS_Xrad, deg2rad(-80), deg2rad(80));
-					if (TPS_Yrad >= deg2rad(180)) { TPS_Yrad -= deg2rad(360); }
-					if (TPS_Yrad <= deg2rad(-180)) { TPS_Yrad += deg2rad(360); }
+					this->m_TPS_Xrad += pp_x;
+					this->m_TPS_Yrad += pp_y;
+					this->m_TPS_Xrad = std::clamp(this->m_TPS_Xrad, deg2rad(-80), deg2rad(80));
+					if (this->m_TPS_Yrad >= deg2rad(180)) { this->m_TPS_Yrad -= deg2rad(360); }
+					if (this->m_TPS_Yrad <= deg2rad(-180)) { this->m_TPS_Yrad += deg2rad(360); }
 
-					TPS_Xrad *= TPS_Per;
-					TPS_Yrad *= TPS_Per;
+					this->m_TPS_Xrad *= this->m_TPS_Per;
+					this->m_TPS_Yrad *= this->m_TPS_Per;
 
-					Easing(&TPS_XradR, TPS_Xrad, 0.5f, EasingType::OutExpo);
+					Easing(&this->m_TPS_XradR, this->m_TPS_Xrad, 0.5f, EasingType::OutExpo);
 
-					TPS_YradR += (sin(TPS_Yrad)*cos(TPS_YradR) - cos(TPS_Yrad) * sin(TPS_YradR))*20.f / FPS;
+					this->m_TPS_YradR += (sin(this->m_TPS_Yrad)*cos(this->m_TPS_YradR) - cos(this->m_TPS_Yrad) * sin(this->m_TPS_YradR))*20.f / FPS;
 
 					Chara->SetEyeVec((camera_main.camvec - camera_main.campos).Norm());
 
@@ -298,12 +293,12 @@ namespace FPS_n2 {
 					bool isready = this->m_ReadyTime < 0.f;
 
 
-					for (int i = 0; i < chara_num; i++) {
-						auto& c = (std::shared_ptr<CharacterClass>&)(*this->Obj.GetObj(ObjType::Human, i));
+					for (int i = 0; i < team_num + enemy_num; i++) {
+						auto& c = (std::shared_ptr<CharacterClass>&)(*this->m_Obj.GetObj(ObjType::Human, i));
 						//拾い判定
 						for (int j = 0; j < item_num; j++) {
-							if (this->Obj.GetObj(ObjType::Item, j) == nullptr) { break; }
-							auto& item = (std::shared_ptr<ItemClass>&)(*this->Obj.GetObj(ObjType::Item, j));
+							if (this->m_Obj.GetObj(ObjType::Item, j) == nullptr) { break; }
+							auto& item = (std::shared_ptr<ItemClass>&)(*this->m_Obj.GetObj(ObjType::Item, j));
 							if (!item->GetHaveChara() && !item->GetUsed()) {
 								if ((item->GetMatrix().pos() - c->GetMatrix().pos()).size() < 12.5f*1.f) {
 									c->AddItem(item);
@@ -316,8 +311,8 @@ namespace FPS_n2 {
 							//&& false
 							) {
 							Input.SetInput(
-								pp_x*(1.f - TPS_Per),
-								pp_y*(1.f - TPS_Per),
+								pp_x*(1.f - this->m_TPS_Per),
+								pp_y*(1.f - this->m_TPS_Per),
 								w_key && isready,
 								s_key && isready,
 								a_key && isready,
@@ -362,13 +357,13 @@ namespace FPS_n2 {
 					}
 				}
 				//Execute
-				this->Obj.ExecuteObject();
+				this->m_Obj.ExecuteObject();
 				//アイテム削除
 				for (int i = 0; i < item_num; i++) {
-					if (this->Obj.GetObj(ObjType::Item, i) == nullptr) { break; }
-					auto& item = (std::shared_ptr<ItemClass>&)(*this->Obj.GetObj(ObjType::Item, i));
+					if (this->m_Obj.GetObj(ObjType::Item, i) == nullptr) { break; }
+					auto& item = (std::shared_ptr<ItemClass>&)(*this->m_Obj.GetObj(ObjType::Item, i));
 					if (item->GetUsed()) {
-						this->Obj.DelObj(ObjType::Item, i);
+						this->m_Obj.DelObj(ObjType::Item, i);
 						i = 0;
 					}
 				}
@@ -377,13 +372,13 @@ namespace FPS_n2 {
 				//視点
 				{
 					if (Chara->GetSendCamShake()) {
-						m_CamShake = 1.f;
+						this->m_CamShake = 1.f;
 					}
-					Easing(&m_CamShake1, VECTOR_ref::vget(GetRandf(m_CamShake), GetRandf(m_CamShake), GetRandf(m_CamShake)), 0.8f, EasingType::OutExpo);
-					Easing(&m_CamShake2, m_CamShake1, 0.8f, EasingType::OutExpo);
-					m_CamShake = std::max(m_CamShake - 1.f / FPS, 0.f);
+					Easing(&this->m_CamShake1, VECTOR_ref::vget(GetRandf(this->m_CamShake), GetRandf(this->m_CamShake), GetRandf(this->m_CamShake)), 0.8f, EasingType::OutExpo);
+					Easing(&this->m_CamShake2, this->m_CamShake1, 0.8f, EasingType::OutExpo);
+					this->m_CamShake = std::max(this->m_CamShake - 1.f / FPS, 0.f);
 
-					if (FPSActive.on()) {
+					if (this->m_FPSActive.on()) {
 						camera_main.campos = Chara->GetEyePosition();
 						camera_main.camvec = camera_main.campos + Chara->GetEyeVecMat().zvec() * -1.f;
 						camera_main.camup = Chara->GetMatrix().GetRot().yvec();
@@ -394,23 +389,23 @@ namespace FPS_n2 {
 
 						VECTOR_ref CamVec;
 
-						CamVec = MATRIX_ref::Vtrans(Chara->GetEyeVecMat().zvec() * -1.f, MATRIX_ref::RotAxis(Chara->GetMatrix().xvec(), TPS_XradR) * MATRIX_ref::RotAxis(Chara->GetMatrix().yvec(), TPS_YradR));
+						CamVec = MATRIX_ref::Vtrans(Chara->GetEyeVecMat().zvec() * -1.f, MATRIX_ref::RotAxis(Chara->GetMatrix().xvec(), this->m_TPS_XradR) * MATRIX_ref::RotAxis(Chara->GetMatrix().yvec(), this->m_TPS_YradR));
 
-						CamVec = Lerp(Chara->GetEyeVecMat().zvec() * -1.f, CamVec, TPS_Per);
+						CamVec = Lerp(Chara->GetEyeVecMat().zvec() * -1.f, CamVec, this->m_TPS_Per);
 
 						CamPos +=
 							Lerp(
-								Lerp((UpperMat.xvec()*-8.f + UpperMat.yvec()*3.f), (UpperMat.xvec()*-3.f + UpperMat.yvec()*4.f), EyeRunPer),
-								Lerp(UpperMat.yvec()*4.f, UpperMat.yvec()*8.f, TPS_Per),
+								Lerp((UpperMat.xvec()*-8.f + UpperMat.yvec()*3.f), (UpperMat.xvec()*-3.f + UpperMat.yvec()*4.f), this->m_EyeRunPer),
+								Lerp(UpperMat.yvec()*4.f, UpperMat.yvec()*8.f, this->m_TPS_Per),
 								Chara->GetFlightPer()
 							);
 
-						camera_main.campos = (CamPos + CamVec * Lerp(Lerp(-20.f, -30.f - (Chara->GetFlightSpeed()/25.f), Chara->GetFlightPer()), -50.f, TPS_Per)) + m_CamShake2*5.f;
+						camera_main.campos = (CamPos + CamVec * Lerp(Lerp(-20.f, -30.f - (Chara->GetFlightSpeed() / 25.f), Chara->GetFlightPer()), -50.f, this->m_TPS_Per)) + this->m_CamShake2 * 5.f;
 						camera_main.camvec = CamPos + CamVec * 100.f;
 
-						camera_main.camup = Chara->GetEyeVecMat().yvec() + m_CamShake2 * 0.25f;
+						camera_main.camup = Chara->GetEyeVecMat().yvec() + this->m_CamShake2 * 0.25f;
 					}
-					Easing(&EyeRunPer, Chara->GetIsRun() ? 1.f : 0.f, 0.95f, EasingType::OutExpo);
+					Easing(&this->m_EyeRunPer, Chara->GetIsRun() ? 1.f : 0.f, 0.95f, EasingType::OutExpo);
 
 					if (Chara->GetIsRun()) {
 						Easing(&camera_main.fov, deg2rad(90), 0.9f, EasingType::OutExpo);
@@ -424,29 +419,29 @@ namespace FPS_n2 {
 					}
 				}
 
-				this->BackGround.Execute();
+				this->m_BackGround.Execute();
 				//UIパラメーター
 				{
 					int minute = (int)((-this->m_ReadyTime) / 60.f);
-					UI_class.SetIntParam(0, minute);
-					UI_class.SetfloatParam(0, (-this->m_ReadyTime) - (float)minute*60.f);
+					this->m_UIclass.SetIntParam(0, minute);
+					this->m_UIclass.SetfloatParam(0, (-this->m_ReadyTime) - (float)minute*60.f);
 
-					UI_class.SetIntParam(1, (int)this->scoreBuf);
-					this->scoreBuf += std::clamp((Chara->GetScore() - this->scoreBuf)*100.f, -5.f, 5.f) / FPS;
+					this->m_UIclass.SetIntParam(1, (int)this->m_ScoreBuf);
+					this->m_ScoreBuf += std::clamp((Chara->GetScore() - this->m_ScoreBuf)*100.f, -5.f, 5.f) / FPS;
 
-					UI_class.SetIntParam(2, Chara->GetFlightMode() ? 1 : 0);
-					UI_class.SetfloatParam(1, Chara->GetFlightSpeed());
-					UI_class.SetfloatParam(2, Chara->GetMatrix().pos().y() / 12.5f);
+					this->m_UIclass.SetIntParam(2, Chara->GetFlightMode() ? 1 : 0);
+					this->m_UIclass.SetfloatParam(1, Chara->GetFlightSpeed());
+					this->m_UIclass.SetfloatParam(2, Chara->GetMatrix().pos().y() / 12.5f);
 
-					UI_class.SetIntParam(3, (int)Chara->GetHP());
-					UI_class.SetIntParam(4, (int)Chara->GetHPMax());
-					UI_class.SetIntParam(5, (int)(this->HPBuf + 0.5f));
-					this->HPBuf += std::clamp((Chara->GetHP() - this->HPBuf)*100.f, -5.f, 5.f) / FPS;
+					this->m_UIclass.SetIntParam(3, (int)Chara->GetHP());
+					this->m_UIclass.SetIntParam(4, (int)Chara->GetHPMax());
+					this->m_UIclass.SetIntParam(5, (int)(this->m_HPBuf + 0.5f));
+					this->m_HPBuf += std::clamp((Chara->GetHP() - this->m_HPBuf)*100.f, -5.f, 5.f) / FPS;
 
-					UI_class.SetIntParam(6, (int)Chara->GetMP());
-					UI_class.SetIntParam(7, (int)Chara->GetMPMax());
-					UI_class.SetIntParam(8, (int)(this->MPBuf + 0.5f));
-					this->MPBuf += std::clamp((Chara->GetMP() - this->MPBuf)*100.f, -5.f, 5.f) / FPS;
+					this->m_UIclass.SetIntParam(6, (int)Chara->GetMP());
+					this->m_UIclass.SetIntParam(7, (int)Chara->GetMPMax());
+					this->m_UIclass.SetIntParam(8, (int)(this->m_MPBuf + 0.5f));
+					this->m_MPBuf += std::clamp((Chara->GetMP() - this->m_MPBuf)*100.f, -5.f, 5.f) / FPS;
 					//アイテム
 					{
 						int i = 0;
@@ -459,8 +454,8 @@ namespace FPS_n2 {
 						if (Chara->GetItemNum() <= ID) { ID = -1; }
 						ID1 = ID;
 
-						UI_class.SetItemGraph(i, (ID != -1) ? (&(Chara->GetItem(ID)->GetItemGraph())) : nullptr);
-						UI_class.SetIntParam(9 + i, (ID != -1) ? (int)(Chara->GetItemCnt(ID)) : 0);
+						this->m_UIclass.SetItemGraph(i, (ID != -1) ? (&(Chara->GetItem(ID)->GetItemGraph())) : nullptr);
+						this->m_UIclass.SetIntParam(9 + i, (ID != -1) ? (int)(Chara->GetItemCnt(ID)) : 0);
 						//
 						i = 0;
 						ID = (Chara->GetItemSel() - 1);
@@ -470,8 +465,8 @@ namespace FPS_n2 {
 						if (Chara->GetItemNum() <= ID) { ID = -1; }
 						if (ID1 == ID) { ID = -1; }
 
-						UI_class.SetItemGraph(i, (ID != -1) ? (&(Chara->GetItem(ID)->GetItemGraph())) : nullptr);
-						UI_class.SetIntParam(9 + i, (ID != -1) ? (int)(Chara->GetItemCnt(ID)) : 0);
+						this->m_UIclass.SetItemGraph(i, (ID != -1) ? (&(Chara->GetItem(ID)->GetItemGraph())) : nullptr);
+						this->m_UIclass.SetIntParam(9 + i, (ID != -1) ? (int)(Chara->GetItemCnt(ID)) : 0);
 						//
 						i = 2;
 						ID = (Chara->GetItemSel() + 1);
@@ -480,40 +475,40 @@ namespace FPS_n2 {
 						if (Chara->GetItemNum() <= ID) { ID = -1; }
 						if (ID1 == ID) { ID = -1; }
 						//if (ID2 == ID) { ID = -1; }
-						UI_class.SetItemGraph(i, (ID != -1) ? (&(Chara->GetItem(ID)->GetItemGraph())) : nullptr);
-						UI_class.SetIntParam(9 + i, (ID != -1) ? (int)(Chara->GetItemCnt(ID)) : 0);
+						this->m_UIclass.SetItemGraph(i, (ID != -1) ? (&(Chara->GetItem(ID)->GetItemGraph())) : nullptr);
+						this->m_UIclass.SetIntParam(9 + i, (ID != -1) ? (int)(Chara->GetItemCnt(ID)) : 0);
 
-						if (PrevPointSel > Chara->GetItemSel()) {
-							if (Chara->GetItemSel() == 0 && PrevPointSel == Chara->GetItemNum() - 1) {
-								AddItemBuf = 0.f;
+						if (this->m_PrevPointSel > Chara->GetItemSel()) {
+							if (Chara->GetItemSel() == 0 && this->m_PrevPointSel == Chara->GetItemNum() - 1) {
+								this->m_AddItemBuf = 0.f;
 							}
 							else {
-								SubItemBuf = 0.f;
+								this->m_SubItemBuf = 0.f;
 							}
 						}
-						else if (PrevPointSel < Chara->GetItemSel()) {
-							if (Chara->GetItemSel() == Chara->GetItemNum() - 1 && PrevPointSel == 0) {
-								SubItemBuf = 0.f;
+						else if (this->m_PrevPointSel < Chara->GetItemSel()) {
+							if (Chara->GetItemSel() == Chara->GetItemNum() - 1 && this->m_PrevPointSel == 0) {
+								this->m_SubItemBuf = 0.f;
 							}
 							else {
-								AddItemBuf = 0.f;
+								this->m_AddItemBuf = 0.f;
 							}
 						}
-						PrevPointSel = Chara->GetItemSel();
+						this->m_PrevPointSel = Chara->GetItemSel();
 
-						UI_class.SetfloatParam(3, AddItemBuf);
-						UI_class.SetfloatParam(4, SubItemBuf);
-						Easing(&AddItemBuf, 1.f, 0.9f, EasingType::OutExpo);
-						Easing(&SubItemBuf, 1.f, 0.9f, EasingType::OutExpo);
+						this->m_UIclass.SetfloatParam(3, this->m_AddItemBuf);
+						this->m_UIclass.SetfloatParam(4, this->m_SubItemBuf);
+						Easing(&this->m_AddItemBuf, 1.f, 0.9f, EasingType::OutExpo);
+						Easing(&this->m_SubItemBuf, 1.f, 0.9f, EasingType::OutExpo);
 					}
 					//魔法
 					{
-						UI_class.SetIntParam(12, Chara->GetMagicSel());
-						UI_class.SetIntParam(13, Chara->GetMagicNum());
+						this->m_UIclass.SetIntParam(12, Chara->GetMagicSel());
+						this->m_UIclass.SetIntParam(13, Chara->GetMagicNum());
 					}
 					//
 					{
-						UI_class.SetStrParam(0, Chara->GetName());
+						this->m_UIclass.SetStrParam(0, Chara->GetName());
 					}
 					//
 				}
@@ -523,36 +518,36 @@ namespace FPS_n2 {
 			}
 			void Dispose(void) noexcept override {
 				Effect_UseControl::Dispose_Effect();
-				this->Obj.DisposeObject();
+				this->m_Obj.DisposeObject();
 			}
 			//
 			void Depth_Draw(void) noexcept override {
-				this->BackGround.Draw();
-				//this->Obj.DrawDepthObject();
+				this->m_BackGround.Draw();
+				//this->m_Obj.DrawDepthObject();
 			}
 			void BG_Draw(void) noexcept override {
-				this->BackGround.BG_Draw();
+				this->m_BackGround.BG_Draw();
 			}
 			void Shadow_Draw_NearFar(void) noexcept override {
-				this->BackGround.Shadow_Draw_NearFar();
-				//this->Obj.DrawObject_Shadow();
+				this->m_BackGround.Shadow_Draw_NearFar();
+				//this->m_Obj.DrawObject_Shadow();
 			}
 			void Shadow_Draw(void) noexcept override {
-				this->BackGround.Shadow_Draw();
-				this->Obj.DrawObject_Shadow();
+				this->m_BackGround.Shadow_Draw();
+				this->m_Obj.DrawObject_Shadow();
 			}
 
 			void Main_Draw(void) noexcept override {
-				this->BackGround.Draw();
-				this->Obj.DrawObject();
-				//this->Obj.DrawDepthObject();
+				this->m_BackGround.Draw();
+				this->m_Obj.DrawObject();
+				//this->m_Obj.DrawDepthObject();
 				//シェーダー描画用パラメーターセット
 				{
 					Set_is_Blackout(false);
 					Set_is_lens(false);
 				}
-				for (int i = 1; i < chara_num; i++) {
-					auto& c = (std::shared_ptr<CharacterClass>&)(*this->Obj.GetObj(ObjType::Human, i));
+				for (int i = 1; i < team_num + enemy_num; i++) {
+					auto& c = (std::shared_ptr<CharacterClass>&)(*this->m_Obj.GetObj(ObjType::Human, i));
 					auto pos = c->GetFrameWorldMat(CharaFrame::Upper).pos();
 					VECTOR_ref campos = ConvWorldPosToScreenPos(pos.get());
 					if (0.f < campos.z() && campos.z() < 1.f) {
@@ -567,23 +562,35 @@ namespace FPS_n2 {
 				}
 			}
 			void Main_Draw2(void) noexcept override {
-				this->Obj.DrawDepthObject();
+				this->m_Obj.DrawDepthObject();
 			}
 			void LAST_Draw(void) noexcept override {
 			}
 			//UI表示
 			void UI_Draw(void) noexcept  override {
-				auto& Chara = (std::shared_ptr<CharacterClass>&)(*this->Obj.GetObj(ObjType::Human, 0));//自分
+				auto& Chara = (std::shared_ptr<CharacterClass>&)(*this->m_Obj.GetObj(ObjType::Human, 0));//自分
 
 				auto* DrawParts = DXDraw::Instance();
 				auto Red = GetColor(255, 0, 0);
+				auto Blue = GetColor(50, 50, 255);
 				auto Green = GetColor(43, 163, 91);
 				auto White = GetColor(212, 255, 239);
+				unsigned int color = Red;
 				//キャラ
-				for (int i = 1; i < chara_num; i++) {
-					auto& c = (std::shared_ptr<CharacterClass>&)(*this->Obj.GetObj(ObjType::Human, i));
+				for (int i = 1; i < team_num + enemy_num; i++) {
+					auto& c = (std::shared_ptr<CharacterClass>&)(*this->m_Obj.GetObj(ObjType::Human, i));
 					auto campos = c->GetCameraPosition();
 					if (0.f < campos.z() && campos.z() < 1.f) {
+						switch (c->GetCharaType()) {
+						case CharaTypeID::Team:
+							color = Blue;
+							break;
+						case CharaTypeID::Enemy:
+							color = Red;
+							break;
+						default:
+							break;
+						}
 						int xp, yp, xs, ys;
 						xp = (int)(campos.x());
 						yp = (int)(campos.y());
@@ -593,20 +600,20 @@ namespace FPS_n2 {
 						int p = 0;
 						DrawBox(xp - xs + p, yp - ys + p, xp + xs - p, yp + ys - p, White, FALSE);
 						p = 1;
-						DrawBox(xp - xs + p, yp - ys + p, xp + xs - p, yp + ys - p, Red, FALSE);
+						DrawBox(xp - xs + p, yp - ys + p, xp + xs - p, yp + ys - p, color, FALSE);
 						p = 2;
 						DrawBox(xp - xs + p, yp - ys + p, xp + xs - p, yp + ys - p, White, FALSE);
 
-						UI_class.GetFont().Get(siz).Get_handle().DrawStringFormat_MID(xp, yp - ys - siz, Red, White, "%s", c->GetName().c_str());
+						this->m_UIclass.GetFont().Get(siz).Get_handle().DrawStringFormat_MID(xp, yp - ys - siz, color, White, "%s", c->GetName().c_str());
 
-						UI_class.GetFont().Get(siz).Get_handle().DrawStringFormat(xp + xs, yp + ys, Red, White, "%dm", (int)((c->GetMatrix().pos() - Chara->GetMatrix().pos()).size() / 12.5f));
+						this->m_UIclass.GetFont().Get(siz).Get_handle().DrawStringFormat(xp + xs, yp + ys, color, White, "%dm", (int)((c->GetMatrix().pos() - Chara->GetMatrix().pos()).size() / 12.5f));
 					}
 				}
 				//UI
-				UI_class.Draw();
+				this->m_UIclass.Draw();
 				//レーダー
 				{
-					Easing(&m_Rader_r, m_Rader, 0.8f, EasingType::OutExpo);
+					Easing(&this->m_Rader_r, this->m_Rader, 0.8f, EasingType::OutExpo);
 
 					int xp1, yp1;
 					int xs1, ys1, xs2, ys2;
@@ -618,18 +625,19 @@ namespace FPS_n2 {
 					xp1 = DrawParts->disp_x - y_r(80) - xs1;
 					yp1 = DrawParts->disp_y - y_r(300) - ys1;
 
-					DrawLine((int)(xp1 - xs1), (int)(yp1), (int)(xp1 + xs2), (int)(yp1), Green, 3);
-					DrawLine((int)(xp1), (int)(yp1 - ys1), (int)(xp1), (int)(yp1 + ys2), Green, 3);
-					DrawLine((int)(xp1 - xs1), (int)(yp1), (int)(xp1 + xs2), (int)(yp1), White);
-					DrawLine((int)(xp1), (int)(yp1 - ys1), (int)(xp1), (int)(yp1 + ys2), White);
+					this->m_UIclass.GetFont().Get(y_r(20)).Get_handle().DrawStringFormat((int)(xp1 - xs1), (int)(yp1 - ys1) - y_r(20), Green, White, "x%4.2f", this->m_Rader_r);
+					DrawLine_2D((int)(xp1 - xs1), (int)(yp1), (int)(xp1 + xs2), (int)(yp1), Green, 3);
+					DrawLine_2D((int)(xp1), (int)(yp1 - ys1), (int)(xp1), (int)(yp1 + ys2), Green, 3);
+					DrawLine_2D((int)(xp1 - xs1), (int)(yp1), (int)(xp1 + xs2), (int)(yp1), White);
+					DrawLine_2D((int)(xp1), (int)(yp1 - ys1), (int)(xp1), (int)(yp1 + ys2), White);
 					DrawBox((int)(xp1 - xs1), (int)(yp1 - ys1), (int)(xp1 + xs2), (int)(yp1 + ys2), Green, FALSE);
 					DrawBox((int)(xp1 - xs1) + 1, (int)(yp1 - ys1) + 1, (int)(xp1 + xs2) - 1, (int)(yp1 + ys2) - 1, White, FALSE);
 					DrawBox((int)(xp1 - xs1) + 2, (int)(yp1 - ys1) + 2, (int)(xp1 + xs2) - 2, (int)(yp1 + ys2) - 2, Green, FALSE);
 
-					xs1 = y_r((int)(256.f * 0.5f*m_Rader_r));
-					ys1 = y_r((int)(256.f * 0.8f*m_Rader_r));
-					xs2 = y_r((int)(256.f * 0.5f*m_Rader_r));
-					ys2 = y_r((int)(256.f * 0.2f*m_Rader_r));
+					xs1 = y_r((int)(256.f * 0.5f*std::min(1.f, this->m_Rader_r)));
+					ys1 = y_r((int)(256.f * 0.8f*std::min(1.f, this->m_Rader_r)));
+					xs2 = y_r((int)(256.f * 0.5f*std::min(1.f, this->m_Rader_r)));
+					ys2 = y_r((int)(256.f * 0.2f*std::min(1.f, this->m_Rader_r)));
 					DrawBox((int)(xp1 - xs1), (int)(yp1 - ys1), (int)(xp1 + xs2), (int)(yp1 + ys2), Green, FALSE);
 					DrawBox((int)(xp1 - xs1) + 1, (int)(yp1 - ys1) + 1, (int)(xp1 + xs2) - 1, (int)(yp1 + ys2) - 1, White, FALSE);
 					DrawBox((int)(xp1 - xs1) + 2, (int)(yp1 - ys1) + 2, (int)(xp1 + xs2) - 2, (int)(yp1 + ys2) - 2, Green, FALSE);
@@ -646,38 +654,50 @@ namespace FPS_n2 {
 					auto vec = VECTOR_ref::front();
 					auto rad = std::atan2f(base.cross(vec).y(), base.dot(vec));
 					{
-						m_Rader = 1.f;
+						float BaseVPer = 2.f;
+
+						this->m_Rader = BaseVPer;
 						bool isout = true;
 						auto tmpRader = 1.f;
-						int div = 4;
-						for (int i = 1; i < chara_num; i++) {
-							auto& c = (std::shared_ptr<CharacterClass>&)(*this->Obj.GetObj(ObjType::Human, i));
-							tmpRader = 1.f;
+						int div = 5;
+						for (int i = 1; i < team_num + enemy_num; i++) {
+							auto& c = (std::shared_ptr<CharacterClass>&)(*this->m_Obj.GetObj(ObjType::Human, i));
+							tmpRader = BaseVPer;
 							for (int j = 0; j < div; j++) {
 								auto pos = MATRIX_ref::Vtrans(c->GetMatrix().pos() - BaseBos, MATRIX_ref::RotY(rad))*((1.f / 12.5f) * tmpRader);
 								if (((-xs1 < pos.x() && pos.x() < xs2) && (-ys1 < -pos.z() && -pos.z() < ys2))) {
-									if (m_Rader >= tmpRader) {
-										m_Rader = tmpRader;
+									if (this->m_Rader >= tmpRader) {
+										this->m_Rader = tmpRader;
 									}
 									isout = false;
 									break;
 								}
-								tmpRader -= 1.f / div;
+								tmpRader -= BaseVPer / div;
 							}
 						}
 						if (isout) {
-							m_Rader = tmpRader + 1.f / div;
+							this->m_Rader = tmpRader + BaseVPer / div;
 						}
 					}
 
-					for (int i = 1; i < chara_num; i++) {
-						auto& c = (std::shared_ptr<CharacterClass>&)(*this->Obj.GetObj(ObjType::Human, i));
-						auto pos = MATRIX_ref::Vtrans(c->GetMatrix().pos() - BaseBos, MATRIX_ref::RotY(rad))*((1.f / 12.5f) * m_Rader_r);
+					for (int i = 1; i < team_num + enemy_num; i++) {
+						auto& c = (std::shared_ptr<CharacterClass>&)(*this->m_Obj.GetObj(ObjType::Human, i));
+						auto pos = MATRIX_ref::Vtrans(c->GetMatrix().pos() - BaseBos, MATRIX_ref::RotY(rad))*((1.f / 12.5f) * this->m_Rader_r);
 						if ((-xs1 < pos.x() && pos.x() < xs2) && (-ys1 < -pos.z() && -pos.z() < ys2)) {
+							switch (c->GetCharaType()) {
+							case CharaTypeID::Team:
+								color = Blue;
+								break;
+							case CharaTypeID::Enemy:
+								color = Red;
+								break;
+							default:
+								break;
+							}
 							int xp, yp;
 							xp = xp1 + (int)(pos.x());
 							yp = yp1 + (int)(-pos.z());
-							DrawCircle(xp, yp, 5, Red, TRUE);
+							DrawCircle(xp, yp, (int)(5.f * std::min(1.f, this->m_Rader_r)), color, TRUE);
 						}
 					}
 				}

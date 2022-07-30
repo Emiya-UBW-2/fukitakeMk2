@@ -92,5 +92,10 @@ namespace FPS_n2 {
 			"^–Ê–Ú",
 			"‚Ü‚Î‚½‚«",
 		};
+
+		enum class CharaTypeID {
+			Team,
+			Enemy,
+		};
 	};
 };

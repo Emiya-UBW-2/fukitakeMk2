@@ -38,7 +38,7 @@ namespace FPS_n2 {
 							break;
 						}
 					}
-					if(!iscopy) {
+					if (!iscopy) {
 						this->m_Object.back()->LoadModel(filepath, PhysicsType, objfilename, colfilename);
 					}
 				}

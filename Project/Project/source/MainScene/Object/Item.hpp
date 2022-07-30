@@ -2,19 +2,13 @@
 #include"Header.hpp"
 
 namespace FPS_n2 {
-	enum class ItemType {
-		YellowPotion,
-		BluePotion,
-		RedPotion,
-	};
-
 	namespace Sceneclass {
 		class ItemClass : public ObjectBaseClass {
-			bool													m_Used;
-			bool													m_Have;
-			bool													m_Hand;
+			bool													m_Used{ false };
+			bool													m_Have{ false };
+			bool													m_Hand{ false };
 			GraphHandle												m_ItemGraph;
-			ItemType												m_type;
+			ItemType												m_type{ ItemType::YellowPotion };
 		public:
 			auto& GetItemGraph() const noexcept { return m_ItemGraph; }
 			const auto& GetItemType() const noexcept { return m_type; }
@@ -63,7 +57,7 @@ namespace FPS_n2 {
 
 					UpdateMove();
 				}
-				else if(!this->m_Hand){
+				else if (!this->m_Hand) {
 					this->m_IsActive = false;
 				}
 				this->m_Hand = false;

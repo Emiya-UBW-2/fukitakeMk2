@@ -18,8 +18,8 @@ namespace FPS_n2 {
 
 			MV1 sea;						//ŠC
 			shaders Sea;
-			float g_fTime;
-			int OldTime;
+			float g_fTime{ 0.f };
+			int OldTime{ 0 };
 		public:
 			void Load(void) noexcept {
 				MV1::Load("data/model/sky/model.mv1", &Sky);

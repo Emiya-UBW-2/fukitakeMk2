@@ -246,19 +246,19 @@ namespace FPS_n2 {
 							[&] { this->m_ScenesPtr->BG_Draw(); },
 							[&] { DrawParts->Draw_by_Shadow(
 								[&] {
-									this->m_ScenesPtr->Main_Draw();
+							this->m_ScenesPtr->Main_Draw();
 
-									//this->m_ScenesPtr->Main_Draw2();
+							//this->m_ScenesPtr->Main_Draw2();
 
-									shader.Set_param(3.f*12.5f, 0, 0, 0);
-									shader.Draw_lamda([&] {
-										SetUseTextureToShader(2, DepthScreen.get());
-										this->m_ScenesPtr->Main_Draw2();
-										SetUseTextureToShader(2, -1);
-									});
-								}
-								);
-							}, tmp_cam, effectControl.Update_effect_f);
+							shader.Set_param(3.f*12.5f, 0, 0, 0);
+							shader.Draw_lamda([&] {
+								SetUseTextureToShader(2, DepthScreen.get());
+								this->m_ScenesPtr->Main_Draw2();
+								SetUseTextureToShader(2, -1);
+							});
+						}
+						);
+						}, tmp_cam, effectControl.Update_effect_f);
 						//ÅI•`‰æ
 						PostPassParts->Set_MAIN_Draw();
 					}

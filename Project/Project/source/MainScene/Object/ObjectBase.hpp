@@ -10,8 +10,8 @@ namespace FPS_n2 {
 			moves										m_move;
 			MATRIX_ref									m_PrevMat;//物理更新のため
 			const MV1*									m_MapCol{ nullptr };
-			std::vector<std::pair<int, MATRIX_ref>>		Frames;
-			std::vector<std::pair<int, float>>			Shapes;
+			std::vector<std::pair<int, MATRIX_ref>>		m_Frames;
+			std::vector<std::pair<int, float>>			m_Shapes;
 			ObjType										m_objType{ ObjType::Human };
 			std::string									m_FilePath;
 			std::string									m_ObjFileName;
@@ -23,7 +23,7 @@ namespace FPS_n2 {
 			float										m_DistanceToCam{ 0.f };
 			bool										m_IsBaseModel{ false };
 			VECTOR_ref									m_CameraPosition;
-			float										m_CameraSize;
+			float										m_CameraSize{ 0.f };
 		public:
 			void			SetActive(bool value) noexcept { this->m_IsActive = value; }
 			void			SetMapCol(const MV1* MapCol) noexcept { this->m_MapCol = MapCol; }
@@ -147,9 +147,9 @@ namespace FPS_n2 {
 					}
 
 					if (compare) {
-						this->Frames.resize(this->Frames.size() + 1);
-						this->Frames.back().first = f;
-						this->Frames.back().second = MATRIX_ref::Mtrans(this->m_obj.GetFrameLocalMatrix(this->Frames.back().first).pos());
+						this->m_Frames.resize(this->m_Frames.size() + 1);
+						this->m_Frames.back().first = f;
+						this->m_Frames.back().second = MATRIX_ref::Mtrans(this->m_obj.GetFrameLocalMatrix(this->m_Frames.back().first).pos());
 						i++;
 						f = 0;
 					}
@@ -163,8 +163,8 @@ namespace FPS_n2 {
 					}
 					if (f == fNum - 1) {
 						if (!isEnd) {
-							this->Frames.resize(this->Frames.size() + 1);
-							this->Frames.back().first = -1;
+							this->m_Frames.resize(this->m_Frames.size() + 1);
+							this->m_Frames.back().first = -1;
 							i++;
 							f = 0;
 						}
@@ -175,12 +175,12 @@ namespace FPS_n2 {
 				}
 				switch (this->m_objType) {
 				case ObjType::Human://human
-					Shapes.resize((int)CharaShape::Max);
+					this->m_Shapes.resize((int)CharaShape::Max);
 					for (int j = 1; j < (int)CharaShape::Max; j++) {
 						auto s = MV1SearchShape(this->m_obj.get(), CharaShapeName[j]);
 						if (s >= 0) {
-							Shapes[j].first = s;
-							Shapes[j].second = 0.f;
+							this->m_Shapes[j].first = s;
+							this->m_Shapes[j].second = 0.f;
 						}
 					}
 					break;
@@ -198,7 +198,7 @@ namespace FPS_n2 {
 				switch (this->m_objType) {
 				case ObjType::Human://human
 					for (int j = 1; j < (int)CharaShape::Max; j++) {
-						MV1SetShapeRate(this->m_obj.get(), Shapes[j].first, (1.f - Shapes[0].second)*Shapes[j].second);
+						MV1SetShapeRate(this->m_obj.get(), this->m_Shapes[j].first, (1.f - this->m_Shapes[0].second)*this->m_Shapes[j].second);
 					}
 					break;
 				default:
@@ -211,15 +211,16 @@ namespace FPS_n2 {
 						this->m_obj.PhysicsResetState();
 					}
 					else {
+						//*
 						auto NowMat = this->m_obj.GetMatrix();
 						int Max = 2;
 						for (int i = 1; i <= Max; i++) {
 							this->m_obj.SetMatrix(
-								
 								Lerp_Matrix(this->m_PrevMat.GetRot(), NowMat.GetRot(), (float)i / (float)Max)
 								* MATRIX_ref::Mtrans(Lerp(this->m_PrevMat.pos(), NowMat.pos(), (float)i / (float)Max)));
 							this->m_obj.PhysicsCalculation(1000.0f / FPS * 60.f);
 						}
+						//*/
 					}
 				}
 				//最初のループ終わり
@@ -234,10 +235,10 @@ namespace FPS_n2 {
 			}
 			void			CheckDraw(void) noexcept {
 				this->m_IsDraw = false;
-				this->m_DistanceToCam = (m_obj.GetMatrix().pos() - GetCameraPosition()).size();
+				this->m_DistanceToCam = (this->m_obj.GetMatrix().pos() - GetCameraPosition()).size();
 				if (CheckCameraViewClip_Box(
-					(m_obj.GetMatrix().pos() + VECTOR_ref::vget(-20, 0, -20)).get(),
-					(m_obj.GetMatrix().pos() + VECTOR_ref::vget(20, 20, 20)).get()) == FALSE
+					(this->m_obj.GetMatrix().pos() + VECTOR_ref::vget(-20, 0, -20)).get(),
+					(this->m_obj.GetMatrix().pos() + VECTOR_ref::vget(20, 20, 20)).get()) == FALSE
 					) {
 					this->m_IsDraw |= true;
 				}
@@ -245,8 +246,8 @@ namespace FPS_n2 {
 			virtual void	Draw(void) noexcept {
 				if (this->m_IsActive && this->m_IsDraw) {
 					if (CheckCameraViewClip_Box(
-						(m_obj.GetMatrix().pos() + VECTOR_ref::vget(-20, 0, -20)).get(),
-						(m_obj.GetMatrix().pos() + VECTOR_ref::vget(20, 20, 20)).get()) == FALSE
+						(this->m_obj.GetMatrix().pos() + VECTOR_ref::vget(-20, 0, -20)).get(),
+						(this->m_obj.GetMatrix().pos() + VECTOR_ref::vget(20, 20, 20)).get()) == FALSE
 						) {
 						this->m_obj.DrawModel();
 					}

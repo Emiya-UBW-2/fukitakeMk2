@@ -161,7 +161,7 @@ namespace FPS_n2 {
 							xp1, yp1, xp1 + y_r(200), yp1 + y_r(10),
 							intParam[3], intParam[4], intParam[5], GetColorU8(255, 0, 0, 255), GetColorU8(255, 255, 0, 255), GetColorU8(0, 255, 0, 255),
 							GetColor(0, 0, 255), GetColor(255, 0, 0)
-							);
+						);
 						yp1 += y_r(10);
 
 						UI.Get(y_r(20)).Get_handle().DrawString(xp1, yp1, "MP", Green, White);
@@ -182,7 +182,7 @@ namespace FPS_n2 {
 
 						int sel = intParam[12];
 
-						UI.Get(y_r(20)).Get_handle().DrawString_RIGHT(xp1, yp1 + ys1* sel,"Å®", Green, White);
+						UI.Get(y_r(20)).Get_handle().DrawString_RIGHT(xp1, yp1 + ys1 * sel, "Å®", Green, White);
 
 						for (int s = 0; s < Num; s++) {
 							UI.Get(y_r(20)).Get_handle().DrawStringFormat(xp1, yp1, (sel == s) ? Green : GetColor(15, 110, 50), White, "%s", "MAGIC");
