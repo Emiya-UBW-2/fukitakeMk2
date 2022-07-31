@@ -241,7 +241,7 @@ namespace FPS_n2 {
 				this->m_ItemSel = 0;
 				this->m_Item_Ptrs.clear();
 				this->m_MagicSel = 0;
-				this->m_MagicNum = 4;
+				this->m_MagicNum = 3;
 				//“®ì‚É‚©‚©‚í‚é‘€ì
 				this->m_InputGround.ValueSet(pxRad, pyRad);
 				this->m_InputSky.ValueSet();

@@ -356,31 +356,47 @@ namespace FPS_n2 {
 	//フォントプール
 	class FontPool {
 	public:
+		enum class FontType {
+			Nomal_Edge,
+			HUD_Edge,
+		};
 		class Fonthave {
-			int size = 0;
-			FontHandle handle;
+			int				m_size{ 0 };
+			FontType		m_Type{ 0 };
+			FontHandle		m_Handle;
 		public:
-			const auto& Get_size(void)const noexcept { return size; }
-			const auto& Get_handle(void)const noexcept { return handle; }
-			void Set(int siz_t) noexcept {
-				this->size = siz_t;
-				this->handle = FontHandle::Create("x14y24pxHeadUpDaisy", siz_t, DX_FONTTYPE_EDGE, -1, 1);
+			const auto& Get_size(void)const noexcept { return this->m_size; }
+			const auto& Get_type(void)const noexcept { return this->m_Type; }
+			const auto& Get_handle(void)const noexcept { return this->m_Handle; }
+			void Set(int siz_t, FontType type) noexcept {
+				this->m_size = siz_t;
+				this->m_Type = type;
+				switch (this->m_Type) {
+				case FontType::Nomal_Edge:
+					this->m_Handle = FontHandle::Create(this->m_size, DX_FONTTYPE_EDGE, -1, 1);
+					break;
+				case FontType::HUD_Edge:
+					this->m_Handle = FontHandle::Create("x14y24pxHeadUpDaisy", this->m_size, DX_FONTTYPE_EDGE, -1, 1);
+					break;
+				default:
+					break;
+				}
 			}
 		};
 	private:
 		std::vector<Fonthave> havehandle;
-		size_t Add(int siz_t) noexcept {
+		size_t Add(int siz_t, FontType type) noexcept {
 			for (auto& h : this->havehandle) {
-				if (h.Get_size() == siz_t) {
+				if (h.Get_size() == siz_t && h.Get_type() == type) {
 					return &h - &this->havehandle.front();
 				}
 			}
 			this->havehandle.resize(this->havehandle.size() + 1);
-			this->havehandle.back().Set(siz_t);
+			this->havehandle.back().Set(siz_t, type);
 			return this->havehandle.size() - 1;
 		}
 	public:
-		Fonthave& Get(int siz_t) noexcept { return this->havehandle[Add(siz_t)]; }
+		Fonthave& Get(int siz_t, FontType type) noexcept { return this->havehandle[Add(siz_t, type)]; }
 	};
 	FontPool Fonts;
 	//エフェクトリソース

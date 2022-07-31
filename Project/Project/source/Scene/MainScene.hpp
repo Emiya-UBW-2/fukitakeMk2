@@ -402,7 +402,7 @@ namespace FPS_n2 {
 						CamPos +=
 							Lerp(
 								Lerp((UpperMat.xvec()*-8.f + UpperMat.yvec()*3.f), (UpperMat.xvec()*-3.f + UpperMat.yvec()*4.f), this->m_EyeRunPer),
-								Lerp(UpperMat.yvec()*4.f, UpperMat.yvec()*8.f, this->m_TPS_Per),
+								Lerp(UpperMat.yvec()*8.f, UpperMat.yvec()*14.f, this->m_TPS_Per),
 								Chara->GetFlightPer()
 							);
 
@@ -507,14 +507,33 @@ namespace FPS_n2 {
 						Easing(&this->m_AddItemBuf, 1.f, 0.9f, EasingType::OutExpo);
 						Easing(&this->m_SubItemBuf, 1.f, 0.9f, EasingType::OutExpo);
 					}
+					//
+					{
+						this->m_UIclass.SetStrParam(0, Chara->GetName());
+					}
 					//魔法
 					{
 						this->m_UIclass.SetIntParam(12, Chara->GetMagicSel());
 						this->m_UIclass.SetIntParam(13, Chara->GetMagicNum());
+						this->m_UIclass.SetStrParam(1, "MAGIC1");
+						this->m_UIclass.SetIntParam(14, (int)100);
+						this->m_UIclass.SetIntParam(15, (int)100);
+						this->m_UIclass.SetStrParam(2, "MAGIC2");
+						this->m_UIclass.SetIntParam(16, (int)100);
+						this->m_UIclass.SetIntParam(17, (int)100);
+						this->m_UIclass.SetStrParam(3, "MAGIC3");
+						this->m_UIclass.SetIntParam(18, (int)100);
+						this->m_UIclass.SetIntParam(19, (int)100);
+						this->m_UIclass.SetStrParam(4, "");
+						this->m_UIclass.SetIntParam(20, (int)100);
+						this->m_UIclass.SetIntParam(21, (int)100);
 					}
-					//
+					//メッセージ
 					{
-						this->m_UIclass.SetStrParam(0, Chara->GetName());
+						auto& c = (std::shared_ptr<CharacterClass>&)(*this->m_Obj.GetObj(ObjType::Human, 1));
+						this->m_UIclass.SetIntParam(22, (int)c->GetCharaType());
+						this->m_UIclass.SetStrParam(5, c->GetName());
+						this->m_UIclass.SetStrParam(6, "あいうえおかきくけこさしすせそ");
 					}
 					//
 				}
@@ -610,9 +629,9 @@ namespace FPS_n2 {
 						p = 2;
 						DrawBox(xp - xs + p, yp - ys + p, xp + xs - p, yp + ys - p, White, FALSE);
 
-						this->m_UIclass.GetFont().Get(siz).Get_handle().DrawStringFormat_MID(xp, yp - ys - siz, color, White, "%s", c->GetName().c_str());
+						this->m_UIclass.GetFont().Get(siz, FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat_MID(xp, yp - ys - siz, color, White, "%s", c->GetName().c_str());
 
-						this->m_UIclass.GetFont().Get(siz).Get_handle().DrawStringFormat(xp + xs, yp + ys, color, White, "%dm", (int)((c->GetMatrix().pos() - Chara->GetMatrix().pos()).size() / 12.5f));
+						this->m_UIclass.GetFont().Get(siz, FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat(xp + xs, yp + ys, color, White, "%dm", (int)((c->GetMatrix().pos() - Chara->GetMatrix().pos()).size() / 12.5f));
 					}
 				}
 				//UI
@@ -631,7 +650,7 @@ namespace FPS_n2 {
 					xp1 = DrawParts->disp_x - y_r(80) - xs1;
 					yp1 = DrawParts->disp_y - y_r(300) - ys1;
 
-					this->m_UIclass.GetFont().Get(y_r(20)).Get_handle().DrawStringFormat((int)(xp1 - xs1), (int)(yp1 - ys1) - y_r(20), Green, White, "x%4.2f", this->m_Rader_r);
+					this->m_UIclass.GetFont().Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat((int)(xp1 - xs1), (int)(yp1 - ys1) - y_r(20), Green, White, "x%4.2f", this->m_Rader_r);
 					DrawLine_2D((int)(xp1 - xs1), (int)(yp1), (int)(xp1 + xs2), (int)(yp1), Green, 3);
 					DrawLine_2D((int)(xp1), (int)(yp1 - ys1), (int)(xp1), (int)(yp1 + ys2), Green, 3);
 					DrawLine_2D((int)(xp1 - xs1), (int)(yp1), (int)(xp1 + xs2), (int)(yp1), White);
