@@ -8,7 +8,7 @@ namespace FPS_n2 {
 			switchs m_ResetP;
 			const MV1* m_MapCol = nullptr;
 		public:
-			void AddObject(ObjType ModelType, const char* filepath, int PhysicsType, const char* objfilename = "model", const char* colfilename = "col") {
+			void AddObject(ObjType ModelType, const char* filepath, const char* objfilename = "model", const char* colfilename = "col") {
 				switch (ModelType) {
 				case ObjType::Human:
 					this->m_Object.resize(this->m_Object.size() + 1);
@@ -39,7 +39,7 @@ namespace FPS_n2 {
 						}
 					}
 					if (!iscopy) {
-						this->m_Object.back()->LoadModel(filepath, PhysicsType, objfilename, colfilename);
+						this->m_Object.back()->LoadModel(filepath, objfilename, colfilename);
 					}
 				}
 

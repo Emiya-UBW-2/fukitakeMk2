@@ -139,15 +139,15 @@ namespace FPS_n2 {
 			//
 			void			SetAnimOnce(CharaAnimeID ID, float speed) noexcept { ObjectBaseClass::SetAnimOnce((int)ID, speed); }
 			void			SetAnimLoop(CharaAnimeID ID, float speed) noexcept { ObjectBaseClass::SetAnimLoop((int)ID, speed); }
-			void			ResetFrameLocalMat(CharaFrame frame) noexcept { this->m_obj.frame_Reset(m_Frames[(int)frame].first); }
-			void			SetFrameLocalMat(CharaFrame frame, const MATRIX_ref&value) noexcept { this->m_obj.SetFrameLocalMatrix(m_Frames[(int)frame].first, value * m_Frames[(int)frame].second); }
+			void			ResetFrameLocalMat(CharaFrame frame) noexcept { this->GetObj().frame_Reset(m_Frames[(int)frame].first); }
+			void			SetFrameLocalMat(CharaFrame frame, const MATRIX_ref&value) noexcept { this->GetObj().SetFrameLocalMatrix(m_Frames[(int)frame].first, value * m_Frames[(int)frame].second); }
 			void			SetShapePer(CharaShape pShape, float Per) noexcept { m_Shapes[(int)pShape].second = Per; }
-			const auto		GetFrameLocalMat(CharaFrame frame) const noexcept { return this->m_obj.GetFrameLocalMatrix(m_Frames[(int)frame].first); }
-			const auto		GetParentFrameLocalMat(CharaFrame frame) const noexcept { return this->m_obj.GetFrameLocalMatrix((int)this->m_obj.frame_parent(m_Frames[(int)frame].first)); }
-			const auto		GetFrameWorldMat(CharaFrame frame) const noexcept { return this->m_obj.GetFrameLocalWorldMatrix(m_Frames[(int)frame].first); }
-			const auto		GetParentFrameWorldMat(CharaFrame frame) const noexcept { return this->m_obj.GetFrameLocalWorldMatrix((int)this->m_obj.frame_parent(m_Frames[(int)frame].first)); }
+			const auto		GetFrameLocalMat(CharaFrame frame) const noexcept { return this->GetObj_const().GetFrameLocalMatrix(m_Frames[(int)frame].first); }
+			const auto		GetParentFrameLocalMat(CharaFrame frame) const noexcept { return this->GetObj_const().GetFrameLocalMatrix((int)this->GetObj_const().frame_parent(m_Frames[(int)frame].first)); }
+			const auto		GetFrameWorldMat(CharaFrame frame) const noexcept { return this->GetObj_const().GetFrameLocalWorldMatrix(m_Frames[(int)frame].first); }
+			const auto		GetParentFrameWorldMat(CharaFrame frame) const noexcept { return this->GetObj_const().GetFrameLocalWorldMatrix((int)this->GetObj_const().frame_parent(m_Frames[(int)frame].first)); }
 			auto&			GetAnimeBuf(CharaAnimeID anim) noexcept { return this->m_AnimPerBuf[(int)anim]; }
-			auto&			GetAnime(CharaAnimeID anim) noexcept { return this->m_obj.get_anime((int)anim); }
+			auto&			GetAnime(CharaAnimeID anim) noexcept { return this->GetObj().get_anime((int)anim); }
 			//
 			const auto		GetIsRun(void) const noexcept { return this->m_InputGround.GetRun(); }
 			const auto		GetTurnRatePer(void) const noexcept { return this->m_InputGround.GetTurnRatePer(); }
@@ -352,7 +352,7 @@ namespace FPS_n2 {
 				}
 			}
 			void			SetEyeVec(const VECTOR_ref& camvec) noexcept {
-				this->m_obj.frame_Reset(this->m_Frames[(int)CharaFrame::Head].first);
+				this->GetObj().frame_Reset(this->m_Frames[(int)CharaFrame::Head].first);
 				auto v1 = (GetFrameWorldMat(CharaFrame::Head).GetRot() * GetCharaDir().Inverse()).zvec()*-1.f;
 				auto v2 = Lerp(MATRIX_ref::Vtrans(camvec.Norm(), GetCharaDir().Inverse()), v1, m_NeckPer);
 
@@ -467,7 +467,7 @@ namespace FPS_n2 {
 			//上半身回転															//0.06ms
 			void			ExecuteUpperMatrix(void) noexcept {
 				this->m_UpperMatrix = MATRIX_ref::RotX(this->m_InputGround.GetRad().x()) * MATRIX_ref::RotY(this->m_InputGround.GetRad().y() - this->m_yrad_Bottom);
-				this->m_obj.frame_Reset(this->m_Frames[(int)CharaFrame::Upper].first);
+				this->GetObj().frame_Reset(this->m_Frames[(int)CharaFrame::Upper].first);
 				SetFrameLocalMat(CharaFrame::Upper, GetFrameLocalMat(CharaFrame::Upper).GetRot() * Lerp_Matrix(this->m_UpperMatrix, MATRIX_ref::zero(), GetFlightPer()));
 			}
 			//SetMat指示															//0.03ms
@@ -810,7 +810,7 @@ namespace FPS_n2 {
 					}
 				}
 				//
-				this->m_obj.work_anime();
+				this->GetObj().work_anime();
 			}
 			//SetMat指示更新														//0.03ms
 			void			ExecuteMatrix(void) noexcept {
@@ -1021,8 +1021,8 @@ namespace FPS_n2 {
 			void			Execute(void) noexcept override {
 				//初回のみ更新する内容
 				if (this->m_IsFirstLoop) {
-					for (int i = 0; i < this->m_obj.get_anime().size(); i++) { GetAnime((CharaAnimeID)i).per = GetAnimeBuf((CharaAnimeID)i); }
-					this->m_obj.work_anime();
+					for (int i = 0; i < this->GetObj().get_anime().size(); i++) { GetAnime((CharaAnimeID)i).per = GetAnimeBuf((CharaAnimeID)i); }
+					this->GetObj().work_anime();
 				}
 				ExecuteSavePrev();			//以前の状態保持
 				ExecuteInput();				//操作//0.01ms

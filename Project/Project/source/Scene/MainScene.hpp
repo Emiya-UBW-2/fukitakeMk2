@@ -57,20 +57,20 @@ namespace FPS_n2 {
 				//
 				this->m_Obj.Init(&this->m_BackGround.GetGroundCol());
 				for (int i = 0; i < team_num; i++) {
-					this->m_Obj.AddObject(ObjType::Human, "data/Charactor/Marisa/", DX_LOADMODEL_PHYSICS_REALTIME);
-					this->m_Obj.AddObject(ObjType::Houki, "data/Houki/Houki01/", DX_LOADMODEL_PHYSICS_LOADCALC);
+					this->m_Obj.AddObject(ObjType::Human, "data/Charactor/Marisa/");
+					this->m_Obj.AddObject(ObjType::Houki, "data/Houki/Houki01/");
 				}
 				for (int i = 0; i < enemy_num; i++) {
-					this->m_Obj.AddObject(ObjType::Human, "data/Charactor/Marisa/", DX_LOADMODEL_PHYSICS_REALTIME);
-					this->m_Obj.AddObject(ObjType::Houki, "data/Houki/Houki01/", DX_LOADMODEL_PHYSICS_LOADCALC);
+					this->m_Obj.AddObject(ObjType::Human, "data/Charactor/Marisa/");
+					this->m_Obj.AddObject(ObjType::Houki, "data/Houki/Houki01/");
 				}
 				for (int i = 0; i < item_num / 3; i++) {
-					this->m_Obj.AddObject(ObjType::Item, "data/Item/BluePotion/", DX_LOADMODEL_PHYSICS_LOADCALC);
-					this->m_Obj.AddObject(ObjType::Item, "data/Item/YellowPotion/", DX_LOADMODEL_PHYSICS_LOADCALC);
-					this->m_Obj.AddObject(ObjType::Item, "data/Item/RedPotion/", DX_LOADMODEL_PHYSICS_LOADCALC);
+					this->m_Obj.AddObject(ObjType::Item, "data/Item/BluePotion/");
+					this->m_Obj.AddObject(ObjType::Item, "data/Item/YellowPotion/");
+					this->m_Obj.AddObject(ObjType::Item, "data/Item/RedPotion/");
 				}
 				//guide
-				//this->m_Obj.AddObject(ObjType::Circle, "data/model/Circle/", DX_LOADMODEL_PHYSICS_LOADCALC);
+				//this->m_Obj.AddObject(ObjType::Circle, "data/model/Circle/");
 				//ƒ[ƒh
 				SetCreate3DSoundFlag(FALSE);
 				this->m_Env = SoundHandle::Load("data/Sound/SE/envi.wav");
@@ -86,6 +86,12 @@ namespace FPS_n2 {
 					auto& c = (std::shared_ptr<CharacterClass>&)(*this->m_Obj.GetObj(ObjType::Human, i));
 					c->SetHoukiPtr((std::shared_ptr<HoukiClass>&)(*this->m_Obj.GetObj(ObjType::Houki, i)));
 					c->ValueSet(deg2rad(0.f), deg2rad(-90.f), VECTOR_ref::vget(0.f, 0.f, -52.5f + (float)(i - 1)*20.f));
+					if (i == 0) {
+						c->SetUseRealTimePhysics(true);
+					}
+					else {
+						c->SetUseRealTimePhysics(false);
+					}
 					if (i < team_num) {
 						c->SetCharaType(CharaTypeID::Team);
 					}

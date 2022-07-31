@@ -10,15 +10,15 @@ namespace FPS_n2 {
 		public:
 			void Execute(void) noexcept override {
 				auto p = 0.5f*12.5f / 100.f;
-				this->m_obj.SetMatrix(MATRIX_ref::GetScale(VECTOR_ref::vget(p, 1.f, p))*this->m_move.MatIn());
+				this->GetObj().SetMatrix(MATRIX_ref::GetScale(VECTOR_ref::vget(p, 1.f, p))*this->m_move.MatIn());
 			}
 			//深度値描画
 			void Depth_Draw(void) noexcept override {
 				auto q = (((VECTOR_ref)GetCameraPosition() - this->m_move.pos).size()) / 12.5f - 2.f;
-				MV1SetMeshDifColorScale(this->m_obj.get(), 0, GetColorF(1.f, 1.f, 1.f, std::clamp(q, 0.f, 1.f)));
+				MV1SetMeshDifColorScale(this->GetObj().get(), 0, GetColorF(1.f, 1.f, 1.f, std::clamp(q, 0.f, 1.f)));
 
-				SetUseTextureToShader(0, MV1GetTextureGraphHandle(this->m_obj.get(), MV1GetMaterialDifMapTexture(this->m_obj.get(), 0)));
-				this->m_obj.DrawModel();
+				SetUseTextureToShader(0, MV1GetTextureGraphHandle(this->GetObj().get(), MV1GetMaterialDifMapTexture(this->GetObj().get(), 0)));
+				this->GetObj().DrawModel();
 				SetUseTextureToShader(0, -1);	//使用するテクスチャをセット
 			}
 
