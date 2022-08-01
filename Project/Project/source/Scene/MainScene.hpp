@@ -515,18 +515,14 @@ namespace FPS_n2 {
 					{
 						this->m_UIclass.SetIntParam(12, Chara->GetMagicSel());
 						this->m_UIclass.SetIntParam(13, Chara->GetMagicNum());
-						this->m_UIclass.SetStrParam(1, "MAGIC1");
-						this->m_UIclass.SetIntParam(14, (int)100);
-						this->m_UIclass.SetIntParam(15, (int)100);
-						this->m_UIclass.SetStrParam(2, "MAGIC2");
-						this->m_UIclass.SetIntParam(16, (int)100);
-						this->m_UIclass.SetIntParam(17, (int)100);
-						this->m_UIclass.SetStrParam(3, "MAGIC3");
-						this->m_UIclass.SetIntParam(18, (int)100);
-						this->m_UIclass.SetIntParam(19, (int)100);
-						this->m_UIclass.SetStrParam(4, "");
-						this->m_UIclass.SetIntParam(20, (int)100);
-						this->m_UIclass.SetIntParam(21, (int)100);
+						for (int i = 0; i < 4; i++) {
+							this->m_UIclass.SetStrParam(1 + i, "");
+						}
+						for (int i = 0; i < Chara->GetMagicNum(); i++) {
+							this->m_UIclass.SetStrParam(1 + i, Chara->GetMagicName(i));
+							this->m_UIclass.SetIntParam(14 + 2 * i, (int)((Chara->GetMagicCoolDown(i) - Chara->GetMagicCoolFrame(i))*100.f));
+							this->m_UIclass.SetIntParam(15 + 2 * i, (int)(Chara->GetMagicCoolDown(i)*100.f));
+						}
 					}
 					//メッセージ
 					{

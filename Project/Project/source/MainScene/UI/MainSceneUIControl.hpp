@@ -179,7 +179,7 @@ namespace FPS_n2 {
 					}
 					//魔法、クールタイム
 					{
-						xp1 = DrawParts->disp_x - y_r(300);
+						xp1 = DrawParts->disp_x - y_r(400);
 						yp1 = DrawParts->disp_y - y_r(30) - ys1 * Num;
 
 						int sel = intParam[12];
@@ -188,11 +188,11 @@ namespace FPS_n2 {
 
 						for (int s = 0; s < Num; s++) {
 							if (strParam[1 + s].length() > 0) {
-								UI.Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat(xp1, yp1, (sel == s) ? Green : GetColor(15, 110, 50), White, "%s", strParam[1 + s].c_str());
+								UI.Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat_RIGHT(xp1 + y_r(150), yp1, (sel == s) ? Green : GetColor(15, 110, 50), White, "%s", strParam[1 + s].c_str());
 
 								auto color = GetColorU8((sel == s) ? 255 : 240, (sel == s) ? 255 : 192, 0, 255);
 								DrawGauge(
-									xp1 + y_r(100), yp1 + y_r(2), xp1 + y_r(100) + y_r(160), yp1 + y_r(2) + y_r(12),
+									xp1 + y_r(150) + y_r(20), yp1 + y_r(2), xp1 + y_r(150) + y_r(20) + y_r(160), yp1 + y_r(2) + y_r(12),
 									intParam[14 + s * 2], intParam[15 + s * 2], intParam[14 + s * 2], color, color, color,
 									GetColor(0, 0, 255), GetColor(255, 0, 0)
 								);

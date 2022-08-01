@@ -53,6 +53,43 @@ namespace FPS_n2 {
 			const auto& GetMoveHit(void) noexcept { return this->m_move_Hit; }
 		};
 
+		enum class MagicType {
+			FireBall,
+			Thunder,
+			SearchSonic,
+		};
+		class MagicClass {
+		private://キャラパラメーター
+			float			m_CoolDown = 60.f;
+			MagicType		m_Type{ MagicType::FireBall };
+			std::string		m_Name;
+		private:
+			float m_CoolFrame = 0.f;
+		public:
+			const auto&		GetCoolFrame(void) const noexcept { return this->m_CoolFrame; }
+			const auto&		GetCoolDown(void) const noexcept { return this->m_CoolDown; }
+			const auto&		GetGetType(void) const noexcept { return this->m_Type; }
+			const auto&		GetName(void) const noexcept { return this->m_Name; }
+			
+		public:
+			void Set(MagicType pType, std::string_view pName, float pCoolDown) noexcept {
+				this->m_Type = pType;
+				this->m_Name = pName;
+				this->m_CoolDown = pCoolDown;
+				this->m_CoolFrame = 0.f;
+			}
+			void Execute() noexcept {
+				this->m_CoolFrame = std::max(this->m_CoolFrame - 1.f / FPS, 0.f);
+			}
+			bool Use() noexcept {
+				if (this->m_CoolFrame > 0.f) {
+					return false;
+				}
+				this->m_CoolFrame = this->m_CoolDown;
+				return true;
+			}
+		};
+
 		class CharacterClass : public ObjectBaseClass, public Effect_UseControl {
 		private://キャラパラメーター
 			const float SpeedLimit{ 2.f };
@@ -132,7 +169,7 @@ namespace FPS_n2 {
 			std::vector <std::pair<ItemType, std::vector<std::shared_ptr<ItemClass>>>>	m_Item_Ptrs;
 			int													m_ItemSel;
 			int													m_MagicSel;
-			int													m_MagicNum;
+			std::vector<MagicClass>								m_Magic;
 			//
 			bool												m_SendCamShake{ false };
 		public://ゲッター
@@ -241,7 +278,10 @@ namespace FPS_n2 {
 				this->m_ItemSel = 0;
 				this->m_Item_Ptrs.clear();
 				this->m_MagicSel = 0;
-				this->m_MagicNum = 3;
+				this->m_Magic.resize(3);
+				this->m_Magic[0].Set(MagicType::FireBall, "FireBall", 3.f);
+				this->m_Magic[1].Set(MagicType::Thunder, "Thunder", 30.f);
+				this->m_Magic[2].Set(MagicType::SearchSonic, "Sonic", 60.f);
 				//動作にかかわる操作
 				this->m_InputGround.ValueSet(pxRad, pyRad);
 				this->m_InputSky.ValueSet();
@@ -337,11 +377,13 @@ namespace FPS_n2 {
 				}
 				if (m_UseMagickey.trigger() && (true)) {
 					if ((this->m_SetMagicPer > 0.95f) && !this->m_UsingMagic) {
-						this->m_UsingMagic = true;
-						this->m_MagicEffectStart = true;
-						this->m_MagicEffectLoop = true;
-						GetAnime(CharaAnimeID::Upper_UseMagic1).GoStart();
-						GetAnime(CharaAnimeID::Upper_FlightUseMagic1).GoStart();
+						if (this->m_Magic[this->m_MagicSel].Use()) {
+							this->m_UsingMagic = true;
+							this->m_MagicEffectStart = true;
+							this->m_MagicEffectLoop = true;
+							GetAnime(CharaAnimeID::Upper_UseMagic1).GoStart();
+							GetAnime(CharaAnimeID::Upper_FlightUseMagic1).GoStart();
+						}
 					}
 				}
 				//
@@ -413,18 +455,21 @@ namespace FPS_n2 {
 				}
 			}
 			//
-			const auto&		GetMagicNum() const noexcept { return this->m_MagicNum; }
+			const auto&		GetMagicCoolDown(int ID) const noexcept { return this->m_Magic[ID].GetCoolDown(); }
+			const auto&		GetMagicCoolFrame(int ID) const noexcept { return this->m_Magic[ID].GetCoolFrame(); }
+			const auto&		GetMagicName(int ID) const noexcept { return this->m_Magic[ID].GetName(); }
+			const auto&		GetMagicNum() const noexcept { return this->m_Magic.size(); }
 			const auto&		GetMagicSel() const noexcept { return this->m_MagicSel; }
 			void			AddMagicSel() noexcept {
 				this->m_MagicSel++;
-				if (this->m_MagicSel > this->m_MagicNum - 1) {
+				if (this->m_MagicSel > this->m_Magic.size() - 1) {
 					this->m_MagicSel = 0;
 				}
 			}
 			void			SubMagicSel() noexcept {
 				this->m_MagicSel--;
 				if (this->m_MagicSel < 0) {
-					this->m_MagicSel = std::max(0, (int)(this->m_MagicNum) - 1);
+					this->m_MagicSel = std::max(0, (int)(this->m_Magic.size()) - 1);
 				}
 			}
 		private: //更新関連
@@ -490,8 +535,8 @@ namespace FPS_n2 {
 							this->m_UpperAnimSelect = CharaAnimeID::Upper_UseMagic1;
 							SetAnimOnce(CharaAnimeID::Upper_UseMagic1, 1.5f);
 							SetAnimOnce(CharaAnimeID::Upper_FlightUseMagic1, 1.5f);
-							switch (this->m_MagicSel) {
-							case 0:
+							switch (this->m_Magic[this->m_MagicSel].GetGetType()) {
+							case MagicType::FireBall:
 								if (this->m_MagicEffectStart && GetAnime(CharaAnimeID::Upper_UseMagic1).time > 30) {
 									MATRIX_ref mat = GetFrameWorldMat(CharaFrame::RightHandJoint);
 									Effect_UseControl::Set_Effect(Effect::ef_FireBallStart, mat.pos(), GetCharaDir().yvec(), 0.25f);
@@ -507,7 +552,7 @@ namespace FPS_n2 {
 									++this->m_NowBullet %= this->m_Bullet.size();
 								}
 								break;
-							case 1:
+							case MagicType::Thunder:
 								if (this->m_MagicEffectStart && GetAnime(CharaAnimeID::Upper_UseMagic1).time > 0) {
 									MATRIX_ref mat = GetFrameWorldMat(CharaFrame::RightHandJoint);
 									Effect_UseControl::Set_LoopEffect(Effect::ef_ThunderStart, mat.pos());
@@ -523,7 +568,7 @@ namespace FPS_n2 {
 									++this->m_NowBullet %= this->m_Bullet.size();
 								}
 								break;
-							case 2:
+							case MagicType::SearchSonic:
 								if (this->m_MagicEffectStart && GetAnime(CharaAnimeID::Upper_UseMagic1).time > 30) {
 									MATRIX_ref mat = GetFrameWorldMat(CharaFrame::Upper);
 									if (this->m_InputSky.GetIsFlightMode()) {
@@ -552,8 +597,8 @@ namespace FPS_n2 {
 
 						{
 							auto* nowptr = GetLatestBulletMove();
-							switch (this->m_MagicSel) {
-							case 0:
+							switch (this->m_Magic[this->m_MagicSel].GetGetType()) {
+							case MagicType::FireBall:
 								Effect_UseControl::SetSpeed_Effect(Effect::ef_FireBallStart, 2.f);
 								if (nowptr != nullptr) {
 									Effect_UseControl::Update_LoopEffect(Effect::ef_FireBallLoop, nowptr->pos, nowptr->mat.yvec(), 0.25f);
@@ -568,7 +613,7 @@ namespace FPS_n2 {
 									}
 								}
 								break;
-							case 1:
+							case MagicType::Thunder:
 								if (!this->m_MagicEffectStart) {
 									MATRIX_ref mat = GetFrameWorldMat(CharaFrame::RightHandJoint);
 									Effect_UseControl::Update_LoopEffect(Effect::ef_ThunderStart, mat.pos(), GetCharaDir().zvec()*-1.f, 0.05f);
@@ -577,7 +622,7 @@ namespace FPS_n2 {
 									Effect_UseControl::Update_LoopEffect(Effect::ef_ThunderLoop, nowptr->pos, nowptr->mat.yvec(), 0.25f);
 								}
 								break;
-							case 2:
+							case MagicType::SearchSonic:
 								Effect_UseControl::SetSpeed_Effect(Effect::ef_Sonic, 1.5f);
 								break;
 							default:
@@ -1038,6 +1083,9 @@ namespace FPS_n2 {
 				}
 				for (auto& b : this->m_Bullet) {
 					b.Execute();
+				}
+				for (auto& m : this->m_Magic) {
+					m.Execute();
 				}
 				Effect_UseControl::Update_Effect();
 			}
