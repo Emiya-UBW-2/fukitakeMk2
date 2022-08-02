@@ -330,6 +330,8 @@ namespace FPS_n2 {
 								useMagic_key && isready
 							);
 							Chara->SetInput(Input, isready);
+
+							Chara->SetLockOn((std::shared_ptr<CharacterClass>&)(*this->m_Obj.GetObj(ObjType::Human, 4)));
 							continue;
 						}
 						Input.SetInput(
@@ -350,9 +352,10 @@ namespace FPS_n2 {
 							(false) && isready,
 							(false) && isready,
 							(false) && isready,
-							(false) && isready
+							(GetRand(2)==0) && isready
 						);
 						c->SetInput(Input, isready);
+						c->SetLockOn((std::shared_ptr<CharacterClass>&)(*this->m_Obj.GetObj(ObjType::Human, 0)));
 					}
 				}
 				//Execute
@@ -507,7 +510,7 @@ namespace FPS_n2 {
 					//–‚–@
 					{
 						this->m_UIclass.SetIntParam(12, Chara->GetMagicSel());
-						this->m_UIclass.SetIntParam(13, Chara->GetMagicNum());
+						this->m_UIclass.SetIntParam(13, (int)Chara->GetMagicNum());
 						for (int i = 0; i < 4; i++) {
 							this->m_UIclass.SetStrParam(1 + i, "");
 						}

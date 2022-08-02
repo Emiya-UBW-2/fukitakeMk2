@@ -22,6 +22,8 @@ namespace FPS_n2 {
 		ef_ThunderLoop,		//雷ループ
 
 		ef_Sonic,			//衝撃波
+
+		ef_ThunderHit,		//雷ヒット
 		effects,			//読み込む総量
 	};
 	namespace Sceneclass {

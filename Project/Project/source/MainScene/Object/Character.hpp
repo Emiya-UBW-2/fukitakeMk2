@@ -3,6 +3,10 @@
 
 namespace FPS_n2 {
 	namespace Sceneclass {
+		enum class BulletType {
+			FireBall,
+			Thunder,
+		};
 		class BulletClass {
 		private://キャラパラメーター
 			bool m_IsActive{ false };
@@ -12,16 +16,28 @@ namespace FPS_n2 {
 			float m_Timer{ 0.f };
 			float m_HitTimer{ 0.f };
 			moves m_move_Hit;
+			BulletType m_Type{ BulletType::FireBall };
 		public:
-			void Set(const MATRIX_ref& mat, const VECTOR_ref& pos, float speed) noexcept {
+			void Set(const MATRIX_ref& mat, const VECTOR_ref& pos, BulletType pType,float pBaseSpeed) noexcept {
 				this->m_IsActive = true;
 				this->m_move.mat = mat;
 				this->m_move.pos = pos;
 				this->m_move.repos = this->m_move.pos;
 				this->m_yAdd = 0.f;
-				this->m_speed = speed;
 				this->m_Timer = 0.f;
-				this->m_HitTimer = 10.f;
+				this->m_Type = pType;
+				switch (this->m_Type) {
+				case BulletType::FireBall:
+					this->m_speed = (pBaseSpeed + 150.f) * 1000.f / 3600.f * 12.5f / 60.f;
+					this->m_HitTimer = 20.f;
+					break;
+				case BulletType::Thunder:
+					this->m_speed = (pBaseSpeed + 800.f) * 1000.f / 3600.f * 12.5f / 60.f;
+					this->m_HitTimer = 3.f;
+					break;
+				default:
+					break;
+				}
 			}
 			void Execute(void) noexcept {
 				if (this->m_IsActive) {
@@ -30,7 +46,7 @@ namespace FPS_n2 {
 					this->m_move.pos += this->m_move.vec;
 					//this->m_yAdd += (M_GR / (FPS*FPS));
 				}
-				if (this->m_Timer > std::min(10.f, this->m_HitTimer)) {
+				if (this->m_Timer > this->m_HitTimer) {
 					this->m_IsActive = false;
 				}
 				this->m_Timer += 1.f / FPS;
@@ -41,16 +57,21 @@ namespace FPS_n2 {
 					if (HitResult.HitFlag == TRUE) {
 						this->m_move_Hit.pos = HitResult.HitPosition;
 						this->m_move_Hit.vec = HitResult.Normal;
-						this->m_IsActive = false;
-						this->m_HitTimer = this->m_Timer + 0.5f;
 						return true;
 					}
 				}
 				return false;
 			}
+			void SetHit() noexcept {
+				if (this->m_IsActive) {
+					this->m_HitTimer = this->m_Timer + 0.5f;
+					this->m_IsActive = false;
+				}
+			}
 		public:
-			const auto* Get_Move(void) noexcept { return (this->m_IsActive) ? &this->m_move : (const moves*)nullptr; }
+			auto* Get_Move(void) noexcept { return (this->m_IsActive) ? &this->m_move : (moves*)nullptr; }
 			const auto& GetMoveHit(void) noexcept { return this->m_move_Hit; }
+			const auto& GetType(void) noexcept { return this->m_Type; }
 		};
 
 		class MagicClass {
@@ -175,6 +196,8 @@ namespace FPS_n2 {
 			int													m_MagicSel;
 			std::vector<MagicClass>								m_Magic;
 			//
+			std::shared_ptr<CharacterClass>						m_LockOn{ nullptr };
+			//
 			bool												m_SendCamShake{ false };
 		public://ゲッター
 			//
@@ -286,6 +309,8 @@ namespace FPS_n2 {
 				this->m_Magic[0].Set("FireBall");
 				this->m_Magic[1].Set("Thunder");
 				this->m_Magic[2].Set("Sonic");
+				//
+				this->m_LockOn.reset();
 				//動作にかかわる操作
 				this->m_InputGround.ValueSet(pxRad, pyRad);
 				this->m_InputSky.ValueSet();
@@ -476,6 +501,9 @@ namespace FPS_n2 {
 					this->m_MagicSel = std::max(0, (int)(this->m_Magic.size()) - 1);
 				}
 			}
+
+			void			SetLockOn(std::shared_ptr<CharacterClass>& pLockOn) noexcept { this->m_LockOn = pLockOn; }
+			const auto&		GetLockOn() const noexcept { return this->m_LockOn; }
 		private: //更新関連
 			//以前の状態保持														//
 			void			ExecuteSavePrev(void) noexcept {
@@ -520,7 +548,7 @@ namespace FPS_n2 {
 				SetFrameLocalMat(CharaFrame::Upper, GetFrameLocalMat(CharaFrame::Upper).GetRot() * Lerp_Matrix(this->m_UpperMatrix, MATRIX_ref::zero(), GetFlightPer()));
 			}
 			//SetMat指示															//0.03ms
-			const auto*		GetLatestBulletMove(void) noexcept {
+			auto*		GetLatestBulletMove(void) noexcept {
 				auto Now = this->m_NowBullet - 1;
 				if (Now < 0) { Now = (int)(this->m_Bullet.size()) - 1; }
 				return this->m_Bullet[Now].Get_Move();
@@ -531,6 +559,7 @@ namespace FPS_n2 {
 				{
 					//上半身
 					{
+						this->m_SendCamShake = false;
 						this->m_UpperAnimSelect = CharaAnimeID::Upper_Down;
 						if (this->m_SetMagic) {
 							this->m_UpperAnimSelect = CharaAnimeID::Upper_SetMagic;
@@ -551,8 +580,7 @@ namespace FPS_n2 {
 									Effect_UseControl::Set_LoopEffect(Effect::ef_FireBallLoop, mat.pos());
 									this->m_MagicEffectLoop = false;
 
-									float Spd = (this->m_FlightSpeed + 100.f) * 1000.f / 3600.f * 12.5f / 60.f;
-									this->m_Bullet[this->m_NowBullet].Set(GetCharaDir(), mat.pos(), Spd);
+									this->m_Bullet[this->m_NowBullet].Set(MATRIX_ref::RotVec2(VECTOR_ref::front() * -1.f, GetCharaDir().zvec() * -1.f).GetRot(), mat.pos(), BulletType::FireBall, this->m_FlightSpeed);
 									++this->m_NowBullet %= this->m_Bullet.size();
 								}
 								break;
@@ -567,8 +595,7 @@ namespace FPS_n2 {
 									Effect_UseControl::Set_LoopEffect(Effect::ef_ThunderLoop, mat.pos());
 									this->m_MagicEffectLoop = false;
 
-									float Spd = (this->m_FlightSpeed + 800.f) * 1000.f / 3600.f * 12.5f / 60.f;
-									this->m_Bullet[this->m_NowBullet].Set(GetCharaDir(), mat.pos(), Spd);
+									this->m_Bullet[this->m_NowBullet].Set(GetCharaDir(), mat.pos(), BulletType::Thunder, this->m_FlightSpeed);
 									++this->m_NowBullet %= this->m_Bullet.size();
 								}
 								break;
@@ -583,7 +610,6 @@ namespace FPS_n2 {
 									}
 									this->m_MagicEffectStart = false;
 								}
-								this->m_SendCamShake = false;
 								if (this->m_MagicEffectLoop && GetAnime(CharaAnimeID::Upper_UseMagic1).time > 35) {
 									this->m_SendCamShake = true;
 									this->m_MagicEffectLoop = false;
@@ -606,15 +632,15 @@ namespace FPS_n2 {
 								Effect_UseControl::SetSpeed_Effect(Effect::ef_FireBallStart, 2.f);
 								if (nowptr != nullptr) {
 									Effect_UseControl::Update_LoopEffect(Effect::ef_FireBallLoop, nowptr->pos, nowptr->mat.yvec(), 0.25f);
+									if (this->m_LockOn != nullptr) {
+										Easing_Matrix(&nowptr->mat,
+											MATRIX_ref::RotVec2(VECTOR_ref::front() * -1.f, (this->m_LockOn->GetMatrix().pos() - nowptr->pos).Norm()).GetRot(),
+											0.96f, EasingType::OutExpo);
+									}
+
 								}
 								else {
 									Effect_UseControl::Stop_Effect(Effect::ef_FireBallLoop);
-								}
-								for (auto& b : this->m_Bullet) {
-									if (b.CheckBullet(this->m_MapCol)) {
-										auto mat = b.GetMoveHit();
-										Effect_UseControl::Set_Effect(Effect::ef_FireBallStart, mat.pos, mat.vec, 0.25f);
-									}
 								}
 								break;
 							case MagicType::Thunder:
@@ -632,6 +658,29 @@ namespace FPS_n2 {
 							default:
 								break;
 							}
+
+							for (auto& b : this->m_Bullet) {
+								if (b.CheckBullet(this->m_MapCol)) {
+									auto mat = b.GetMoveHit();
+									switch (b.GetType()) {
+									case BulletType::FireBall:
+										Effect_UseControl::Set_Effect(Effect::ef_FireBallHit, mat.pos, mat.vec, 0.1f);
+										break;
+									case BulletType::Thunder:
+										Effect_UseControl::Set_Effect(Effect::ef_ThunderHit, mat.pos, mat.vec, 0.5f);
+										if ((mat.pos - GetMatrix().pos()).size() < 12.5f*10.f) {
+											this->m_SendCamShake = true;
+										}
+										break;
+									default:
+										break;
+									}
+									b.SetHit();
+								}
+							}
+							Effect_UseControl::SetSpeed_Effect(Effect::ef_FireBallHit, 2.f);
+							Effect_UseControl::SetSpeed_Effect(Effect::ef_ThunderHit, 2.f);
+
 						}
 
 						if (this->m_UsingItem) {
