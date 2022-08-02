@@ -33,7 +33,6 @@ namespace FPS_n2 {
 		};
 		enum class ObjType {
 			Human,
-			Circle,
 			Houki,
 			Item,
 		};

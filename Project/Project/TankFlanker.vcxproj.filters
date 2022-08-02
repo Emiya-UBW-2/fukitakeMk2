@@ -45,9 +45,6 @@
     <ClInclude Include="source\MainScene\Object\Character.hpp">
       <Filter>ソース ファイル\MainScene\Object</Filter>
     </ClInclude>
-    <ClInclude Include="source\MainScene\Object\Circle.hpp">
-      <Filter>ソース ファイル\MainScene\Object</Filter>
-    </ClInclude>
     <ClInclude Include="source\MainScene\Object\ObjectBase.hpp">
       <Filter>ソース ファイル\MainScene\Object</Filter>
     </ClInclude>
@@ -67,9 +64,6 @@
       <Filter>ソース ファイル\MainScene\Object</Filter>
     </ClInclude>
     <ClInclude Include="source\MainScene\Object\CharacterEnum.hpp">
-      <Filter>ソース ファイル\MainScene\Object</Filter>
-    </ClInclude>
-    <ClInclude Include="source\MainScene\Object\CircleEnum.hpp">
       <Filter>ソース ファイル\MainScene\Object</Filter>
     </ClInclude>
     <ClInclude Include="source\MainScene\Object\Houki.hpp">

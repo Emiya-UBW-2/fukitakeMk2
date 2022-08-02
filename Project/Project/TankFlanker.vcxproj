@@ -16,8 +16,6 @@
     <ClInclude Include="source\MainScene\BackGround\BackGround.hpp" />
     <ClInclude Include="source\MainScene\Object\Character.hpp" />
     <ClInclude Include="source\MainScene\Object\CharacterEnum.hpp" />
-    <ClInclude Include="source\MainScene\Object\Circle.hpp" />
-    <ClInclude Include="source\MainScene\Object\CircleEnum.hpp" />
     <ClInclude Include="source\MainScene\Object\Houki.hpp" />
     <ClInclude Include="source\MainScene\Object\Item.hpp" />
     <ClInclude Include="source\MainScene\Object\ItemEnum.hpp" />

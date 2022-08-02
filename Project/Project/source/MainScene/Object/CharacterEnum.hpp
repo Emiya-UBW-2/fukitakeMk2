@@ -97,5 +97,18 @@ namespace FPS_n2 {
 			Team,
 			Enemy,
 		};
+
+		enum class MagicType {
+			FireBall,
+			Thunder,
+			SearchSonic,
+			Max,
+		};
+		const char* MagicTypeName[(int)MagicType::Max] = {
+			"FireBall",
+			"Thunder",
+			"SearchSonic",
+		};
+
 	};
 };

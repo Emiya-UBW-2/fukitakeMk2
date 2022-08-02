@@ -1,0 +1,2 @@
+Type=FireBall
+CoolDown=3.0

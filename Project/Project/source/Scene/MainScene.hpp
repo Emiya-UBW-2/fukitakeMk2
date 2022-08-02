@@ -69,8 +69,6 @@ namespace FPS_n2 {
 					this->m_Obj.AddObject(ObjType::Item, "data/Item/YellowPotion/");
 					this->m_Obj.AddObject(ObjType::Item, "data/Item/RedPotion/");
 				}
-				//guide
-				//this->m_Obj.AddObject(ObjType::Circle, "data/model/Circle/");
 				//ロード
 				SetCreate3DSoundFlag(FALSE);
 				this->m_Env = SoundHandle::Load("data/Sound/SE/envi.wav");
@@ -111,11 +109,6 @@ namespace FPS_n2 {
 						auto& c = *this->m_Obj.GetObj(ObjType::Item, i);
 						c->SetMove(MATRIX_ref::RotY(deg2rad(0)), VECTOR_ref::vget(20.f * (i / (item_num / 3)), 0.f, 20.f + 20.f * (i % (item_num / 3))));
 					}
-				}
-				//ガイドサークル
-				{
-					//auto& c = *this->m_Obj.GetObj(ObjType::Circle, 0);
-					//c->SetMove(MATRIX_ref::RotY(deg2rad(-90)), VECTOR_ref::vget(-10.f, 0, -20));
 				}
 				//Cam
 				camera_main.set_cam_info(deg2rad(65), 1.f, 100.f);

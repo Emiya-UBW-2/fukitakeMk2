@@ -53,11 +53,6 @@ namespace FPS_n2 {
 			const auto& GetMoveHit(void) noexcept { return this->m_move_Hit; }
 		};
 
-		enum class MagicType {
-			FireBall,
-			Thunder,
-			SearchSonic,
-		};
 		class MagicClass {
 		private://キャラパラメーター
 			float			m_CoolDown = 60.f;
@@ -72,10 +67,19 @@ namespace FPS_n2 {
 			const auto&		GetName(void) const noexcept { return this->m_Name; }
 			
 		public:
-			void Set(MagicType pType, std::string_view pName, float pCoolDown) noexcept {
-				this->m_Type = pType;
+			void Set(std::string_view pName) noexcept {
 				this->m_Name = pName;
-				this->m_CoolDown = pCoolDown;
+				int mdata = FileRead_open(("data/Magic/"+ this->m_Name+"/data.txt").c_str(), FALSE);
+				std::string Type = getparams::_str(mdata);
+				float cooldown = getparams::_float(mdata);
+				FileRead_close(mdata);
+				for (int i = 0; i < (int)MagicType::Max; i++) {
+					if (Type == MagicTypeName[i]) {
+						this->m_Type = (MagicType)i;
+						break;
+					}
+				}
+				this->m_CoolDown = cooldown;
 				this->m_CoolFrame = 0.f;
 			}
 			void Execute() noexcept {
@@ -279,9 +283,9 @@ namespace FPS_n2 {
 				this->m_Item_Ptrs.clear();
 				this->m_MagicSel = 0;
 				this->m_Magic.resize(3);
-				this->m_Magic[0].Set(MagicType::FireBall, "FireBall", 3.f);
-				this->m_Magic[1].Set(MagicType::Thunder, "Thunder", 30.f);
-				this->m_Magic[2].Set(MagicType::SearchSonic, "Sonic", 60.f);
+				this->m_Magic[0].Set("FireBall");
+				this->m_Magic[1].Set("Thunder");
+				this->m_Magic[2].Set("Sonic");
 				//動作にかかわる操作
 				this->m_InputGround.ValueSet(pxRad, pyRad);
 				this->m_InputSky.ValueSet();
