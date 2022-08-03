@@ -21,6 +21,9 @@ namespace FPS_n2 {
 			float					m_EyeRunPer{ 0.f };
 			switchs					m_FPSActive;
 			switchs					m_MouseActive;
+			switchs					m_LookModeChange;
+			int						m_LookMode{ 0 };
+			float					m_LookReturnTime{ 0.f };
 			//UI関連
 			UIClass					m_UIclass;
 			float					m_HPBuf{ 0.f };
@@ -142,6 +145,8 @@ namespace FPS_n2 {
 				//入力
 				this->m_FPSActive.Init(false);
 				this->m_MouseActive.Init(true);
+				this->m_LookMode = 0;
+				this->m_LookReturnTime = 0.f;
 			}
 			//
 			bool Update(void) noexcept override {
@@ -270,8 +275,23 @@ namespace FPS_n2 {
 					}
 
 					this->m_FPSActive.GetInput(eyechange_key);
+					this->m_LookModeChange.GetInput(look_key);
+					if (this->m_LookModeChange.trigger()) {
+						++this->m_LookMode %= 2;
+					}
+					if (this->m_LookMode == 1) {
+						if (this->m_LookModeChange.press()) {
+							this->m_LookReturnTime = std::min(this->m_LookReturnTime + 1.f / FPS, 1.f);
+						}
+						else {
+							if (this->m_LookReturnTime >= 1.f) {
+								this->m_LookMode = 0;
+							}
+							this->m_LookReturnTime = 0.f;
+						}
+					}
 
-					Easing(&this->m_TPS_Per, (!this->m_FPSActive.on() && look_key) ? 1.f : 0.f, 0.9f, EasingType::OutExpo);
+					Easing(&this->m_TPS_Per, (!this->m_FPSActive.on() && (this->m_LookMode == 1)) ? 1.f : 0.f, 0.9f, EasingType::OutExpo);
 
 					this->m_TPS_Xrad += pp_x;
 					this->m_TPS_Yrad += pp_y;
@@ -391,7 +411,17 @@ namespace FPS_n2 {
 
 						VECTOR_ref CamVec;
 
-						CamVec = MATRIX_ref::Vtrans(Chara->GetEyeVecMat().zvec() * -1.f, MATRIX_ref::RotAxis(Chara->GetMatrix().xvec(), this->m_TPS_XradR) * MATRIX_ref::RotAxis(Chara->GetMatrix().yvec(), this->m_TPS_YradR));
+						MATRIX_ref FreeLook = MATRIX_ref::RotAxis(Chara->GetMatrix().xvec(), this->m_TPS_XradR) * MATRIX_ref::RotAxis(Chara->GetMatrix().yvec(), this->m_TPS_YradR);
+						MATRIX_ref LockOn;
+						auto charalock = Chara->GetLockOn();
+						if (charalock != nullptr) {
+							LockOn = MATRIX_ref::RotVec2(Chara->GetMatrix().zvec()*-1.f, charalock->GetFrameWorldMat(CharaFrame::Upper).pos() - Chara->GetEyePosition());
+							if (this->m_LookMode == 1) {
+								FreeLook = LockOn;
+							}
+						}
+
+						CamVec = MATRIX_ref::Vtrans(Chara->GetEyeVecMat().zvec() * -1.f, FreeLook);
 
 						CamVec = Lerp(Chara->GetEyeVecMat().zvec() * -1.f, CamVec, this->m_TPS_Per);
 
@@ -514,7 +544,7 @@ namespace FPS_n2 {
 						for (int i = 0; i < 4; i++) {
 							this->m_UIclass.SetStrParam(1 + i, "");
 						}
-						for (int i = 0; i < Chara->GetMagicNum(); i++) {
+						for (int i = 0; i < std::min<int>(Chara->GetMagicNum(), 4); i++) {
 							this->m_UIclass.SetStrParam(1 + i, Chara->GetMagicName(i));
 							this->m_UIclass.SetIntParam(14 + 2 * i, (int)((Chara->GetMagicCoolDown(i) - Chara->GetMagicCoolFrame(i))*100.f));
 							this->m_UIclass.SetIntParam(15 + 2 * i, (int)(Chara->GetMagicCoolDown(i)*100.f));
@@ -624,6 +654,13 @@ namespace FPS_n2 {
 						this->m_UIclass.GetFont().Get(siz, FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat_MID(xp, yp - ys - siz, color, White, "%s", c->GetName().c_str());
 
 						this->m_UIclass.GetFont().Get(siz, FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat(xp + xs, yp + ys, color, White, "%dm", (int)((c->GetMatrix().pos() - Chara->GetMatrix().pos()).size() / 12.5f));
+
+						if (Chara->GetLockOn() == c) {
+							this->m_UIclass.GetFont().Get(siz, FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat_MID(xp, yp - siz / 2, color, White, "%s", (c->GetCameraSize() > 0.25f) ? "TARGET" : "TGT");
+						}
+						//リセット
+						campos.z(-1.f);
+						c->SetCameraPosition(campos);
 					}
 				}
 				//UI

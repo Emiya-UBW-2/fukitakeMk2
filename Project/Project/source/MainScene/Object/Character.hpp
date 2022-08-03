@@ -487,7 +487,7 @@ namespace FPS_n2 {
 			const auto&		GetMagicCoolDown(int ID) const noexcept { return this->m_Magic[ID].GetCoolDown(); }
 			const auto&		GetMagicCoolFrame(int ID) const noexcept { return this->m_Magic[ID].GetCoolFrame(); }
 			const auto&		GetMagicName(int ID) const noexcept { return this->m_Magic[ID].GetName(); }
-			const auto&		GetMagicNum() const noexcept { return this->m_Magic.size(); }
+			const auto		GetMagicNum() const noexcept { return this->m_Magic.size(); }
 			const auto&		GetMagicSel() const noexcept { return this->m_MagicSel; }
 			void			AddMagicSel() noexcept {
 				this->m_MagicSel++;

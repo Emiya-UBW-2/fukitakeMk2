@@ -9,10 +9,10 @@ namespace FPS_n2 {
 
 			FontPool UI;
 
-			int intParam[23]{ 0 };
-			float floatParam[5]{ 0 };
-			std::string	strParam[7];
-			GraphHandle* ItemGraphPtr[3]{ 0 };
+			std::array<int, 23>				intParam{ 0 };
+			std::array<float, 5>			floatParam{ 0 };
+			std::array<std::string, 7>		strParam;
+			std::array<GraphHandle*, 3>		ItemGraphPtr{ 0 };
 
 			int Blend3Int(int pInt1, int pInt2, int pInt3, float per) {
 				int ans;
@@ -201,19 +201,44 @@ namespace FPS_n2 {
 						}
 					}
 				}
-				//スピード
+				//飛行UI
 				if (intParam[2] == 1) {
-					int xp1, yp1;
-					xp1 = DrawParts->disp_x / 2 - y_r(300);
-					yp1 = DrawParts->disp_y / 2 - y_r(10);
-					UI.Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat_RIGHT(xp1, yp1, Green, White, "%06.2f km/h", floatParam[1]);
-				}
-				//高度
-				if (intParam[2] == 1) {
-					int xp1, yp1;
-					xp1 = DrawParts->disp_x / 2 + y_r(300);
-					yp1 = DrawParts->disp_y / 2 - y_r(10);
-					UI.Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat(xp1, yp1, Green, White, "%07.2f m", floatParam[2]);
+					//スピード
+					{
+						int xp1, yp1;
+						xp1 = DrawParts->disp_x / 2 - y_r(300);
+						yp1 = DrawParts->disp_y / 2 - y_r(10);
+						UI.Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat_RIGHT(xp1, yp1, Green, White, "%06.2f km/h", floatParam[1]);
+					}
+					//高度
+					{
+						int xp1, yp1;
+						xp1 = DrawParts->disp_x / 2 + y_r(300);
+						yp1 = DrawParts->disp_y / 2 - y_r(10);
+						UI.Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat(xp1, yp1, Green, White, "%07.2f m", floatParam[2]);
+					}
+					//
+					{
+						int xp1, yp1, xp2, yp2;
+						xp1 = DrawParts->disp_x / 2 + y_r(120);
+						yp1 = DrawParts->disp_y / 2;
+						xp2 = DrawParts->disp_x / 2 + y_r(240);
+						yp2 = DrawParts->disp_y / 2;
+						DrawLine_2D(xp1, yp1, xp2, yp2, White, 3);
+						DrawLine_2D(xp1, yp1, xp2, yp2, Green);
+
+						xp1 = DrawParts->disp_x / 2 - y_r(120);
+						yp1 = DrawParts->disp_y / 2;
+						xp2 = DrawParts->disp_x / 2 - y_r(240);
+						yp2 = DrawParts->disp_y / 2;
+						DrawLine_2D(xp1, yp1, xp2, yp2, White, 3);
+						DrawLine_2D(xp1, yp1, xp2, yp2, Green);
+
+						xp1 = DrawParts->disp_x / 2;
+						yp1 = DrawParts->disp_y / 2;
+						DrawCircle(xp1, yp1, y_r(100), White, FALSE, 3);
+						DrawCircle(xp1, yp1, y_r(100), Green, FALSE);
+					}
 				}
 				//セリフ
 				{
