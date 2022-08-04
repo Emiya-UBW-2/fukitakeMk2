@@ -21,6 +21,7 @@ namespace FPS_n2 {
 			float					m_EyeRunPer{ 0.f };
 			switchs					m_FPSActive;
 			switchs					m_MouseActive;
+			switchs					m_Lockon;
 			switchs					m_LookModeChange;
 			int						m_LookMode{ 0 };
 			float					m_LookReturnTime{ 0.f };
@@ -32,10 +33,18 @@ namespace FPS_n2 {
 			float					m_AddItemBuf{ 1.f };
 			float					m_SubItemBuf{ 1.f };
 			int						m_PrevPointSel{ 0 };
+			float					m_LockonBuf{ 0.f };
+			float					m_LockoffBuf{ 0.f };
+			int						m_LockoffXposBuf{ 0 };
+			int						m_LockoffYposBuf{ 0 };
+			int						m_LockoffXsizeBuf{ 0 };
+			int						m_LockoffYsizeBuf{ 0 };
 			//
 			float					m_CamShake{ 0.f };
 			VECTOR_ref				m_CamShake1;
 			VECTOR_ref				m_CamShake2;
+			//
+			MATRIX_ref				m_FreeLookMat;
 			//
 			float					m_Rader{ 1.f };
 			float					m_Rader_r{ 1.f };
@@ -211,6 +220,8 @@ namespace FPS_n2 {
 					bool look_key = ((GetMouseInputWithCheck() & MOUSE_INPUT_RIGHT) != 0);
 					bool eyechange_key = CheckHitKeyWithCheck(KEY_INPUT_V) != 0;
 
+					bool Lockon_key = ((GetMouseInputWithCheck() & MOUSE_INPUT_MIDDLE) != 0);
+
 					if (GetJoypadNum() > 0) {
 						DINPUT_JOYSTATE input;
 						int padID = DX_INPUT_PAD1;
@@ -261,7 +272,7 @@ namespace FPS_n2 {
 								right_key = (40.f <= deg && deg <= 140.f);
 								//ボタン
 								useItem_key = (input.Buttons[3] != 0);//□
-								//_key = (input.Buttons[0] != 0);//△
+								Lockon_key = (input.Buttons[0] != 0);//△
 								useMagic_key = (input.Buttons[1] != 0);//〇
 								//_key = (input.Buttons[2] != 0);//×
 							}
@@ -276,6 +287,8 @@ namespace FPS_n2 {
 
 					this->m_FPSActive.GetInput(eyechange_key);
 					this->m_LookModeChange.GetInput(look_key);
+					this->m_Lockon.GetInput(Lockon_key);
+
 					if (this->m_LookModeChange.trigger()) {
 						++this->m_LookMode %= 2;
 					}
@@ -288,6 +301,30 @@ namespace FPS_n2 {
 								this->m_LookMode = 0;
 							}
 							this->m_LookReturnTime = 0.f;
+						}
+					}
+					if (this->m_Lockon.trigger()) {
+						if (Chara->GetLockOn() == nullptr) {
+							for (int i = 1; i < team_num + enemy_num; i++) {
+								auto& c = (std::shared_ptr<CharacterClass>&)(*this->m_Obj.GetObj(ObjType::Human, i));
+
+								if (Chara->GetCharaType() == c->GetCharaType()) { continue; }
+								auto cPos = c->GetFrameWorldMat(CharaFrame::Upper).pos();
+
+								auto minLength = GetMinLenSegmentToPoint(
+									Chara->GetEyePosition(),
+									Chara->GetEyePosition() + Lerp(Chara->GetEyeVecMat().zvec() * -1.f, MATRIX_ref::Vtrans(Chara->GetEyeVecMat().zvec() * -1.f, m_FreeLookMat), this->m_TPS_Per) * 12.5f * 3000.f,
+									cPos);
+								if (minLength <= (100.f / (50 * 12.5f)*(cPos - Chara->GetEyePosition()).size())) {
+									Chara->SetLockOn(c);
+									this->m_LockonBuf = 1.f;
+									break;
+								}
+							}
+						}
+						else {
+							Chara->SetLockOn(nullptr);
+							this->m_LockoffBuf = 1.f;
 						}
 					}
 
@@ -350,8 +387,6 @@ namespace FPS_n2 {
 								useMagic_key && isready
 							);
 							Chara->SetInput(Input, isready);
-
-							Chara->SetLockOn((std::shared_ptr<CharacterClass>&)(*this->m_Obj.GetObj(ObjType::Human, 4)));
 							continue;
 						}
 						Input.SetInput(
@@ -409,21 +444,17 @@ namespace FPS_n2 {
 						MATRIX_ref UpperMat = Chara->GetFrameWorldMat(CharaFrame::Upper).GetRot();
 						VECTOR_ref CamPos = Chara->GetMatrix().pos() + Chara->GetMatrix().yvec() * 14.f;
 
-						VECTOR_ref CamVec;
-
-						MATRIX_ref FreeLook = MATRIX_ref::RotAxis(Chara->GetMatrix().xvec(), this->m_TPS_XradR) * MATRIX_ref::RotAxis(Chara->GetMatrix().yvec(), this->m_TPS_YradR);
-						MATRIX_ref LockOn;
+						MATRIX_ref FreeLook;
 						auto charalock = Chara->GetLockOn();
-						if (charalock != nullptr) {
-							LockOn = MATRIX_ref::RotVec2(Chara->GetMatrix().zvec()*-1.f, charalock->GetFrameWorldMat(CharaFrame::Upper).pos() - Chara->GetEyePosition());
-							if (this->m_LookMode == 1) {
-								FreeLook = LockOn;
-							}
+						if (charalock != nullptr && (this->m_LookMode == 1)) {
+							FreeLook = MATRIX_ref::RotVec2(Chara->GetMatrix().zvec()*-1.f, charalock->GetFrameWorldMat(CharaFrame::Upper).pos() - Chara->GetEyePosition());
 						}
+						else {
+							FreeLook = MATRIX_ref::RotAxis(Chara->GetMatrix().xvec(), this->m_TPS_XradR) * MATRIX_ref::RotAxis(Chara->GetMatrix().yvec(), this->m_TPS_YradR);
+						}
+						Easing_Matrix(&m_FreeLookMat, FreeLook, 0.5f, EasingType::OutExpo);
 
-						CamVec = MATRIX_ref::Vtrans(Chara->GetEyeVecMat().zvec() * -1.f, FreeLook);
-
-						CamVec = Lerp(Chara->GetEyeVecMat().zvec() * -1.f, CamVec, this->m_TPS_Per);
+						VECTOR_ref CamVec = Lerp(Chara->GetEyeVecMat().zvec() * -1.f, MATRIX_ref::Vtrans(Chara->GetEyeVecMat().zvec() * -1.f, m_FreeLookMat), this->m_TPS_Per);
 
 						CamPos +=
 							Lerp(
@@ -544,7 +575,7 @@ namespace FPS_n2 {
 						for (int i = 0; i < 4; i++) {
 							this->m_UIclass.SetStrParam(1 + i, "");
 						}
-						for (int i = 0; i < std::min<int>(Chara->GetMagicNum(), 4); i++) {
+						for (int i = 0; i < std::min<int>((int)(Chara->GetMagicNum()), 4); i++) {
 							this->m_UIclass.SetStrParam(1 + i, Chara->GetMagicName(i));
 							this->m_UIclass.SetIntParam(14 + 2 * i, (int)((Chara->GetMagicCoolDown(i) - Chara->GetMagicCoolFrame(i))*100.f));
 							this->m_UIclass.SetIntParam(15 + 2 * i, (int)(Chara->GetMagicCoolDown(i)*100.f));
@@ -657,10 +688,46 @@ namespace FPS_n2 {
 
 						if (Chara->GetLockOn() == c) {
 							this->m_UIclass.GetFont().Get(siz, FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat_MID(xp, yp - siz / 2, color, White, "%s", (c->GetCameraSize() > 0.25f) ? "TARGET" : "TGT");
+
+							if (this->m_LockonBuf > 0.f) {
+								xs = (int)((100.f + 100.f * this->m_LockonBuf)*c->GetCameraSize());
+								ys = (int)((100.f + 100.f * this->m_LockonBuf)*c->GetCameraSize());
+								p = 0;
+								DrawBox(xp - xs + p, yp - ys + p, xp + xs - p, yp + ys - p, White, FALSE);
+								p = 1;
+								DrawBox(xp - xs + p, yp - ys + p, xp + xs - p, yp + ys - p, color, FALSE);
+								p = 2;
+								DrawBox(xp - xs + p, yp - ys + p, xp + xs - p, yp + ys - p, White, FALSE);
+
+								this->m_LockonBuf -= 1.f / FPS / 0.5f;
+
+							}
+							this->m_LockoffXposBuf = xp;
+							this->m_LockoffYposBuf = yp;
+							this->m_LockoffXsizeBuf = xs;
+							this->m_LockoffYsizeBuf = ys;
 						}
 						//リセット
 						campos.z(-1.f);
 						c->SetCameraPosition(campos);
+					}
+					if (this->m_LockoffBuf > 0.f) {
+						int xp, yp, xs, ys;
+						xp = this->m_LockoffXposBuf;
+						yp = this->m_LockoffYposBuf;
+						xs = this->m_LockoffXsizeBuf;
+						ys = this->m_LockoffYsizeBuf;
+
+						SetDrawBlendMode(DX_BLENDMODE_ALPHA, (int)(255.f*this->m_LockoffBuf));
+						int p = 0;
+						DrawBox(xp - xs + p, yp - ys + p, xp + xs - p, yp + ys - p, White, FALSE);
+						p = 1;
+						DrawBox(xp - xs + p, yp - ys + p, xp + xs - p, yp + ys - p, Red, FALSE);
+						p = 2;
+						DrawBox(xp - xs + p, yp - ys + p, xp + xs - p, yp + ys - p, White, FALSE);
+						SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
+
+						this->m_LockoffBuf -= 1.f / FPS / 2.f;
 					}
 				}
 				//UI

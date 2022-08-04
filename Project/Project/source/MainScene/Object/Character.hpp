@@ -28,8 +28,8 @@ namespace FPS_n2 {
 				this->m_Type = pType;
 				switch (this->m_Type) {
 				case BulletType::FireBall:
-					this->m_speed = (pBaseSpeed + 150.f) * 1000.f / 3600.f * 12.5f / 60.f;
-					this->m_HitTimer = 20.f;
+					this->m_speed = (pBaseSpeed + 200.f) * 1000.f / 3600.f * 12.5f / 60.f;
+					this->m_HitTimer = 10.f;
 					break;
 				case BulletType::Thunder:
 					this->m_speed = (pBaseSpeed + 800.f) * 1000.f / 3600.f * 12.5f / 60.f;
@@ -502,7 +502,7 @@ namespace FPS_n2 {
 				}
 			}
 
-			void			SetLockOn(std::shared_ptr<CharacterClass>& pLockOn) noexcept { this->m_LockOn = pLockOn; }
+			void			SetLockOn(const std::shared_ptr<CharacterClass>& pLockOn) noexcept { this->m_LockOn = pLockOn; }
 			const auto&		GetLockOn() const noexcept { return this->m_LockOn; }
 		private: //更新関連
 			//以前の状態保持														//
@@ -631,7 +631,7 @@ namespace FPS_n2 {
 							case MagicType::FireBall:
 								Effect_UseControl::SetSpeed_Effect(Effect::ef_FireBallStart, 2.f);
 								if (nowptr != nullptr) {
-									Effect_UseControl::Update_LoopEffect(Effect::ef_FireBallLoop, nowptr->pos, nowptr->mat.yvec(), 0.25f);
+									Effect_UseControl::Update_LoopEffect(Effect::ef_FireBallLoop, nowptr->pos, nowptr->mat.yvec(), 1.0f);
 									if (this->m_LockOn != nullptr) {
 										Easing_Matrix(&nowptr->mat,
 											MATRIX_ref::RotVec2(VECTOR_ref::front() * -1.f, (this->m_LockOn->GetMatrix().pos() - nowptr->pos).Norm()).GetRot(),

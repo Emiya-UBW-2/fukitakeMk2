@@ -5,8 +5,6 @@ namespace FPS_n2 {
 	namespace Sceneclass {
 		class UIClass {
 		private:
-			GraphHandle HeartGraph;
-
 			FontPool UI;
 
 			std::array<int, 23>				intParam{ 0 };
@@ -44,7 +42,6 @@ namespace FPS_n2 {
 			}
 		public:
 			void Set(void) noexcept {
-				HeartGraph = GraphHandle::Load("data/UI/Heart.png");
 				for (int i = 0; i < 3; i++) {
 					ItemGraphPtr[i] = nullptr;
 				}
