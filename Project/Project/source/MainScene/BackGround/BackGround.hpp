@@ -74,7 +74,7 @@ namespace FPS_n2 {
 				//ŠC
 				{
 					MV1::Load("data/model/sea/model.mv1", &this->sea, true);	//ŠC
-					this->sea.SetPosition(VECTOR_ref::vget(0, -12.5f*3.f, 0));
+					this->sea.SetPosition(VECTOR_ref::vget(0, -Scale_Rate *3.f, 0));
 					this->sea.SetScale(VECTOR_ref::vget(20, 20, 20));
 
 					Sea.Init("NormalMesh_DirLight_PhongVS.vso", "NormalMesh_DirLight_PhongPS.pso");

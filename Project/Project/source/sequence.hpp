@@ -71,7 +71,7 @@ namespace FPS_n2 {
 				//‰¹ˆÊ’uw’è
 				Set3DSoundListenerPosAndFrontPosAndUpVec(camera_main.campos.get(), camera_main.camvec.get(), camera_main.camup.get());
 				//‰e—pˆÓ
-				auto NearShadow = std::min(camera_main.far_, 25.f*12.5f);
+				auto NearShadow = std::min(camera_main.far_, 25.f*Scale_Rate);
 				DrawParts->Ready_Shadow(camera_main.campos, [&] { Shadow_Draw(); }, [&] { Shadow_Draw_NearFar(); }, VECTOR_ref::vget(NearShadow, 30.f, NearShadow), VECTOR_ref::vget(2000.f, 60.f, 2000.f));//MAIN_LOOP‚Ìnear‚Í‚±‚ê (Get_Mine()->Damage.Get_alive()) ? VECTOR_ref::vget(2.f, 2.5f, 2.f) : VECTOR_ref::vget(10.f, 2.5f, 10.f)
 			}
 			virtual void UI_Draw(void) noexcept {}
@@ -250,7 +250,7 @@ namespace FPS_n2 {
 
 							//this->m_ScenesPtr->Main_Draw2();
 
-							shader.Set_param(3.f*12.5f, 0, 0, 0);
+							shader.Set_param(3.f*Scale_Rate, 0, 0, 0);
 							shader.Draw_lamda([&] {
 								SetUseTextureToShader(2, DepthScreen.get());
 								this->m_ScenesPtr->Main_Draw2();

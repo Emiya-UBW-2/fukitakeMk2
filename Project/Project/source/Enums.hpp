@@ -5,6 +5,9 @@ namespace FPS_n2 {
 	//’è”
 	static const float Frame_Rate{ 60.f };
 
+	static const float Scale_Rate{ 12.5f };
+	
+
 	enum class Effect {
 		ef_fire,			//”­–C‰Š
 		ef_reco,			//¬ŒûŒa’µ’e

@@ -353,84 +353,8 @@ namespace FPS_n2 {
 			Easing(&this->m_FradAdd, this->m_FradAdd_Buf, 0.95f, EasingType::OutExpo);
 		}
 	};
-	//フォントプール
-	class FontPool {
-	public:
-		enum class FontType {
-			Nomal_Edge,
-			HUD_Edge,
-		};
-		class Fonthave {
-			int				m_size{ 0 };
-			FontType		m_Type{ 0 };
-			FontHandle		m_Handle;
-		public:
-			const auto& Get_size(void)const noexcept { return this->m_size; }
-			const auto& Get_type(void)const noexcept { return this->m_Type; }
-			const auto& Get_handle(void)const noexcept { return this->m_Handle; }
-			void Set(int siz_t, FontType type) noexcept {
-				this->m_size = siz_t;
-				this->m_Type = type;
-				switch (this->m_Type) {
-				case FontType::Nomal_Edge:
-					this->m_Handle = FontHandle::Create(this->m_size, DX_FONTTYPE_EDGE, -1, 1);
-					break;
-				case FontType::HUD_Edge:
-					this->m_Handle = FontHandle::Create("x14y24pxHeadUpDaisy", this->m_size, DX_FONTTYPE_EDGE, -1, 1);
-					break;
-				default:
-					break;
-				}
-			}
-		};
-	private:
-		std::vector<Fonthave> havehandle;
-		size_t Add(int siz_t, FontType type) noexcept {
-			for (auto& h : this->havehandle) {
-				if (h.Get_size() == siz_t && h.Get_type() == type) {
-					return &h - &this->havehandle.front();
-				}
-			}
-			this->havehandle.resize(this->havehandle.size() + 1);
-			this->havehandle.back().Set(siz_t, type);
-			return this->havehandle.size() - 1;
-		}
-	public:
-		Fonthave& Get(int siz_t, FontType type) noexcept { return this->havehandle[Add(siz_t, type)]; }
-	};
-	FontPool Fonts;
-	//エフェクトリソース
-	class EffectControl {
-		LONGLONG Update_effect_was = 0;					//エフェクトのアップデートタイミングタイマー
-	public:
-		bool Update_effect_f{ true };					//エフェクトのアップデートタイミングフラグ
-		std::vector<EffekseerEffectHandle> effsorce;	/*エフェクトリソース*/
-		void Init(void) noexcept {
-			auto data_t = GetFileNamesInDirectory("data/effect/");
-			for (const auto& d : data_t) {
-				std::string p = d.cFileName;
-				if (p.find(".efk") != std::string::npos && p.find(".efkproj") == std::string::npos) {
-					effsorce.resize(effsorce.size() + 1);
-					effsorce.back() = EffekseerEffectHandle::load("data/effect/" + p);
-				}
-			}
-			effsorce.resize(effsorce.size() + 1);
-			effsorce.back() = EffekseerEffectHandle::load("data/effect/gndsmk.efk");								//戦車用エフェクト
-			Update_effect_was = GetNowHiPerformanceCount();
-		}
-		void Calc(void) noexcept {
-			Update_effect_f = ((GetNowHiPerformanceCount() - Update_effect_was) >= 1000000 / 60);
-			if (Update_effect_f) {
-				Update_effect_was = GetNowHiPerformanceCount();
-			}
-		}
-		void Dispose(void) noexcept {
-			for (auto& e : effsorce) {
-				e.Dispose();
-			}
-		}
-	};
-	EffectControl effectControl;
+
+	EffectControl	effectControl;	//エフェクトリソース
 	//エフェクト利用コントロール
 	class Effect_UseControl {
 		std::array<EffectS, int(Effect::effects)> effcs;	/*エフェクト*/
@@ -487,46 +411,14 @@ namespace FPS_n2 {
 			for (auto& t : this->effcs) { t.handle.Dispose(); }
 		}
 	};
-	//ライト
-	class LightPool {
-		class Lights {
-		public:
-			LightHandle handle;
-			LONGLONG time{ 0 };
-		};
-		std::array<Lights, 2> handles;
-		int now = 0;
-		VECTOR_ref campos;
-	public:
-		void Put(const VECTOR_ref& pos) noexcept {
-			if ((pos - campos).size() >= 10.f) { return; }
-			if (handles[now].handle.get() != -1) {
-				handles[now].handle.Dispose();
-			}
-			handles[now].time = GetNowHiPerformanceCount();
-			handles[now].handle = LightHandle::Create(pos, 2.5f, 0.5f, 1.5f, 0.5f);
-			SetLightDifColorHandle(handles[now].handle.get(), GetColorF(1.f, 1.f, 0.f, 1.f));
-			++now %= handles.size();
-		}
-		void Update(const VECTOR_ref& campos_t) noexcept {
-			campos = campos_t;
-			for (auto& h : handles) {
-				if (h.handle.get() != -1) {
-					if ((GetNowHiPerformanceCount() - h.time) >= 1000000 / 30) {
-						h.handle.Dispose();
-					}
-				}
-			}
-		}
-	};
-	LightPool Light_pool;
+
 
 	// プレイヤー関係の定義
-#define PLAYER_ENUM_DEFAULT_SIZE	(1.8f * 12.5f)		// 周囲のポリゴン検出に使用する球の初期サイズ
-#define PLAYER_HIT_WIDTH			(0.4f * 12.5f)		// 当たり判定カプセルの半径
-#define PLAYER_HIT_HEIGHT			(1.8f * 12.5f)		// 当たり判定カプセルの高さ
-#define PLAYER_HIT_TRYNUM			(16)				// 壁押し出し処理の最大試行回数
-#define PLAYER_HIT_SLIDE_LENGTH		(0.015f * 12.5f)	// 一度の壁押し出し処理でスライドさせる距離
+#define PLAYER_ENUM_DEFAULT_SIZE	(1.8f * Scale_Rate)		// 周囲のポリゴン検出に使用する球の初期サイズ
+#define PLAYER_HIT_WIDTH			(0.4f * Scale_Rate)		// 当たり判定カプセルの半径
+#define PLAYER_HIT_HEIGHT			(1.8f * Scale_Rate)		// 当たり判定カプセルの高さ
+#define PLAYER_HIT_TRYNUM			(16)					// 壁押し出し処理の最大試行回数
+#define PLAYER_HIT_SLIDE_LENGTH		(0.015f * Scale_Rate)	// 一度の壁押し出し処理でスライドさせる距離
 	//壁判定ユニバーサル
 	static bool col_wall(const VECTOR_ref& OldPos, VECTOR_ref* NowPos, const MV1& col_obj_t) noexcept {
 		auto MoveVector = *NowPos - OldPos;

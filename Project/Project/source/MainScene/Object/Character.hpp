@@ -28,11 +28,11 @@ namespace FPS_n2 {
 				this->m_Type = pType;
 				switch (this->m_Type) {
 				case BulletType::FireBall:
-					this->m_speed = (pBaseSpeed + 200.f) * 1000.f / 3600.f * 12.5f / 60.f;
+					this->m_speed = (pBaseSpeed + 200.f) * 1000.f / 3600.f * Scale_Rate;
 					this->m_HitTimer = 10.f;
 					break;
 				case BulletType::Thunder:
-					this->m_speed = (pBaseSpeed + 800.f) * 1000.f / 3600.f * 12.5f / 60.f;
+					this->m_speed = (pBaseSpeed + 800.f) * 1000.f / 3600.f * Scale_Rate;
 					this->m_HitTimer = 3.f;
 					break;
 				default:
@@ -42,7 +42,7 @@ namespace FPS_n2 {
 			void Execute(void) noexcept {
 				if (this->m_IsActive) {
 					this->m_move.repos = this->m_move.pos;
-					this->m_move.vec = this->m_move.mat.zvec() * (-1.f * this->m_speed * 60.f / FPS) + VECTOR_ref::up()*this->m_yAdd;
+					this->m_move.vec = this->m_move.mat.zvec() * (-1.f * this->m_speed / FPS) + VECTOR_ref::up()*this->m_yAdd;
 					this->m_move.pos += this->m_move.vec;
 					//this->m_yAdd += (M_GR / (FPS*FPS));
 				}
@@ -603,7 +603,7 @@ namespace FPS_n2 {
 								if (this->m_MagicEffectStart && GetAnime(CharaAnimeID::Upper_UseMagic1).time > 30) {
 									MATRIX_ref mat = GetFrameWorldMat(CharaFrame::Upper);
 									if (this->m_InputSky.GetIsFlightMode()) {
-										Effect_UseControl::Set_Effect(Effect::ef_Sonic, mat.pos() + GetCharaDir().zvec()*-1.f * this->m_FlightSpeed * 60.f / FPS, GetCharaDir().yvec(), 1.f);
+										Effect_UseControl::Set_Effect(Effect::ef_Sonic, mat.pos() + GetCharaDir().zvec()*-1.f * this->m_FlightSpeed * Frame_Rate / FPS, GetCharaDir().yvec(), 1.f);
 									}
 									else {
 										Effect_UseControl::Set_Effect(Effect::ef_Sonic, mat.pos(), GetCharaDir().yvec(), 1.f);
@@ -646,7 +646,7 @@ namespace FPS_n2 {
 							case MagicType::Thunder:
 								if (!this->m_MagicEffectStart) {
 									MATRIX_ref mat = GetFrameWorldMat(CharaFrame::RightHandJoint);
-									Effect_UseControl::Update_LoopEffect(Effect::ef_ThunderStart, mat.pos(), GetCharaDir().zvec()*-1.f, 0.05f);
+									Effect_UseControl::Update_LoopEffect(Effect::ef_ThunderStart, mat.pos(), GetCharaDir().zvec()*-1.f, 0.1f);
 								}
 								if (nowptr != nullptr) {
 									Effect_UseControl::Update_LoopEffect(Effect::ef_ThunderLoop, nowptr->pos, nowptr->mat.yvec(), 0.25f);
@@ -668,7 +668,7 @@ namespace FPS_n2 {
 										break;
 									case BulletType::Thunder:
 										Effect_UseControl::Set_Effect(Effect::ef_ThunderHit, mat.pos, mat.vec, 0.5f);
-										if ((mat.pos - GetMatrix().pos()).size() < 12.5f*10.f) {
+										if ((mat.pos - GetMatrix().pos()).size() < Scale_Rate*10.f) {
 											this->m_SendCamShake = true;
 										}
 										break;
@@ -864,14 +864,14 @@ namespace FPS_n2 {
 							if ((9.f < Time && Time < 10.f)) {
 								if (this->m_CharaSound != 1) {
 									this->m_CharaSound = 1;
-									SE->Get((int)SoundEnum::RunFoot).Play_3D(0, GetFrameWorldMat(CharaFrame::LeftFoot).pos(), 12.5f * 5.f);
+									SE->Get((int)SoundEnum::RunFoot).Play_3D(0, GetFrameWorldMat(CharaFrame::LeftFoot).pos(), Scale_Rate * 5.f);
 								}
 							}
 							//R
 							if ((27.f < Time &&Time < 28.f)) {
 								if (this->m_CharaSound != 3) {
 									this->m_CharaSound = 3;
-									SE->Get((int)SoundEnum::RunFoot).Play_3D(0, GetFrameWorldMat(CharaFrame::RightFoot).pos(), 12.5f * 5.f);
+									SE->Get((int)SoundEnum::RunFoot).Play_3D(0, GetFrameWorldMat(CharaFrame::RightFoot).pos(), Scale_Rate * 5.f);
 								}
 							}
 						}
@@ -883,7 +883,7 @@ namespace FPS_n2 {
 								) {
 								if (this->m_CharaSound != 5) {
 									this->m_CharaSound = 5;
-									SE->Get((int)SoundEnum::RunFoot).Play_3D(0, GetFrameWorldMat(CharaFrame::LeftFoot).pos(), 12.5f * 5.f);
+									SE->Get((int)SoundEnum::RunFoot).Play_3D(0, GetFrameWorldMat(CharaFrame::LeftFoot).pos(), Scale_Rate * 5.f);
 								}
 							}
 							//R
@@ -893,7 +893,7 @@ namespace FPS_n2 {
 								) {
 								if (this->m_CharaSound != 6) {
 									this->m_CharaSound = 6;
-									SE->Get((int)SoundEnum::RunFoot).Play_3D(0, GetFrameWorldMat(CharaFrame::RightFoot).pos(), 12.5f * 5.f);
+									SE->Get((int)SoundEnum::RunFoot).Play_3D(0, GetFrameWorldMat(CharaFrame::RightFoot).pos(), Scale_Rate * 5.f);
 								}
 							}
 						}
@@ -902,7 +902,7 @@ namespace FPS_n2 {
 					else if (this->m_ReturnStand) {
 						if (this->m_CharaSound != 7) {
 							this->m_CharaSound = 7;
-							SE->Get((int)SoundEnum::SlideFoot).Play_3D(0, GetFrameWorldMat(CharaFrame::RightFoot).pos(), 12.5f * 5.f, (int)(192.f * this->m_RunPer2 / SpeedLimit));
+							SE->Get((int)SoundEnum::SlideFoot).Play_3D(0, GetFrameWorldMat(CharaFrame::RightFoot).pos(), Scale_Rate * 5.f, (int)(192.f * this->m_RunPer2 / SpeedLimit));
 						}
 						this->m_ReturnStand = false;
 					}
@@ -922,15 +922,15 @@ namespace FPS_n2 {
 				this->m_Speed = std::clamp(vecBuf.size(), 0.f, 1.f);
 
 				if (this->m_Speed > 0.1f) {
-					this->m_move.vec.x((vecBuf.Norm() * this->m_RunPer2 * 60.f / FPS).x());
-					this->m_move.vec.z((vecBuf.Norm() * this->m_RunPer2 * 60.f / FPS).z());
+					this->m_move.vec.x((vecBuf.Norm() * this->m_RunPer2 * Frame_Rate / FPS).x());
+					this->m_move.vec.z((vecBuf.Norm() * this->m_RunPer2 * Frame_Rate / FPS).z());
 				}
 				else {
 					this->m_move.vec.x(vecBuf.x());
 					this->m_move.vec.z(vecBuf.z());
 				}
 				{
-					auto FlightSpeed = this->m_FlightSpeed * 1000.f / 3600.f * (12.5f / FPS);
+					auto FlightSpeed = this->m_FlightSpeed * 1000.f / 3600.f * (Scale_Rate / FPS);
 					auto HitResult = this->m_MapCol->CollCheck_Line(this->m_PosBuf + VECTOR_ref::up() * -1.f, this->m_PosBuf + VECTOR_ref::up() * std::max(15.f, FlightSpeed));
 					if (HitResult.HitFlag == TRUE) {
 						auto yPos = this->m_PosBuf.y();
@@ -999,7 +999,7 @@ namespace FPS_n2 {
 					float per = GetCharaDir().zvec().y();
 					Easing(&this->m_FlightSpeedAdd, (per >= 0) ? (per*0.2f) : (per*0.05f), 0.95f, EasingType::OutExpo);
 				}
-				this->m_FlightSpeed_r = std::clamp(this->m_FlightSpeed_r + this->m_FlightSpeedAdd*60.f / FPS, 0.f, FlightSpeedMax*std::min(1.f, (2.f - (GetMatrix().pos().y() / 12.5f) / FlightHightLimit)));
+				this->m_FlightSpeed_r = std::clamp(this->m_FlightSpeed_r + this->m_FlightSpeedAdd*Frame_Rate / FPS, 0.f, FlightSpeedMax*std::min(1.f, (2.f - (GetMatrix().pos().y() / Scale_Rate) / FlightHightLimit)));
 				Easing(&this->m_FlightSpeed, this->m_FlightSpeed_r, 0.95f, EasingType::OutExpo);
 				//
 				{
@@ -1009,7 +1009,7 @@ namespace FPS_n2 {
 				//
 				if (m_InputSky.GetIsFlightMode()) {
 					Easing(&this->m_FlightVecBuf,
-						(this->GetCharaDir().zvec() * -1.f + VECTOR_ref::up() * m_InputSky.GetGoFlight()) * this->m_FlightSpeed * 1000.f / 3600.f * (12.5f / FPS)
+						(this->GetCharaDir().zvec() * -1.f + VECTOR_ref::up() * m_InputSky.GetGoFlight()) * this->m_FlightSpeed * 1000.f / 3600.f * (Scale_Rate / FPS)
 						, 0.95f, EasingType::OutExpo);
 				}
 				else {
@@ -1019,7 +1019,7 @@ namespace FPS_n2 {
 
 					Easing(&this->m_FlightVecBuf, VECTOR_ref::zero(), 0.975f, EasingType::OutExpo);
 				}
-				this->m_PosBuf += this->m_FlightVecBuf + this->m_FlightKickReturnVec * 1000.f / 3600.f* (12.5f / FPS);
+				this->m_PosBuf += this->m_FlightVecBuf + this->m_FlightKickReturnVec * 1000.f / 3600.f* (Scale_Rate / FPS);
 				auto OLDbuf = this->m_PosBuf;
 				if (col_wall(OLDpos, &this->m_PosBuf, *this->m_MapCol)) {
 					if (m_InputSky.GetIsFlightMode()) {

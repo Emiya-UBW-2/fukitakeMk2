@@ -5,8 +5,6 @@ namespace FPS_n2 {
 	namespace Sceneclass {
 		class UIClass {
 		private:
-			FontPool UI;
-
 			std::array<int, 23>				intParam{ 0 };
 			std::array<float, 5>			floatParam{ 0 };
 			std::array<std::string, 7>		strParam;
@@ -47,6 +45,7 @@ namespace FPS_n2 {
 				}
 			}
 			void Draw(void) noexcept {
+				auto* Fonts = FontPool::Instance();
 				auto* DrawParts = DXDraw::Instance();
 				auto Red = GetColor(255, 0, 0);
 				auto Blue = GetColor(50, 50, 255);
@@ -57,12 +56,12 @@ namespace FPS_n2 {
 					int xp1, yp1;
 					xp1 = y_r(10);
 					yp1 = y_r(10);
-					UI.Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawString(xp1, yp1, "TIME", Green, White);
-					UI.Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat_RIGHT(xp1 + y_r(240), yp1, Green, White, "%d:%05.2f", intParam[0], floatParam[0]);
+					Fonts->Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawString(xp1, yp1, "TIME", Green, White);
+					Fonts->Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat_RIGHT(xp1 + y_r(240), yp1, Green, White, "%d:%05.2f", intParam[0], floatParam[0]);
 
 					yp1 += y_r(25);
-					UI.Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawString(xp1, yp1, "SCORE", Green, White);
-					UI.Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat_RIGHT(xp1 + y_r(240), yp1, Green, White, "%d", intParam[1]);
+					Fonts->Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawString(xp1, yp1, "SCORE", Green, White);
+					Fonts->Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat_RIGHT(xp1 + y_r(240), yp1, Green, White, "%d", intParam[1]);
 				}
 				//アイテム
 				{
@@ -123,18 +122,18 @@ namespace FPS_n2 {
 					SetDrawBright(col, col, col);
 					if (ItemGraphPtr[0] != nullptr) {
 						ItemGraphPtr[0]->DrawExtendGraph((int)(xp1_r - xs1_r), (int)(yp1_r - ys1_r), (int)(xp1_r + xs1_r), (int)(yp1_r + ys1_r), true);
-						UI.Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat_RIGHT((int)(xp1_r + xs1_r), (int)(yp1_r + ys1_r) - y_r(20), Green, White, "%d", intParam[9]);
+						Fonts->Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat_RIGHT((int)(xp1_r + xs1_r), (int)(yp1_r + ys1_r) - y_r(20), Green, White, "%d", intParam[9]);
 					}
 					if (ItemGraphPtr[2] != nullptr) {
 						ItemGraphPtr[2]->DrawExtendGraph((int)(xp3_r - xs3_r), (int)(yp3_r - ys3_r), (int)(xp3_r + xs3_r), (int)(yp3_r + ys3_r), true);
-						UI.Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat_RIGHT((int)(xp3_r + xs3_r), (int)(yp3_r + ys3_r) - y_r(20), Green, White, "%d", intParam[11]);
+						Fonts->Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat_RIGHT((int)(xp3_r + xs3_r), (int)(yp3_r + ys3_r) - y_r(20), Green, White, "%d", intParam[11]);
 					}
 					//中央
 					col = (int)Lerp(128.f, 255.f, Lper*Rper);
 					SetDrawBright(col, col, col);
 					if (ItemGraphPtr[1] != nullptr) {
 						ItemGraphPtr[1]->DrawExtendGraph((int)(xp2_r - xs2_r), (int)(yp2_r - ys2_r), (int)(xp2_r + xs2_r), (int)(yp2_r + ys2_r), true);
-						UI.Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat_RIGHT((int)(xp2_r + xs2_r), (int)(yp2_r + ys2_r) - y_r(20), Green, White, "%d", intParam[10]);
+						Fonts->Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat_RIGHT((int)(xp2_r + xs2_r), (int)(yp2_r + ys2_r) - y_r(20), Green, White, "%d", intParam[10]);
 					}
 
 					SetDrawBright(255, 255, 255);
@@ -149,11 +148,11 @@ namespace FPS_n2 {
 						xp1 = DrawParts->disp_x - y_r(300);
 						yp1 = DrawParts->disp_y - y_r(30) - ys1 * Num - y_r(110);
 
-						UI.Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat(xp1 + y_r(50), yp1, Green, White, "%s", strParam[0].c_str());
+						Fonts->Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat(xp1 + y_r(50), yp1, Green, White, "%s", strParam[0].c_str());
 						yp1 += y_r(25);
 
-						UI.Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawString(xp1, yp1, "HP", Green, White);
-						UI.Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat(xp1 + y_r(50), yp1, Green, White, "%03d / %03d", intParam[3], intParam[4]);
+						Fonts->Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawString(xp1, yp1, "HP", Green, White);
+						Fonts->Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat(xp1 + y_r(50), yp1, Green, White, "%03d / %03d", intParam[3], intParam[4]);
 						yp1 += y_r(25);
 
 						DrawGauge(
@@ -163,8 +162,8 @@ namespace FPS_n2 {
 						);
 						yp1 += y_r(10);
 
-						UI.Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawString(xp1, yp1, "MP", Green, White);
-						UI.Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat(xp1 + y_r(50), yp1, Green, White, "%03d / %03d", intParam[6], intParam[7]);
+						Fonts->Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawString(xp1, yp1, "MP", Green, White);
+						Fonts->Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat(xp1 + y_r(50), yp1, Green, White, "%03d / %03d", intParam[6], intParam[7]);
 						yp1 += y_r(25);
 
 						DrawGauge(
@@ -181,11 +180,11 @@ namespace FPS_n2 {
 
 						int sel = intParam[12];
 
-						UI.Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawString_RIGHT(xp1, yp1 + ys1 * sel, "→", Green, White);
+						Fonts->Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawString_RIGHT(xp1, yp1 + ys1 * sel, "→", Green, White);
 
 						for (int s = 0; s < Num; s++) {
 							if (strParam[1 + s].length() > 0) {
-								UI.Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat_RIGHT(xp1 + y_r(150), yp1, (sel == s) ? Green : GetColor(15, 110, 50), White, "%s", strParam[1 + s].c_str());
+								Fonts->Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat_RIGHT(xp1 + y_r(150), yp1, (sel == s) ? Green : GetColor(15, 110, 50), White, "%s", strParam[1 + s].c_str());
 
 								auto color = GetColorU8((sel == s) ? 255 : 240, (sel == s) ? 255 : 192, 0, 255);
 								DrawGauge(
@@ -205,14 +204,14 @@ namespace FPS_n2 {
 						int xp1, yp1;
 						xp1 = DrawParts->disp_x / 2 - y_r(300);
 						yp1 = DrawParts->disp_y / 2 - y_r(10);
-						UI.Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat_RIGHT(xp1, yp1, Green, White, "%06.2f km/h", floatParam[1]);
+						Fonts->Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat_RIGHT(xp1, yp1, Green, White, "%06.2f km/h", floatParam[1]);
 					}
 					//高度
 					{
 						int xp1, yp1;
 						xp1 = DrawParts->disp_x / 2 + y_r(300);
 						yp1 = DrawParts->disp_y / 2 - y_r(10);
-						UI.Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat(xp1, yp1, Green, White, "%07.2f m", floatParam[2]);
+						Fonts->Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat(xp1, yp1, Green, White, "%07.2f m", floatParam[2]);
 					}
 					//
 					{
@@ -258,9 +257,9 @@ namespace FPS_n2 {
 						int xs1, ys1;
 						xp1 = DrawParts->disp_x / 2;
 						yp1 = DrawParts->disp_y / 20;
-						UI.Get(y_r(28), FontPool::FontType::Nomal_Edge).Get_handle().DrawStringFormat_MID(xp1, yp1, color, White, "<%s>", Mes.c_str());
+						Fonts->Get(y_r(28), FontPool::FontType::Nomal_Edge).Get_handle().DrawStringFormat_MID(xp1, yp1, color, White, "<%s>", Mes.c_str());
 
-						int picx = std::max(DrawParts->disp_x / 8, UI.Get(y_r(28), FontPool::FontType::Nomal_Edge).Get_handle().GetDrawWidthFormat("<%s>", Mes.c_str()) / 2 + y_r(20));
+						int picx = std::max(DrawParts->disp_x / 8, Fonts->Get(y_r(28), FontPool::FontType::Nomal_Edge).Get_handle().GetDrawWidthFormat("<%s>", Mes.c_str()) / 2 + y_r(20));
 
 						xs1 = y_r(40);
 						ys1 = y_r(40);
@@ -268,7 +267,7 @@ namespace FPS_n2 {
 						yp1 = DrawParts->disp_y / 20 - y_r(28) + ys1;
 
 						DrawBox((int)(xp1 - xs1), (int)(yp1 - ys1), (int)(xp1 + xs1), (int)(yp1 + ys1), GetColor(0, 0, 0), TRUE);
-						UI.Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat_MID(xp1, yp1 + ys1, color, White, "%s", strParam[5].c_str());
+						Fonts->Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat_MID(xp1, yp1 + ys1, color, White, "%s", strParam[5].c_str());
 					}
 				}
 			}
@@ -277,8 +276,6 @@ namespace FPS_n2 {
 			void SetfloatParam(int ID, float value) { floatParam[ID] = value; }
 			void SetStrParam(int ID, std::string_view value) { strParam[ID] = value; }
 			void SetItemGraph(int ID, const GraphHandle* value) { ItemGraphPtr[ID] = (GraphHandle*)value; }
-
-			auto&		GetFont(void) noexcept { return this->UI; }
 		};
 	};
 };

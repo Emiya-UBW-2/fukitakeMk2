@@ -59,8 +59,8 @@ namespace FPS_n2 {
 			void Set(void) noexcept override {
 				SoundPool::Create();
 				Set_EnvLight(
-					VECTOR_ref::vget(12.5f*-300.f, 12.5f*-10.f, 12.5f*-300.f),
-					VECTOR_ref::vget(12.5f*300.f, 12.5f*50.f, 12.5f*300.f),
+					VECTOR_ref::vget(Scale_Rate*-300.f, Scale_Rate*-10.f, Scale_Rate*-300.f),
+					VECTOR_ref::vget(Scale_Rate*300.f, Scale_Rate*50.f, Scale_Rate*300.f),
 					VECTOR_ref::vget(-0.25f, -0.5f, 0.0f),
 					GetColorF(0.42f, 0.41f, 0.40f, 0.0f));
 				//Load
@@ -313,9 +313,9 @@ namespace FPS_n2 {
 
 								auto minLength = GetMinLenSegmentToPoint(
 									Chara->GetEyePosition(),
-									Chara->GetEyePosition() + Lerp(Chara->GetEyeVecMat().zvec() * -1.f, MATRIX_ref::Vtrans(Chara->GetEyeVecMat().zvec() * -1.f, m_FreeLookMat), this->m_TPS_Per) * 12.5f * 3000.f,
+									Chara->GetEyePosition() + Lerp(Chara->GetEyeVecMat().zvec() * -1.f, MATRIX_ref::Vtrans(Chara->GetEyeVecMat().zvec() * -1.f, m_FreeLookMat), this->m_TPS_Per) * Scale_Rate * 3000.f,
 									cPos);
-								if (minLength <= (100.f / (50 * 12.5f)*(cPos - Chara->GetEyePosition()).size())) {
+								if (minLength <= (100.f / (50 * Scale_Rate)*(cPos - Chara->GetEyePosition()).size())) {
 									Chara->SetLockOn(c);
 									this->m_LockonBuf = 1.f;
 									break;
@@ -356,7 +356,7 @@ namespace FPS_n2 {
 							if (this->m_Obj.GetObj(ObjType::Item, j) == nullptr) { break; }
 							auto& item = (std::shared_ptr<ItemClass>&)(*this->m_Obj.GetObj(ObjType::Item, j));
 							if (!item->GetHaveChara() && !item->GetUsed()) {
-								if ((item->GetMatrix().pos() - c->GetMatrix().pos()).size() < 12.5f*1.f) {
+								if ((item->GetMatrix().pos() - c->GetMatrix().pos()).size() < Scale_Rate*1.f) {
 									c->AddItem(item);
 								}
 							}
@@ -407,7 +407,7 @@ namespace FPS_n2 {
 							(false) && isready,
 							(false) && isready,
 							(false) && isready,
-							(GetRand(2)==0) && isready
+							(GetRand(2) == 0) && isready
 						);
 						c->SetInput(Input, isready);
 						c->SetLockOn((std::shared_ptr<CharacterClass>&)(*this->m_Obj.GetObj(ObjType::Human, 0)));
@@ -473,12 +473,12 @@ namespace FPS_n2 {
 					if (Chara->GetIsRun()) {
 						Easing(&camera_main.fov, deg2rad(90), 0.9f, EasingType::OutExpo);
 						Easing(&camera_main.near_, 3.f, 0.9f, EasingType::OutExpo);
-						Easing(&camera_main.far_, 12.5f * 150.f, 0.9f, EasingType::OutExpo);
+						Easing(&camera_main.far_, Scale_Rate * 150.f, 0.9f, EasingType::OutExpo);
 					}
 					else {
 						Easing(&camera_main.fov, deg2rad(75), 0.9f, EasingType::OutExpo);
 						Easing(&camera_main.near_, 10.f, 0.9f, EasingType::OutExpo);
-						Easing(&camera_main.far_, 12.5f * 300.f, 0.9f, EasingType::OutExpo);
+						Easing(&camera_main.far_, Scale_Rate * 300.f, 0.9f, EasingType::OutExpo);
 					}
 				}
 
@@ -494,7 +494,7 @@ namespace FPS_n2 {
 
 					this->m_UIclass.SetIntParam(2, Chara->GetFlightMode() ? 1 : 0);
 					this->m_UIclass.SetfloatParam(1, Chara->GetFlightSpeed());
-					this->m_UIclass.SetfloatParam(2, Chara->GetMatrix().pos().y() / 12.5f);
+					this->m_UIclass.SetfloatParam(2, Chara->GetMatrix().pos().y() / Scale_Rate);
 
 					this->m_UIclass.SetIntParam(3, (int)Chara->GetHP());
 					this->m_UIclass.SetIntParam(4, (int)Chara->GetHPMax());
@@ -648,6 +648,7 @@ namespace FPS_n2 {
 			void UI_Draw(void) noexcept  override {
 				auto& Chara = (std::shared_ptr<CharacterClass>&)(*this->m_Obj.GetObj(ObjType::Human, 0));//Ž©•ª
 
+				auto* Fonts = FontPool::Instance();
 				auto* DrawParts = DXDraw::Instance();
 				auto Red = GetColor(255, 0, 0);
 				auto Blue = GetColor(50, 50, 255);
@@ -682,12 +683,12 @@ namespace FPS_n2 {
 						p = 2;
 						DrawBox(xp - xs + p, yp - ys + p, xp + xs - p, yp + ys - p, White, FALSE);
 
-						this->m_UIclass.GetFont().Get(siz, FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat_MID(xp, yp - ys - siz, color, White, "%s", c->GetName().c_str());
+						Fonts->Get(siz, FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat_MID(xp, yp - ys - siz, color, White, "%s", c->GetName().c_str());
 
-						this->m_UIclass.GetFont().Get(siz, FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat(xp + xs, yp + ys, color, White, "%dm", (int)((c->GetMatrix().pos() - Chara->GetMatrix().pos()).size() / 12.5f));
+						Fonts->Get(siz, FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat(xp + xs, yp + ys, color, White, "%dm", (int)((c->GetMatrix().pos() - Chara->GetMatrix().pos()).size() / Scale_Rate));
 
 						if (Chara->GetLockOn() == c) {
-							this->m_UIclass.GetFont().Get(siz, FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat_MID(xp, yp - siz / 2, color, White, "%s", (c->GetCameraSize() > 0.25f) ? "TARGET" : "TGT");
+							Fonts->Get(siz, FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat_MID(xp, yp - siz / 2, color, White, "%s", (c->GetCameraSize() > 0.25f) ? "TARGET" : "TGT");
 
 							if (this->m_LockonBuf > 0.f) {
 								xs = (int)((100.f + 100.f * this->m_LockonBuf)*c->GetCameraSize());
@@ -746,22 +747,29 @@ namespace FPS_n2 {
 					xp1 = DrawParts->disp_x - y_r(80) - xs1;
 					yp1 = DrawParts->disp_y - y_r(300) - ys1;
 
-					this->m_UIclass.GetFont().Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat((int)(xp1 - xs1), (int)(yp1 - ys1) - y_r(20), Green, White, "x%4.2f", this->m_Rader_r);
+					Fonts->Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat((int)(xp1 - xs1), (int)(yp1 - ys1) - y_r(20), Green, White, "x%4.2f", this->m_Rader_r);
 					DrawLine_2D((int)(xp1 - xs1), (int)(yp1), (int)(xp1 + xs2), (int)(yp1), Green, 3);
 					DrawLine_2D((int)(xp1), (int)(yp1 - ys1), (int)(xp1), (int)(yp1 + ys2), Green, 3);
 					DrawLine_2D((int)(xp1 - xs1), (int)(yp1), (int)(xp1 + xs2), (int)(yp1), White);
 					DrawLine_2D((int)(xp1), (int)(yp1 - ys1), (int)(xp1), (int)(yp1 + ys2), White);
-					DrawBox((int)(xp1 - xs1), (int)(yp1 - ys1), (int)(xp1 + xs2), (int)(yp1 + ys2), Green, FALSE);
-					DrawBox((int)(xp1 - xs1) + 1, (int)(yp1 - ys1) + 1, (int)(xp1 + xs2) - 1, (int)(yp1 + ys2) - 1, White, FALSE);
-					DrawBox((int)(xp1 - xs1) + 2, (int)(yp1 - ys1) + 2, (int)(xp1 + xs2) - 2, (int)(yp1 + ys2) - 2, Green, FALSE);
+
+					int p = 0;
+					DrawBox((int)(xp1 - xs1) + p, (int)(yp1 - ys1) + p, (int)(xp1 + xs2) - p, (int)(yp1 + ys2) - p, Green, FALSE);
+					p = 1;
+					DrawBox((int)(xp1 - xs1) + p, (int)(yp1 - ys1) + p, (int)(xp1 + xs2) - p, (int)(yp1 + ys2) - p, White, FALSE);
+					p = 2;
+					DrawBox((int)(xp1 - xs1) + p, (int)(yp1 - ys1) + p, (int)(xp1 + xs2) - p, (int)(yp1 + ys2) - p, Green, FALSE);
 
 					xs1 = y_r((int)(256.f * 0.5f*std::min(1.f, this->m_Rader_r)));
 					ys1 = y_r((int)(256.f * 0.8f*std::min(1.f, this->m_Rader_r)));
 					xs2 = y_r((int)(256.f * 0.5f*std::min(1.f, this->m_Rader_r)));
 					ys2 = y_r((int)(256.f * 0.2f*std::min(1.f, this->m_Rader_r)));
-					DrawBox((int)(xp1 - xs1), (int)(yp1 - ys1), (int)(xp1 + xs2), (int)(yp1 + ys2), Green, FALSE);
-					DrawBox((int)(xp1 - xs1) + 1, (int)(yp1 - ys1) + 1, (int)(xp1 + xs2) - 1, (int)(yp1 + ys2) - 1, White, FALSE);
-					DrawBox((int)(xp1 - xs1) + 2, (int)(yp1 - ys1) + 2, (int)(xp1 + xs2) - 2, (int)(yp1 + ys2) - 2, Green, FALSE);
+					p = 0;
+					DrawBox((int)(xp1 - xs1) + p, (int)(yp1 - ys1) + p, (int)(xp1 + xs2) - p, (int)(yp1 + ys2) - p, Green, FALSE);
+					p = 1;
+					DrawBox((int)(xp1 - xs1) + p, (int)(yp1 - ys1) + p, (int)(xp1 + xs2) - p, (int)(yp1 + ys2) - p, White, FALSE);
+					p = 2;
+					DrawBox((int)(xp1 - xs1) + p, (int)(yp1 - ys1) + p, (int)(xp1 + xs2) - p, (int)(yp1 + ys2) - p, Green, FALSE);
 
 					auto BaseBos = Chara->GetMatrix().pos();
 
@@ -785,7 +793,7 @@ namespace FPS_n2 {
 							auto& c = (std::shared_ptr<CharacterClass>&)(*this->m_Obj.GetObj(ObjType::Human, i));
 							tmpRader = BaseVPer;
 							for (int j = 0; j < div; j++) {
-								auto pos = MATRIX_ref::Vtrans(c->GetMatrix().pos() - BaseBos, MATRIX_ref::RotY(rad))*((1.f / 12.5f) * tmpRader);
+								auto pos = MATRIX_ref::Vtrans(c->GetMatrix().pos() - BaseBos, MATRIX_ref::RotY(rad))*((1.f / Scale_Rate) * tmpRader);
 								if (((-xs1 < pos.x() && pos.x() < xs2) && (-ys1 < -pos.z() && -pos.z() < ys2))) {
 									if (this->m_Rader >= tmpRader) {
 										this->m_Rader = tmpRader;
@@ -803,7 +811,7 @@ namespace FPS_n2 {
 
 					for (int i = 1; i < team_num + enemy_num; i++) {
 						auto& c = (std::shared_ptr<CharacterClass>&)(*this->m_Obj.GetObj(ObjType::Human, i));
-						auto pos = MATRIX_ref::Vtrans(c->GetMatrix().pos() - BaseBos, MATRIX_ref::RotY(rad))*((1.f / 12.5f) * this->m_Rader_r);
+						auto pos = MATRIX_ref::Vtrans(c->GetMatrix().pos() - BaseBos, MATRIX_ref::RotY(rad))*((1.f / Scale_Rate) * this->m_Rader_r);
 						if ((-xs1 < pos.x() && pos.x() < xs2) && (-ys1 < -pos.z() && -pos.z() < ys2)) {
 							switch (c->GetCharaType()) {
 							case CharaTypeID::Team:
