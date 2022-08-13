@@ -8,13 +8,16 @@ namespace FPS_n2 {
 			bool										m_Use_RealTimePhysics{ false };
 			MV1											m_obj_REALTIME;
 			MV1											m_obj_LOADCALC;
+
 			MV1											m_col;
+			bool										m_ColActive{ false };							//
+
 			moves										m_move;
 			MATRIX_ref									m_PrevMat;//物理更新のため
 			const MV1*									m_MapCol{ nullptr };
 			std::vector<std::pair<int, MATRIX_ref>>		m_Frames;
 			std::vector<std::pair<int, float>>			m_Shapes;
-			ObjType										m_objType{ ObjType::Human };
+			ObjType										m_objType{ (ObjType)0 };
 			std::string									m_FilePath;
 			std::string									m_ObjFileName;
 			std::string									m_ColFileName;
@@ -27,9 +30,6 @@ namespace FPS_n2 {
 			VECTOR_ref									m_CameraPosition;
 			float										m_CameraSize{ 0.f };
 		public:
-			auto&			GetObj(void) noexcept { return this->m_Use_RealTimePhysics ? this->m_obj_REALTIME : this->m_obj_LOADCALC; }
-			const auto&		GetObj_const(void) const noexcept { return this->m_Use_RealTimePhysics ? this->m_obj_REALTIME : this->m_obj_LOADCALC; }
-
 			void			SetUseRealTimePhysics(bool value) noexcept { this->m_Use_RealTimePhysics = value; }
 			void			SetActive(bool value) noexcept { this->m_IsActive = value; }
 			void			SetMapCol(const MV1* MapCol) noexcept { this->m_MapCol = MapCol; }
@@ -37,6 +37,8 @@ namespace FPS_n2 {
 			void			SetCameraPosition(const VECTOR_ref& value) { this->m_CameraPosition = value; }
 			void			SetCameraSize(float value) { this->m_CameraSize = value; }
 
+			auto&			GetObj(void) noexcept { return this->m_Use_RealTimePhysics ? this->m_obj_REALTIME : this->m_obj_LOADCALC; }
+			const auto&		GetObj_const(void) const noexcept { return this->m_Use_RealTimePhysics ? this->m_obj_REALTIME : this->m_obj_LOADCALC; }
 			const auto		GetMatrix(void) const noexcept { return this->GetObj_const().GetMatrix(); }
 			const auto		GetIsBaseModel(const char* filepath, const char* objfilename, const char* colfilename) const noexcept {
 				return (
@@ -46,9 +48,9 @@ namespace FPS_n2 {
 					(this->m_ColFileName == colfilename));
 			}
 			const auto&		GetobjType(void) const noexcept { return this->m_objType; }
-			const auto&		GetCol(void) const noexcept { return this->m_col; }
 			const auto&		GetCameraPosition(void) const noexcept { return this->m_CameraPosition; }
 			const auto&		GetCameraSize(void) const noexcept { return this->m_CameraSize; }
+			const auto&		GetMove(void) const noexcept { return this->m_move; }
 			//
 			void			SetAnimOnce(int ID, float speed) {
 				this->GetObj().get_anime(ID).time += 30.f / FPS * speed;
@@ -68,7 +70,51 @@ namespace FPS_n2 {
 				this->GetObj().SetMatrix(this->m_move.MatIn());
 				if (this->m_col.IsActive()) {
 					this->m_col.SetMatrix(this->m_move.MatIn());
-					this->m_col.RefreshCollInfo();
+					//this->m_col.RefreshCollInfo();
+				}
+			}
+
+			const auto GetMapColNearest(const VECTOR_ref& StartPos, VECTOR_ref* EndPos) {
+				bool ans = false;
+				while (true) {
+					auto colres = m_MapCol->CollCheck_Line(StartPos, *EndPos);
+					if (colres.HitFlag == TRUE) {
+						ans = true;
+						if (*EndPos == colres.HitPosition) { break; }
+						*EndPos = colres.HitPosition;
+					}
+					else {
+						break;
+					}
+				}
+				return ans;
+			}
+
+			//判定起動
+			const auto		RefreshCol(const VECTOR_ref& StartPos, const VECTOR_ref& EndPos, float pRange) noexcept {
+				if (this->m_ColActive) { return true; }				//すでに起動しているなら無視
+				if (this->m_col.IsActive()) { return false; }
+				if (GetMinLenSegmentToPoint(StartPos, EndPos, this->m_move.pos) <= pRange) {
+					//判定起動
+					this->m_ColActive = true;
+					for (int i = 0; i < this->m_col.mesh_num(); i++) {
+						this->m_col.RefreshCollInfo(-1, i);
+					}
+					return true;
+				}
+				return false;
+			}
+			//判定取得
+			const auto		GetColLine(const VECTOR_ref& StartPos, const VECTOR_ref& EndPos, const int sel = 0) const noexcept { return this->m_col.CollCheck_Line(StartPos, EndPos, -1, sel); }
+			void			GetColNearestInAllMesh(const VECTOR_ref& StartPos, VECTOR_ref* EndPos) const noexcept {
+				MV1_COLL_RESULT_POLY colres;
+				if (this->m_col.IsActive()) {
+					for (int i = 0; i < this->m_col.mesh_num(); ++i) {
+						colres = GetColLine(StartPos, *EndPos, i);
+						if (colres.HitFlag == TRUE) {
+							*EndPos = colres.HitPosition;
+						}
+					}
 				}
 			}
 		public:
@@ -119,11 +165,10 @@ namespace FPS_n2 {
 							MV1SaveModelToMV1File(this->m_col.get(), (Path + ".mv1").c_str());
 							MV1SetLoadModelUsePhysicsMode(DX_LOADMODEL_PHYSICS_LOADCALC);
 						}
-						else {
-						}
 					}
-
-					this->m_col.SetupCollInfo(1, 1, 1);
+					if (this->m_col.IsActive()) {
+						for (int i = 0; i < this->m_col.mesh_num(); ++i) { this->m_col.SetupCollInfo(8, 8, 8, -1, i); }
+					}
 				}
 				this->m_IsBaseModel = true;
 			}
@@ -136,7 +181,7 @@ namespace FPS_n2 {
 				//col
 				if (pBase->m_col.IsActive()) {
 					this->m_col = pBase->m_col.Duplicate();
-					this->m_col.SetupCollInfo(1, 1, 1);
+					for (int i = 0; i < this->m_col.mesh_num(); ++i) { this->m_col.SetupCollInfo(8, 8, 8, -1, i); }
 				}
 				this->m_IsBaseModel = false;
 			}
@@ -156,7 +201,7 @@ namespace FPS_n2 {
 					std::string FName = this->GetObj().frame_name(f);
 					bool compare = false;
 					switch (this->m_objType) {
-					case ObjType::Human://human
+					case ObjType::Human:
 						compare = (FName == CharaFrameName[i]);
 						break;
 					default:
@@ -171,7 +216,7 @@ namespace FPS_n2 {
 						f = 0;
 					}
 					switch (this->m_objType) {
-					case ObjType::Human://human
+					case ObjType::Human:
 						if (i == (int)CharaFrame::Max) { isEnd = true; }
 						break;
 					default:
@@ -191,7 +236,7 @@ namespace FPS_n2 {
 					}
 				}
 				switch (this->m_objType) {
-				case ObjType::Human://human
+				case ObjType::Human:
 					this->m_Shapes.resize((int)CharaShape::Max);
 					for (int j = 1; j < (int)CharaShape::Max; j++) {
 						auto s = MV1SearchShape(this->GetObj().get(), CharaShapeName[j]);
@@ -206,14 +251,14 @@ namespace FPS_n2 {
 				}
 			}
 			//
-			virtual void	Execute(void) noexcept { }
+			virtual void	FirstExecute(void) noexcept { }
 			void			ExecuteCommon(void) noexcept {
 				if (this->m_IsFirstLoop) {
 					this->m_PrevMat = this->GetObj().GetMatrix();
 				}
 				//シェイプ更新
 				switch (this->m_objType) {
-				case ObjType::Human://human
+				case ObjType::Human:
 					for (int j = 1; j < (int)CharaShape::Max; j++) {
 						MV1SetShapeRate(this->GetObj().get(), this->m_Shapes[j].first, (1.f - this->m_Shapes[0].second)*this->m_Shapes[j].second);
 					}
@@ -243,6 +288,7 @@ namespace FPS_n2 {
 				//最初のループ終わり
 				this->m_IsFirstLoop = false;
 			}
+			virtual void	LateExecute(void) noexcept { }
 			//
 			virtual void	Depth_Draw(void) noexcept { }
 			virtual void	DrawShadow(void) noexcept {
@@ -273,6 +319,8 @@ namespace FPS_n2 {
 			//
 			virtual void	Dispose(void) noexcept {
 				this->GetObj().Dispose();
+				this->m_col.Dispose();
+				this->m_move.vec.clear();
 			}
 		};
 	};

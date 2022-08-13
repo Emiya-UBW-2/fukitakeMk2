@@ -1116,7 +1116,7 @@ namespace FPS_n2 {
 				this->m_Name = "Name";
 				this->m_CharaType = CharaTypeID::Enemy;
 			}
-			void			Execute(void) noexcept override {
+			void			FirstExecute(void) noexcept override {
 				//‰‰ñ‚Ì‚ÝXV‚·‚é“à—e
 				if (this->m_IsFirstLoop) {
 					for (int i = 0; i < this->GetObj().get_anime().size(); i++) { GetAnime((CharaAnimeID)i).per = GetAnimeBuf((CharaAnimeID)i); }

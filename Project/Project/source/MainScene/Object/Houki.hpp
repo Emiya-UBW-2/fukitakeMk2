@@ -10,7 +10,9 @@ namespace FPS_n2 {
 		public:
 			void Init(void) noexcept override {
 			}
-			void Execute(void) noexcept override {
+			void FirstExecute(void) noexcept override {
+			}
+			void LateExecute(void) noexcept override {
 			}
 		};
 	};

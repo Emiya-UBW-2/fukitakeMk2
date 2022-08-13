@@ -40,7 +40,7 @@ namespace FPS_n2 {
 					this->m_type = ItemType::RedPotion;
 				}
 			}
-			void Execute(void) noexcept override {
+			void FirstExecute(void) noexcept override {
 				if (!this->m_Have) {
 					this->m_IsActive = true;
 					auto HitResult = this->m_MapCol->CollCheck_Line(this->m_move.pos + VECTOR_ref::up() * (-1.f - 3.f), this->m_move.pos + VECTOR_ref::up() * 15.f);
