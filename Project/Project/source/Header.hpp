@@ -34,7 +34,6 @@ using namespace DXLib_ref;
 #include "MainScene/Object/CharacterEnum.hpp"
 //
 #include "sub.hpp"
-#include "sequence.hpp"
 //
 #include "MainScene/BackGround/BackGround.hpp"
 

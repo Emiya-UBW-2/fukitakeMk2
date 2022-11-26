@@ -71,7 +71,7 @@ namespace FPS_n2 {
 					float xs1_r, ys1_r;
 
 					xp1 = (float)y_r(50);
-					yp1 = (float)DrawParts->disp_y - y_r(100);
+					yp1 = (float)DrawParts->m_DispYSize - y_r(100);
 					xs1 = (float)y_r(80) / 2;
 					ys1 = (float)y_r(100) / 2;
 
@@ -81,7 +81,7 @@ namespace FPS_n2 {
 					float xs2_r, ys2_r;
 
 					xp2 = (float)y_r(160);
-					yp2 = (float)DrawParts->disp_y - y_r(130);
+					yp2 = (float)DrawParts->m_DispYSize - y_r(130);
 					xs2 = (float)y_r(120) / 2;
 					ys2 = (float)y_r(160) / 2;
 
@@ -91,7 +91,7 @@ namespace FPS_n2 {
 					float xs3_r, ys3_r;
 
 					xp3 = (float)y_r(270);
-					yp3 = (float)DrawParts->disp_y - y_r(100);
+					yp3 = (float)DrawParts->m_DispYSize - y_r(100);
 					xs3 = (float)y_r(80) / 2;
 					ys3 = (float)y_r(100) / 2;
 
@@ -145,8 +145,8 @@ namespace FPS_n2 {
 					int ys1 = y_r(30);
 					//名前、体力、魔力
 					{
-						xp1 = DrawParts->disp_x - y_r(300);
-						yp1 = DrawParts->disp_y - y_r(30) - ys1 * Num - y_r(110);
+						xp1 = DrawParts->m_DispXSize - y_r(300);
+						yp1 = DrawParts->m_DispYSize - y_r(30) - ys1 * Num - y_r(110);
 
 						Fonts->Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat(xp1 + y_r(50), yp1, Green, White, "%s", strParam[0].c_str());
 						yp1 += y_r(25);
@@ -175,8 +175,8 @@ namespace FPS_n2 {
 					}
 					//魔法、クールタイム
 					{
-						xp1 = DrawParts->disp_x - y_r(400);
-						yp1 = DrawParts->disp_y - y_r(30) - ys1 * Num;
+						xp1 = DrawParts->m_DispXSize - y_r(400);
+						yp1 = DrawParts->m_DispYSize - y_r(30) - ys1 * Num;
 
 						int sel = intParam[12];
 
@@ -202,36 +202,36 @@ namespace FPS_n2 {
 					//スピード
 					{
 						int xp1, yp1;
-						xp1 = DrawParts->disp_x / 2 - y_r(300);
-						yp1 = DrawParts->disp_y / 2 - y_r(10);
+						xp1 = DrawParts->m_DispXSize / 2 - y_r(300);
+						yp1 = DrawParts->m_DispYSize / 2 - y_r(10);
 						Fonts->Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat_RIGHT(xp1, yp1, Green, White, "%06.2f km/h", floatParam[1]);
 					}
 					//高度
 					{
 						int xp1, yp1;
-						xp1 = DrawParts->disp_x / 2 + y_r(300);
-						yp1 = DrawParts->disp_y / 2 - y_r(10);
+						xp1 = DrawParts->m_DispXSize / 2 + y_r(300);
+						yp1 = DrawParts->m_DispYSize / 2 - y_r(10);
 						Fonts->Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat(xp1, yp1, Green, White, "%07.2f m", floatParam[2]);
 					}
 					//
 					{
 						int xp1, yp1, xp2, yp2;
-						xp1 = DrawParts->disp_x / 2 + y_r(120);
-						yp1 = DrawParts->disp_y / 2;
-						xp2 = DrawParts->disp_x / 2 + y_r(240);
-						yp2 = DrawParts->disp_y / 2;
+						xp1 = DrawParts->m_DispXSize / 2 + y_r(120);
+						yp1 = DrawParts->m_DispYSize / 2;
+						xp2 = DrawParts->m_DispXSize / 2 + y_r(240);
+						yp2 = DrawParts->m_DispYSize / 2;
 						DrawLine_2D(xp1, yp1, xp2, yp2, White, 3);
 						DrawLine_2D(xp1, yp1, xp2, yp2, Green);
 
-						xp1 = DrawParts->disp_x / 2 - y_r(120);
-						yp1 = DrawParts->disp_y / 2;
-						xp2 = DrawParts->disp_x / 2 - y_r(240);
-						yp2 = DrawParts->disp_y / 2;
+						xp1 = DrawParts->m_DispXSize / 2 - y_r(120);
+						yp1 = DrawParts->m_DispYSize / 2;
+						xp2 = DrawParts->m_DispXSize / 2 - y_r(240);
+						yp2 = DrawParts->m_DispYSize / 2;
 						DrawLine_2D(xp1, yp1, xp2, yp2, White, 3);
 						DrawLine_2D(xp1, yp1, xp2, yp2, Green);
 
-						xp1 = DrawParts->disp_x / 2;
-						yp1 = DrawParts->disp_y / 2;
+						xp1 = DrawParts->m_DispXSize / 2;
+						yp1 = DrawParts->m_DispYSize / 2;
 						DrawCircle(xp1, yp1, y_r(100), White, FALSE, 3);
 						DrawCircle(xp1, yp1, y_r(100), Green, FALSE);
 					}
@@ -255,16 +255,16 @@ namespace FPS_n2 {
 
 						int xp1, yp1;
 						int xs1, ys1;
-						xp1 = DrawParts->disp_x / 2;
-						yp1 = DrawParts->disp_y / 20;
+						xp1 = DrawParts->m_DispXSize / 2;
+						yp1 = DrawParts->m_DispYSize / 20;
 						Fonts->Get(y_r(28), FontPool::FontType::Nomal_Edge).Get_handle().DrawStringFormat_MID(xp1, yp1, color, White, "<%s>", Mes.c_str());
 
-						int picx = std::max(DrawParts->disp_x / 8, Fonts->Get(y_r(28), FontPool::FontType::Nomal_Edge).Get_handle().GetDrawWidthFormat("<%s>", Mes.c_str()) / 2 + y_r(20));
+						int picx = std::max(DrawParts->m_DispXSize / 8, Fonts->Get(y_r(28), FontPool::FontType::Nomal_Edge).Get_handle().GetDrawWidthFormat("<%s>", Mes.c_str()) / 2 + y_r(20));
 
 						xs1 = y_r(40);
 						ys1 = y_r(40);
-						xp1 = DrawParts->disp_x / 2 + picx + xs1;
-						yp1 = DrawParts->disp_y / 20 - y_r(28) + ys1;
+						xp1 = DrawParts->m_DispXSize / 2 + picx + xs1;
+						yp1 = DrawParts->m_DispYSize / 20 - y_r(28) + ys1;
 
 						DrawBox((int)(xp1 - xs1), (int)(yp1 - ys1), (int)(xp1 + xs1), (int)(yp1 + ys1), GetColor(0, 0, 0), TRUE);
 						Fonts->Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat_MID(xp1, yp1 + ys1, color, White, "%s", strParam[5].c_str());

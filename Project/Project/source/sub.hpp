@@ -189,8 +189,8 @@ namespace FPS_n2 {
 			}
 			this->m_IsSprint = this->m_IsRun && (!GetPressFront() && !GetPressRear());
 			{
-				m_QKey.GetInput(pQPress && !pFlightMode);
-				m_EKey.GetInput(pEPress && !pFlightMode);
+				m_QKey.Execute(pQPress && !pFlightMode);
+				m_EKey.Execute(pEPress && !pFlightMode);
 				if (m_EKey.trigger()) {
 					if (this->m_TurnRate > -1) {
 						this->m_TurnRate--;
@@ -320,8 +320,8 @@ namespace FPS_n2 {
 			this->m_Press_GoRear = pGoBackPress && this->m_Flightmode;
 			this->m_Press_GoLeft = pGoLeftPress && this->m_Flightmode;
 			this->m_Press_GoRight = pGoRightPress && this->m_Flightmode;
-			m_QKey.GetInput(pQPress && this->m_Flightmode);
-			m_EKey.GetInput(pEPress && this->m_Flightmode);
+			m_QKey.Execute(pQPress && this->m_Flightmode);
+			m_EKey.Execute(pEPress && this->m_Flightmode);
 			this->m_Press_Accel = pPress_Accel && this->m_Flightmode;
 			this->m_Press_Brake = pPress_Brake && this->m_Flightmode;
 			if (m_EKey.trigger()) {
@@ -351,64 +351,6 @@ namespace FPS_n2 {
 			this->m_FradAdd_Buf.y((GetVecRight() - GetVecLeft())*4.f / 100.f);
 			this->m_FradAdd_Buf.z((GetVecRightYaw() - GetVecLeftYaw())*0.6f / 100.f);
 			Easing(&this->m_FradAdd, this->m_FradAdd_Buf, 0.95f, EasingType::OutExpo);
-		}
-	};
-
-	EffectControl	effectControl;	//エフェクトリソース
-	//エフェクト利用コントロール
-	class Effect_UseControl {
-		std::array<EffectS, int(Effect::effects)> effcs;	/*エフェクト*/
-		std::array<EffectS, 256> effcs_G;					/*エフェクト*/
-		int G_cnt = 0;
-	public:
-		const auto CheckPlayEffect(Effect ef_) const noexcept { return this->effcs[(int)ef_].GetIsPlaying(); }
-		void Set_FootEffect(const VECTOR_ref& pos_t, const VECTOR_ref& nomal_t, float scale = 1.f) noexcept {
-			this->effcs_G[this->G_cnt].Stop();
-			this->effcs_G[this->G_cnt].Set(pos_t, nomal_t, scale);
-			++this->G_cnt %= 256;
-		}
-		const auto Check_FootEffectCnt(void) noexcept {
-			int cnt = 0;
-			for (auto& t : this->effcs_G) {
-				if (t.GetStart()) { cnt++; }
-			}
-			return cnt;
-		}
-
-		void Set_LoopEffect(Effect ef_, const VECTOR_ref& pos_t) noexcept {
-			this->effcs[(int)ef_].Stop();
-			this->effcs[(int)ef_].pos = pos_t;
-			this->effcs[(int)ef_].set_loop(effectControl.effsorce[(int)ef_]);
-		}
-		void Update_LoopEffect(Effect ef_, const VECTOR_ref& pos_t, const VECTOR_ref& nomal_t, float scale = 1.f) noexcept {
-			this->effcs[(int)ef_].put_loop(pos_t, nomal_t, scale);
-		}
-
-		void Set_Effect(Effect ef_, const VECTOR_ref& pos_t, const VECTOR_ref& nomal_t, float scale = 1.f) noexcept { this->effcs[(int)ef_].Set(pos_t, nomal_t, scale); }
-		void Stop_Effect(Effect ef_) noexcept { this->effcs[(int)ef_].Stop(); }
-
-		void SetSpeed_Effect(Effect ef_, float value) noexcept { this->effcs[(int)ef_].Set_Speed(value); }
-		void SetScale_Effect(Effect ef_, float value) noexcept { this->effcs[(int)ef_].Set_Scale(value); }
-		//エフェクトの更新
-		void Update_Effect(void) noexcept {
-			for (auto& t : this->effcs) {
-				const size_t index = &t - &this->effcs.front();
-				if (
-					index != (int)Effect::ef_smoke
-					&& index != (int)Effect::ef_FireBallLoop
-					&& index != (int)Effect::ef_ThunderStart	//雷はじめ
-					&& index != (int)Effect::ef_ThunderLoop		//雷ループ
-					) {
-					t.put(effectControl.effsorce[index]);
-				}
-			}
-			for (auto& t : this->effcs_G) {
-				t.put(effectControl.effsorce[(int)Effect::ef_gndsmoke]);
-			}
-		}
-		/*おわり*/
-		void Dispose_Effect(void) noexcept {
-			for (auto& t : this->effcs) { t.handle.Dispose(); }
 		}
 	};
 

@@ -115,7 +115,7 @@ namespace FPS_n2 {
 			}
 		};
 
-		class CharacterClass : public ObjectBaseClass, public Effect_UseControl {
+		class CharacterClass : public ObjectBaseClass, public EffectControl {
 		private://キャラパラメーター
 			const float SpeedLimit{ 2.f };
 			const float UpperTimerLimit = 3.f;
@@ -161,6 +161,8 @@ namespace FPS_n2 {
 			float												m_RunPer2{ 0.f }, m_PrevRunPer2{ 0.f };
 			float												m_NeckPer{ 0.f };
 			float												m_SlingHoukiPer{ 0.f };
+			moves												m_FallPoint;
+
 			bool												m_TurnBody{ false };
 			bool												m_ReturnStand{ false };
 			bool												m_RunReady{ false };
@@ -364,12 +366,12 @@ namespace FPS_n2 {
 					pInput.m_EPress
 				);
 				//
-				m_Rightkey.GetInput(pInput.m_RightPress);
-				m_Leftkey.GetInput(pInput.m_LeftPress);
-				m_UseItemkey.GetInput(pInput.m_UseItemPress);
-				m_Upkey.GetInput(pInput.m_UpPress);
-				m_Downkey.GetInput(pInput.m_DownPress);
-				m_UseMagickey.GetInput(pInput.m_UseMagicPress);
+				m_Rightkey.Execute(pInput.m_RightPress);
+				m_Leftkey.Execute(pInput.m_LeftPress);
+				m_UseItemkey.Execute(pInput.m_UseItemPress);
+				m_Upkey.Execute(pInput.m_UpPress);
+				m_Downkey.Execute(pInput.m_DownPress);
+				m_UseMagickey.Execute(pInput.m_UseMagicPress);
 
 				if (m_Rightkey.trigger()) {
 					AddItemSel();
@@ -572,12 +574,12 @@ namespace FPS_n2 {
 							case MagicType::FireBall:
 								if (this->m_MagicEffectStart && GetAnime(CharaAnimeID::Upper_UseMagic1).time > 30) {
 									MATRIX_ref mat = GetFrameWorldMat(CharaFrame::RightHandJoint);
-									Effect_UseControl::Set_Effect(Effect::ef_FireBallStart, mat.pos(), GetCharaDir().yvec(), 0.25f);
+									EffectControl::SetOnce(EffectResource::Effect::ef_FireBallStart, mat.pos(), GetCharaDir().yvec(), 0.25f);
 									this->m_MagicEffectStart = false;
 								}
 								if (this->m_MagicEffectLoop && GetAnime(CharaAnimeID::Upper_UseMagic1).time > 35) {
 									MATRIX_ref mat = GetFrameWorldMat(CharaFrame::RightHandJoint);
-									Effect_UseControl::Set_LoopEffect(Effect::ef_FireBallLoop, mat.pos());
+									EffectControl::SetLoop(EffectResource::Effect::ef_FireBallLoop, mat.pos());
 									this->m_MagicEffectLoop = false;
 
 									this->m_Bullet[this->m_NowBullet].Set(MATRIX_ref::RotVec2(VECTOR_ref::front() * -1.f, GetCharaDir().zvec() * -1.f).GetRot(), mat.pos(), BulletType::FireBall, this->m_FlightSpeed);
@@ -587,12 +589,12 @@ namespace FPS_n2 {
 							case MagicType::Thunder:
 								if (this->m_MagicEffectStart && GetAnime(CharaAnimeID::Upper_UseMagic1).time > 0) {
 									MATRIX_ref mat = GetFrameWorldMat(CharaFrame::RightHandJoint);
-									Effect_UseControl::Set_LoopEffect(Effect::ef_ThunderStart, mat.pos());
+									EffectControl::SetLoop(EffectResource::Effect::ef_ThunderStart, mat.pos());
 									this->m_MagicEffectStart = false;
 								}
 								if (this->m_MagicEffectLoop && GetAnime(CharaAnimeID::Upper_UseMagic1).time > 40) {
 									MATRIX_ref mat = GetFrameWorldMat(CharaFrame::RightHandJoint);
-									Effect_UseControl::Set_LoopEffect(Effect::ef_ThunderLoop, mat.pos());
+									EffectControl::SetLoop(EffectResource::Effect::ef_ThunderLoop, mat.pos());
 									this->m_MagicEffectLoop = false;
 
 									this->m_Bullet[this->m_NowBullet].Set(GetCharaDir(), mat.pos(), BulletType::Thunder, this->m_FlightSpeed);
@@ -603,10 +605,10 @@ namespace FPS_n2 {
 								if (this->m_MagicEffectStart && GetAnime(CharaAnimeID::Upper_UseMagic1).time > 30) {
 									MATRIX_ref mat = GetFrameWorldMat(CharaFrame::Upper);
 									if (this->m_InputSky.GetIsFlightMode()) {
-										Effect_UseControl::Set_Effect(Effect::ef_Sonic, mat.pos() + GetCharaDir().zvec()*-1.f * this->m_FlightSpeed * Frame_Rate / FPS, GetCharaDir().yvec(), 1.f);
+										EffectControl::SetOnce(EffectResource::Effect::ef_Sonic, mat.pos() + GetCharaDir().zvec()*-1.f * this->m_FlightSpeed * Frame_Rate / FPS, GetCharaDir().yvec(), 1.f);
 									}
 									else {
-										Effect_UseControl::Set_Effect(Effect::ef_Sonic, mat.pos(), GetCharaDir().yvec(), 1.f);
+										EffectControl::SetOnce(EffectResource::Effect::ef_Sonic, mat.pos(), GetCharaDir().yvec(), 1.f);
 									}
 									this->m_MagicEffectStart = false;
 								}
@@ -629,9 +631,9 @@ namespace FPS_n2 {
 							auto* nowptr = GetLatestBulletMove();
 							switch (this->m_Magic[this->m_MagicSel].GetGetType()) {
 							case MagicType::FireBall:
-								Effect_UseControl::SetSpeed_Effect(Effect::ef_FireBallStart, 2.f);
+								EffectControl::SetEffectSpeed(EffectResource::Effect::ef_FireBallStart, 2.f);
 								if (nowptr != nullptr) {
-									Effect_UseControl::Update_LoopEffect(Effect::ef_FireBallLoop, nowptr->pos, nowptr->mat.yvec(), 1.0f);
+									EffectControl::Update_LoopEffect(EffectResource::Effect::ef_FireBallLoop, nowptr->pos, nowptr->mat.yvec(), 1.0f);
 									if (this->m_LockOn != nullptr) {
 										Easing_Matrix(&nowptr->mat,
 											MATRIX_ref::RotVec2(VECTOR_ref::front() * -1.f, (this->m_LockOn->GetMatrix().pos() - nowptr->pos).Norm()).GetRot(),
@@ -640,20 +642,20 @@ namespace FPS_n2 {
 
 								}
 								else {
-									Effect_UseControl::Stop_Effect(Effect::ef_FireBallLoop);
+									EffectControl::StopEffect(EffectResource::Effect::ef_FireBallLoop);
 								}
 								break;
 							case MagicType::Thunder:
 								if (!this->m_MagicEffectStart) {
 									MATRIX_ref mat = GetFrameWorldMat(CharaFrame::RightHandJoint);
-									Effect_UseControl::Update_LoopEffect(Effect::ef_ThunderStart, mat.pos(), GetCharaDir().zvec()*-1.f, 0.1f);
+									EffectControl::Update_LoopEffect(EffectResource::Effect::ef_ThunderStart, mat.pos(), GetCharaDir().zvec()*-1.f, 0.1f);
 								}
 								if (nowptr != nullptr) {
-									Effect_UseControl::Update_LoopEffect(Effect::ef_ThunderLoop, nowptr->pos, nowptr->mat.yvec(), 0.25f);
+									EffectControl::Update_LoopEffect(EffectResource::Effect::ef_ThunderLoop, nowptr->pos, nowptr->mat.yvec(), 0.25f);
 								}
 								break;
 							case MagicType::SearchSonic:
-								Effect_UseControl::SetSpeed_Effect(Effect::ef_Sonic, 1.5f);
+								EffectControl::SetEffectSpeed(EffectResource::Effect::ef_Sonic, 1.5f);
 								break;
 							default:
 								break;
@@ -664,10 +666,10 @@ namespace FPS_n2 {
 									auto mat = b.GetMoveHit();
 									switch (b.GetType()) {
 									case BulletType::FireBall:
-										Effect_UseControl::Set_Effect(Effect::ef_FireBallHit, mat.pos, mat.vec, 0.1f);
+										EffectControl::SetOnce(EffectResource::Effect::ef_FireBallHit, mat.pos, mat.vec, 0.1f);
 										break;
 									case BulletType::Thunder:
-										Effect_UseControl::Set_Effect(Effect::ef_ThunderHit, mat.pos, mat.vec, 0.5f);
+										EffectControl::SetOnce(EffectResource::Effect::ef_ThunderHit, mat.pos, mat.vec, 0.5f);
 										if ((mat.pos - GetMatrix().pos()).size() < Scale_Rate*10.f) {
 											this->m_SendCamShake = true;
 										}
@@ -678,8 +680,8 @@ namespace FPS_n2 {
 									b.SetHit();
 								}
 							}
-							Effect_UseControl::SetSpeed_Effect(Effect::ef_FireBallHit, 2.f);
-							Effect_UseControl::SetSpeed_Effect(Effect::ef_ThunderHit, 2.f);
+							EffectControl::SetEffectSpeed(EffectResource::Effect::ef_FireBallHit, 2.f);
+							EffectControl::SetEffectSpeed(EffectResource::Effect::ef_ThunderHit, 2.f);
 
 						}
 
@@ -1078,6 +1080,13 @@ namespace FPS_n2 {
 							GetFrameWorldMat(CharaFrame::Upper2).pos() +
 							GetFrameWorldMat(CharaFrame::Upper2).GetRot().yvec() * -1.75f +
 							GetFrameWorldMat(CharaFrame::Upper2).GetRot().zvec() * 1.75f;
+						if (this->m_SlingHoukiPer < 0.1f) {
+							this->m_FallPoint = this->m_Houki_Ptr->GetMove();
+						}
+
+						yVec2 = this->m_FallPoint.mat.yvec();
+						zVec2 = this->m_FallPoint.mat.zvec();
+						Pos2 = this->m_FallPoint.pos;
 					}
 					auto yVec = Lerp(yVec1, yVec2, this->m_SlingHoukiPer);
 					auto zVec = Lerp(zVec1, zVec2, this->m_SlingHoukiPer);
@@ -1085,7 +1094,6 @@ namespace FPS_n2 {
 					auto tmp_gunrat = MATRIX_ref::RotVec2(VECTOR_ref::vget(0, 0, -1).Norm(), zVec);
 					tmp_gunrat *= MATRIX_ref::RotVec2(tmp_gunrat.yvec(), yVec);
 					tmp_gunrat *= GetCharaDir() * MATRIX_ref::Mtrans(PosBuf);
-
 					this->m_Houki_Ptr->SetMove(tmp_gunrat.GetRot(), tmp_gunrat.pos());
 				}
 			}
@@ -1140,12 +1148,12 @@ namespace FPS_n2 {
 				for (auto& m : this->m_Magic) {
 					m.Execute();
 				}
-				Effect_UseControl::Update_Effect();
+				EffectControl::Execute();
 			}
 			//void			Draw(void) noexcept override { ObjectBaseClass::Draw(); }
 			void			Dispose(void) noexcept override {
 				ObjectBaseClass::Dispose();
-				Effect_UseControl::Dispose_Effect();
+				EffectControl::Dispose();
 			}
 		};
 	};

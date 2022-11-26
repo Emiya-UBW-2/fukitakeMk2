@@ -125,18 +125,18 @@ namespace FPS_n2 {
 			}
 			void Draw(void) noexcept {
 				{
-					Sea.Set_paramV(this->g_fTime, 0, 0, 0);
-					Sea.Set_param(this->g_fTime, 0, 0, 0);
-
+					auto* DrawParts = DXDraw::Instance();
+					Sea.SetVertexParam(this->g_fTime, 0, 0, 0);
+					Sea.SetPixelParam(this->g_fTime, 0, 0, 0);
 					Sea.Draw_lamda([&]() {
 						SetFogEnable(TRUE);
 						SetFogStartEnd(12500.0f, 50000.f);
 						SetFogColor(126, 168, 193);
 						SetUseTextureToShader(0, MV1GetTextureGraphHandle(sea.get(), MV1GetMaterialDifMapTexture(sea.get(), 0)));
-						//SetUseTextureToShader(1, MV1GetTextureGraphHandle(sea.get(), MV1GetMaterialNormalMapTexture(sea.get(), 0)));
+						SetUseTextureToShader(1, MV1GetTextureGraphHandle(sea.get(), MV1GetMaterialNormalMapTexture(sea.get(), 0)));
 						this->sea.DrawModel();
 						SetUseTextureToShader(0, -1);
-						//SetUseTextureToShader(1, -1);
+						SetUseTextureToShader(1, -1);
 						SetFogEnable(FALSE);
 					});
 				}

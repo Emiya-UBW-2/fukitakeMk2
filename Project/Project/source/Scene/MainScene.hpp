@@ -3,7 +3,7 @@
 
 namespace FPS_n2 {
 	namespace Sceneclass {
-		class MAINLOOP : public TEMPSCENE, public Effect_UseControl {
+		class MAINLOOP : public TEMPSCENE, public EffectControl {
 		private:
 			static const int		team_num = 3;
 			static const int		enemy_num = 3;
@@ -55,10 +55,9 @@ namespace FPS_n2 {
 			float					m_TPS_YradR{ 0.f };
 			float					m_TPS_Per{ 1.f };
 		public:
-			using TEMPSCENE::TEMPSCENE;
-			void Set(void) noexcept override {
+			void Set_Sub(void) noexcept override {
 				SoundPool::Create();
-				Set_EnvLight(
+				SetAmbientShadow(
 					VECTOR_ref::vget(Scale_Rate*-300.f, Scale_Rate*-10.f, Scale_Rate*-300.f),
 					VECTOR_ref::vget(Scale_Rate*300.f, Scale_Rate*50.f, Scale_Rate*300.f),
 					VECTOR_ref::vget(-0.25f, -0.5f, 0.0f),
@@ -88,8 +87,6 @@ namespace FPS_n2 {
 				this->m_Env.vol(64);
 				//UI
 				this->m_UIclass.Set();
-				//
-				TEMPSCENE::Set();
 				//Set
 				//人
 				for (int i = 0; i < team_num + enemy_num; i++) {
@@ -123,8 +120,8 @@ namespace FPS_n2 {
 					}
 				}
 				//Cam
-				camera_main.set_cam_info(deg2rad(65), 1.f, 100.f);
-				camera_main.set_cam_pos(VECTOR_ref::vget(0, 15, -20), VECTOR_ref::vget(0, 15, 0), VECTOR_ref::vget(0, 1, 0));
+				SetMainCamera().SetCamInfo(deg2rad(65), 1.f, 100.f);
+				SetMainCamera().SetCamPos(VECTOR_ref::vget(0, 15, -20), VECTOR_ref::vget(0, 15, 0), VECTOR_ref::vget(0, 1, 0));
 				Set_zoom_lens(3.5f);
 				//サウンド
 				auto SE = SoundPool::Instance();
@@ -152,17 +149,18 @@ namespace FPS_n2 {
 				this->m_StartSwitch = false;
 				this->m_RemoveSwitch = false;
 				//入力
-				this->m_FPSActive.Init(false);
-				this->m_MouseActive.Init(true);
+				this->m_FPSActive.Set(false);
+				this->m_MouseActive.Set(true);
 				this->m_LookMode = 0;
 				this->m_LookReturnTime = 0.f;
 			}
 			//
-			bool Update(void) noexcept override {
+			bool Update_Sub(void) noexcept override {
+				auto* DrawParts = DXDraw::Instance();
 				auto& Chara = (std::shared_ptr<CharacterClass>&)(*this->m_Obj.GetObj(ObjType::Human, 0));//自分
 				//FirstDoing
-				if (IsFirstLoop) {
-					SetMousePoint(DXDraw::Instance()->disp_x / 2, DXDraw::Instance()->disp_y / 2);
+				if (GetIsFirstLoop()) {
+					SetMousePoint(DrawParts->m_DispXSize / 2, DrawParts->m_DispYSize / 2);
 					this->m_Env.play(DX_PLAYTYPE_LOOP, TRUE);
 					this->m_ReadyTime = 1.f;
 					this->m_PrevPointSel = Chara->GetItemSel();
@@ -181,23 +179,23 @@ namespace FPS_n2 {
 				}
 				//Input,AI
 				{
-					this->m_MouseActive.GetInput(CheckHitKeyWithCheck(KEY_INPUT_TAB) != 0);
-					int mx = DXDraw::Instance()->disp_x / 2, my = DXDraw::Instance()->disp_y / 2;
+					this->m_MouseActive.Execute(CheckHitKeyWithCheck(KEY_INPUT_TAB) != 0);
+					int mx = DrawParts->m_DispXSize / 2, my = DrawParts->m_DispYSize / 2;
 					if (this->m_MouseActive.on()) {
 						if (this->m_MouseActive.trigger()) {
-							SetMousePoint(DXDraw::Instance()->disp_x / 2, DXDraw::Instance()->disp_y / 2);
+							SetMousePoint(DrawParts->m_DispXSize / 2, DrawParts->m_DispYSize / 2);
 						}
 						GetMousePoint(&mx, &my);
-						SetMousePoint(DXDraw::Instance()->disp_x / 2, DXDraw::Instance()->disp_y / 2);
+						SetMousePoint(DrawParts->m_DispXSize / 2, DrawParts->m_DispYSize / 2);
 						SetMouseDispFlag(FALSE);
 					}
 					else {
 						SetMouseDispFlag(TRUE);
 					}
 
-					float cam_per = ((camera_main.fov / deg2rad(75)) / (is_lens() ? zoom_lens() : 1.f)) / 100.f;
-					float pp_x = std::clamp(-(float)(my - DXDraw::Instance()->disp_y / 2)*1.f, -9.f, 9.f) * cam_per;
-					float pp_y = std::clamp((float)(mx - DXDraw::Instance()->disp_x / 2)*1.f, -9.f, 9.f) * cam_per;
+					float cam_per = ((GetMainCamera().GetCamFov() / deg2rad(75)) / (is_lens() ? zoom_lens() : 1.f)) / 100.f;
+					float pp_x = std::clamp(-(float)(my - DrawParts->m_DispYSize / 2)*1.f, -9.f, 9.f) * cam_per;
+					float pp_y = std::clamp((float)(mx - DrawParts->m_DispXSize / 2)*1.f, -9.f, 9.f) * cam_per;
 					bool w_key = (CheckHitKeyWithCheck(KEY_INPUT_W) != 0);
 					bool s_key = (CheckHitKeyWithCheck(KEY_INPUT_S) != 0);
 					bool a_key = (CheckHitKeyWithCheck(KEY_INPUT_A) != 0);
@@ -285,9 +283,9 @@ namespace FPS_n2 {
 						}
 					}
 
-					this->m_FPSActive.GetInput(eyechange_key);
-					this->m_LookModeChange.GetInput(look_key);
-					this->m_Lockon.GetInput(Lockon_key);
+					this->m_FPSActive.Execute(eyechange_key);
+					this->m_LookModeChange.Execute(look_key);
+					this->m_Lockon.Execute(Lockon_key);
 
 					if (this->m_LookModeChange.trigger()) {
 						++this->m_LookMode %= 2;
@@ -343,7 +341,7 @@ namespace FPS_n2 {
 
 					this->m_TPS_YradR += (sin(this->m_TPS_Yrad)*cos(this->m_TPS_YradR) - cos(this->m_TPS_Yrad) * sin(this->m_TPS_YradR))*20.f / FPS;
 
-					Chara->SetEyeVec((camera_main.camvec - camera_main.campos).Norm());
+					Chara->SetEyeVec((GetMainCamera().GetCamVec() - GetMainCamera().GetCamPos()).Norm());
 
 					InputControl Input;
 					bool isready = this->m_ReadyTime < 0.f;
@@ -436,9 +434,8 @@ namespace FPS_n2 {
 					this->m_CamShake = std::max(this->m_CamShake - 1.f / FPS, 0.f);
 
 					if (this->m_FPSActive.on()) {
-						camera_main.campos = Chara->GetEyePosition();
-						camera_main.camvec = camera_main.campos + Chara->GetEyeVecMat().zvec() * -1.f;
-						camera_main.camup = Chara->GetMatrix().GetRot().yvec();
+						auto CamPos = Chara->GetEyePosition();
+						SetMainCamera().SetCamPos(CamPos, CamPos + Chara->GetEyeVecMat().zvec() * -1.f, Chara->GetMatrix().GetRot().yvec());
 					}
 					else {
 						MATRIX_ref UpperMat = Chara->GetFrameWorldMat(CharaFrame::Upper).GetRot();
@@ -463,23 +460,28 @@ namespace FPS_n2 {
 								Chara->GetFlightPer()
 							);
 
-						camera_main.campos = (CamPos + CamVec * Lerp(Lerp(-20.f, -30.f - (Chara->GetFlightSpeed() / 25.f), Chara->GetFlightPer()), -50.f, this->m_TPS_Per)) + this->m_CamShake2 * 5.f;
-						camera_main.camvec = CamPos + CamVec * 100.f;
-
-						camera_main.camup = Chara->GetEyeVecMat().yvec() + this->m_CamShake2 * 0.25f;
+						SetMainCamera().SetCamPos(
+							(CamPos + CamVec * Lerp(Lerp(-20.f, -30.f - (Chara->GetFlightSpeed() / 25.f), Chara->GetFlightPer()), -50.f, this->m_TPS_Per)) + this->m_CamShake2 * 5.f,
+							CamPos + CamVec * 100.f,
+							Chara->GetEyeVecMat().yvec() + this->m_CamShake2 * 0.25f
+						);
 					}
 					Easing(&this->m_EyeRunPer, Chara->GetIsRun() ? 1.f : 0.f, 0.95f, EasingType::OutExpo);
 
+					auto fov_t = GetMainCamera().GetCamFov();
+					auto near_t = GetMainCamera().GetCamNear();
+					auto far_t = GetMainCamera().GetCamFar();
 					if (Chara->GetIsRun()) {
-						Easing(&camera_main.fov, deg2rad(90), 0.9f, EasingType::OutExpo);
-						Easing(&camera_main.near_, 3.f, 0.9f, EasingType::OutExpo);
-						Easing(&camera_main.far_, Scale_Rate * 150.f, 0.9f, EasingType::OutExpo);
+						Easing(&fov_t, deg2rad(90), 0.9f, EasingType::OutExpo);
+						Easing(&near_t, 3.f, 0.9f, EasingType::OutExpo);
+						Easing(&far_t, Scale_Rate * 150.f, 0.9f, EasingType::OutExpo);
 					}
 					else {
-						Easing(&camera_main.fov, deg2rad(75), 0.9f, EasingType::OutExpo);
-						Easing(&camera_main.near_, 10.f, 0.9f, EasingType::OutExpo);
-						Easing(&camera_main.far_, Scale_Rate * 300.f, 0.9f, EasingType::OutExpo);
+						Easing(&fov_t, deg2rad(75), 0.9f, EasingType::OutExpo);
+						Easing(&near_t, 10.f, 0.9f, EasingType::OutExpo);
+						Easing(&far_t, Scale_Rate * 300.f, 0.9f, EasingType::OutExpo);
 					}
+					SetMainCamera().SetCamInfo(fov_t, near_t, far_t);
 				}
 
 				this->m_BackGround.Execute();
@@ -590,32 +592,31 @@ namespace FPS_n2 {
 					}
 					//
 				}
-				TEMPSCENE::Update();
-				Effect_UseControl::Update_Effect();
+				EffectControl::Execute();
 				return true;
 			}
-			void Dispose(void) noexcept override {
-				Effect_UseControl::Dispose_Effect();
+			void Dispose_Sub(void) noexcept override {
+				EffectControl::Dispose();
 				this->m_Obj.DisposeObject();
 			}
 			//
-			void Depth_Draw(void) noexcept override {
+			void Depth_Draw_Sub(void) noexcept override {
 				this->m_BackGround.Draw();
 				//this->m_Obj.DrawDepthObject();
 			}
-			void BG_Draw(void) noexcept override {
+			void BG_Draw_Sub(void) noexcept override {
 				this->m_BackGround.BG_Draw();
 			}
-			void Shadow_Draw_NearFar(void) noexcept override {
+			void ShadowDraw_NearFar_Sub(void) noexcept override {
 				this->m_BackGround.Shadow_Draw_NearFar();
 				//this->m_Obj.DrawObject_Shadow();
 			}
-			void Shadow_Draw(void) noexcept override {
+			void ShadowDraw_Sub(void) noexcept override {
 				this->m_BackGround.Shadow_Draw();
 				this->m_Obj.DrawObject_Shadow();
 			}
 
-			void Main_Draw(void) noexcept override {
+			void MainDraw_Sub(void) noexcept override {
 				this->m_BackGround.Draw();
 				this->m_Obj.DrawObject();
 				//this->m_Obj.DrawDepthObject();
@@ -639,13 +640,11 @@ namespace FPS_n2 {
 					}
 				}
 			}
-			void Main_Draw2(void) noexcept override {
+			void MainDrawbyDepth_Sub(void) noexcept override {
 				this->m_Obj.DrawDepthObject();
 			}
-			void LAST_Draw(void) noexcept override {
-			}
 			//UI表示
-			void UI_Draw(void) noexcept  override {
+			void DrawUI_Base_Sub(void) noexcept  override {
 				auto& Chara = (std::shared_ptr<CharacterClass>&)(*this->m_Obj.GetObj(ObjType::Human, 0));//自分
 
 				auto* Fonts = FontPool::Instance();
@@ -744,8 +743,8 @@ namespace FPS_n2 {
 					ys1 = y_r((int)(256.f * 0.8f));
 					xs2 = y_r((int)(256.f * 0.5f));
 					ys2 = y_r((int)(256.f * 0.2f));
-					xp1 = DrawParts->disp_x - y_r(80) - xs1;
-					yp1 = DrawParts->disp_y - y_r(300) - ys1;
+					xp1 = DrawParts->m_DispXSize - y_r(80) - xs1;
+					yp1 = DrawParts->m_DispYSize - y_r(300) - ys1;
 
 					Fonts->Get(y_r(20), FontPool::FontType::HUD_Edge).Get_handle().DrawStringFormat((int)(xp1 - xs1), (int)(yp1 - ys1) - y_r(20), Green, White, "x%4.2f", this->m_Rader_r);
 					DrawLine_2D((int)(xp1 - xs1), (int)(yp1), (int)(xp1 + xs2), (int)(yp1), Green, 3);
@@ -831,6 +830,8 @@ namespace FPS_n2 {
 					}
 				}
 				//
+			}
+			void DrawUI_In_Sub(void) noexcept override {
 			}
 		};
 	};
